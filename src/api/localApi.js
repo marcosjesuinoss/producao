@@ -1,0 +1,151 @@
+import { db, uid } from '../db/db.js'
+import { monthlySummary, annualSummary, generalSummary } from '../lib/summaries.js'
+
+/*
+  "Endpoints" locais (Promise-based) equivalentes a uma REST API,
+  porem 100% offline sobre IndexedDB.
+
+    GET    /records              -> listRecords(filters)
+    POST   /records             -> createRecord(payload)
+    PUT    /records/:id         -> updateRecord(id, patch)
+    DELETE /records/:id         -> deleteRecord(id)
+    GET    /summary?period=...  -> getSummary(period, filters)
+    GET    /goals               -> listGoals(filters)
+    POST   /goals (upsert)      -> upsertGoal(payload)
+    POST   /export?format=csv   -> ver lib/csv.js (exportCsv)
+*/
+
+// ---- Helpers ----
+const ym = (dateStr) => {
+  const d = new Date(dateStr + 'T00:00:00')
+  return { year: d.getFullYear(), month: d.getMonth() + 1 }
+}
+
+function applyFilters(coll, { year, month, product, account, manager }) {
+  return coll.filter((r) => {
+    if (year && r.year !== Number(year)) return false
+    if (month && r.month !== Number(month)) return false
+    if (product && r.product !== product) return false
+    if (account && r.account !== account) return false
+    if (manager && r.manager !== manager) return false
+    return true
+  })
+}
+
+// ---- RECORDS (CRUD) ----
+export async function listRecords(filters = {}) {
+  const all = db.records.orderBy('date').reverse()
+  return applyFilters(all, filters).toArray()
+}
+
+export async function getRecord(id) {
+  return db.records.get(id)
+}
+
+export async function createRecord(payload) {
+  const { year, month } = ym(payload.date)
+  const now = Date.now()
+  const rec = {
+    id: uid(),
+    date: payload.date,
+    year,
+    month,
+    product: payload.product?.trim() || 'Outros',
+    account: payload.account?.trim() || '',
+    manager: payload.manager?.trim() || '',
+    quantity: Number(payload.quantity) || 0,
+    value: payload.value === '' || payload.value == null ? null : Number(payload.value),
+    notes: payload.notes?.trim() || '',
+    createdAt: now,
+    updatedAt: now,
+    synced: false
+  }
+  await db.records.add(rec)
+  return rec
+}
+
+export async function updateRecord(id, patch) {
+  const current = await db.records.get(id)
+  if (!current) throw new Error('Registro nao encontrado')
+  const next = { ...current, ...patch, updatedAt: Date.now(), synced: false }
+  if (patch.date) {
+    const { year, month } = ym(patch.date)
+    next.year = year
+    next.month = month
+  }
+  if ('quantity' in patch) next.quantity = Number(patch.quantity) || 0
+  if ('value' in patch) next.value = patch.value === '' || patch.value == null ? null : Number(patch.value)
+  await db.records.put(next)
+  return next
+}
+
+export async function deleteRecord(id) {
+  await db.records.delete(id)
+  return { ok: true, id }
+}
+
+// ---- GOALS ----
+export async function listGoals(filters = {}) {
+  return applyFilters(db.goals.toCollection(), filters).toArray()
+}
+
+// upsert: 1 meta por (year, month, product, manager)
+export async function upsertGoal(payload) {
+  const existing = await db.goals
+    .filter(
+      (g) =>
+        g.year === Number(payload.year) &&
+        g.month === Number(payload.month) &&
+        g.product === payload.product &&
+        (g.manager || '') === (payload.manager || '')
+    )
+    .first()
+
+  const base = {
+    id: existing?.id || uid(),
+    year: Number(payload.year),
+    month: Number(payload.month),
+    product: payload.product,
+    manager: payload.manager || '',
+    targetQuantity: Number(payload.targetQuantity) || 0,
+    targetValue: payload.targetValue === '' || payload.targetValue == null ? null : Number(payload.targetValue),
+    updatedAt: Date.now()
+  }
+  await db.goals.put(base)
+  return base
+}
+
+export async function deleteGoal(id) {
+  await db.goals.delete(id)
+  return { ok: true, id }
+}
+
+// ---- SUMMARY ----
+export async function getSummary(period = 'monthly', filters = {}) {
+  if (period === 'monthly') return monthlySummary(filters)
+  if (period === 'annual') return annualSummary(filters)
+  return generalSummary(filters)
+}
+
+// ---- SYNC (opcional / simples) ----
+// Marca registros como sincronizados; aqui simulamos um POST em lote.
+export async function syncNow(endpoint) {
+  const pending = await db.records.filter((r) => !r.synced).toArray()
+  if (!pending.length) return { synced: 0, skipped: 'nada pendente' }
+  if (endpoint && navigator.onLine) {
+    try {
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pending)
+      })
+    } catch (e) {
+      return { synced: 0, error: String(e) }
+    }
+  }
+  // Em todos os casos marcamos local como sincronizado (sync otimista).
+  await db.transaction('rw', db.records, async () => {
+    for (const r of pending) await db.records.update(r.id, { synced: true })
+  })
+  return { synced: pending.length }
+}

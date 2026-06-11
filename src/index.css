@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Paletas sugeridas — controladas por CSS variables.
+  Tema claro = :root | Tema escuro = .dark
+  Contraste AA garantido entre texto (--c-fg) e fundo (--c-bg).
+*/
+:root {
+  --c-bg: #f1f5f9;        /* slate-100  */
+  --c-surface: #ffffff;   /* cards       */
+  --c-fg: #0f172a;        /* slate-900   */
+  --c-muted: #475569;     /* slate-600   */
+  --c-border: #cbd5e1;    /* slate-300   */
+  --c-brand: #0f766e;     /* teal-700    */
+  --c-brand-soft: #99f6e4;/* teal-200    */
+  --c-good: #15803d;      /* green-700   */
+  --c-bad: #b91c1c;       /* red-700     */
+  --c-warn: #b45309;      /* amber-700   */
+  --font-scale: 1;
+}
+
+.dark {
+  --c-bg: #0b1220;        /* azul quase preto */
+  --c-surface: #131c2e;
+  --c-fg: #e6edf6;
+  --c-muted: #93a4bd;
+  --c-border: #26344b;
+  --c-brand: #2dd4bf;     /* teal-400 */
+  --c-brand-soft: #134e4a;/* teal-900 */
+  --c-good: #4ade80;
+  --c-bad: #f87171;
+  --c-warn: #fbbf24;
+}
+
+html { font-size: calc(100% * var(--font-scale)); }
+
+body {
+  background: var(--c-bg);
+  color: var(--c-fg);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Helpers semanticos */
+.surface { background: var(--c-surface); border-color: var(--c-border); }
+.text-muted { color: var(--c-muted); }
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition;
+  border: 1px solid var(--c-border);
+}
+.btn-brand { background: var(--c-brand); color: #fff; border-color: transparent; }
+.btn-brand:hover { filter: brightness(1.08); }
+.input {
+  @apply w-full rounded-lg px-3 py-2 text-sm outline-none;
+  background: var(--c-surface);
+  color: var(--c-fg);
+  border: 1px solid var(--c-border);
+}
+.input:focus { border-color: var(--c-brand); box-shadow: 0 0 0 2px var(--c-brand-soft); }
+.card { @apply rounded-xl border p-4; background: var(--c-surface); border-color: var(--c-border); }
+.label { @apply block text-sm font-medium mb-1; color: var(--c-muted); }
+
+/* Foco visivel para acessibilidade por teclado */
+:focus-visible { outline: 2px solid var(--c-brand); outline-offset: 2px; }
