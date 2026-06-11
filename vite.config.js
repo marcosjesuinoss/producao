@@ -4,7 +4,12 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // PWA via Workbox (vite-plugin-pwa). Cacheia assets (precache) e usa
 // runtime caching para a navegacao -> experiencia offline-first.
+// base: caminho do site no GitHub Pages (https://<user>.github.io/<repo>/).
+// Em dev (npm run dev) usamos '/'; no build de producao usamos '/producao/'.
+const base = process.env.NODE_ENV === 'production' ? '/producao/' : '/'
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -17,8 +22,8 @@ export default defineConfig({
         theme_color: '#0f766e',
         background_color: '#0b1220',
         display: 'standalone',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         icons: [
           { src: 'icon-192.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
           { src: 'icon-512.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
