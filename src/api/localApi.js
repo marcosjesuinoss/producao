@@ -21,6 +21,19 @@ const ym = (dateStr) => {
   return { year: d.getFullYear(), month: d.getMonth() + 1 }
 }
 
+// pt-BR: ponto = milhar (exige 3 digitos apos), virgula = decimal.
+// "8.4" e invalido; "8.400" = 8000; "8,4" = 8.4. Formato errado -> 0.
+const BR_NUM_RE = /^(\d{1,3}(\.\d{3})*(,\d*)?|\d+(,\d*)?)$/
+const parseNum = (v) => {
+  if (v === '' || v == null) return 0
+  const s = String(v).trim()
+  if (!BR_NUM_RE.test(s)) return 0
+  const n = Number(s.replace(/\./g, '').replace(',', '.'))
+  return Number.isFinite(n) ? n : 0
+}
+// Igual ao parseNum, mas vazio -> null (campos opcionais como valor).
+const parseNumOrNull = (v) => (v === '' || v == null ? null : parseNum(v))
+
 function applyFilters(coll, { year, month, product, account, manager }) {
   return coll.filter((r) => {
     if (year && r.year !== Number(year)) return false
@@ -53,9 +66,10 @@ export async function createRecord(payload) {
     product: payload.product?.trim() || 'Outros',
     account: payload.account?.trim() || '',
     manager: payload.manager?.trim() || '',
-    quantity: Number(payload.quantity) || 0,
-    value: payload.value === '' || payload.value == null ? null : Number(payload.value),
+    quantity: parseNum(payload.quantity),
+    value: parseNumOrNull(payload.value),
     notes: payload.notes?.trim() || '',
+    qualified: !!payload.qualified,
     createdAt: now,
     updatedAt: now,
     synced: false
@@ -73,8 +87,9 @@ export async function updateRecord(id, patch) {
     next.year = year
     next.month = month
   }
-  if ('quantity' in patch) next.quantity = Number(patch.quantity) || 0
-  if ('value' in patch) next.value = patch.value === '' || patch.value == null ? null : Number(patch.value)
+  if ('quantity' in patch) next.quantity = parseNum(patch.quantity)
+  if ('value' in patch) next.value = parseNumOrNull(patch.value)
+  if ('qualified' in patch) next.qualified = !!patch.qualified
   await db.records.put(next)
   return next
 }

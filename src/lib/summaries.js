@@ -1,4 +1,5 @@
 import { db } from '../db/db.js'
+import { VALUE_PRODUCTS } from './format.js'
 
 /*
   Queries de somatorios sobre IndexedDB (Dexie).
@@ -86,7 +87,8 @@ export async function generalSummary({ product, manager } = {}) {
   return { period: 'general', ...reduceTotals(records) }
 }
 
-// Agregacao por produto para o mes vigente (grafico por produto)
+// Agregacao por produto para o mes vigente.
+// Produtos em VALUE_PRODUCTS usam valor como metrica principal.
 export async function productBreakdown({ year, month, manager } = {}) {
   const now = new Date()
   const y = Number(year) || now.getFullYear()
@@ -96,16 +98,26 @@ export async function productBreakdown({ year, month, manager } = {}) {
 
   const map = new Map()
   for (const r of records) {
-    const cur = map.get(r.product) || { product: r.product, quantity: 0, value: 0, target: 0 }
+    const cur = map.get(r.product) || { product: r.product, quantity: 0, value: 0, targetQty: 0, targetVal: 0 }
     cur.quantity += r.quantity || 0
     cur.value += r.value || 0
     map.set(r.product, cur)
   }
   const goals = await db.goals.filter((g) => g.year === y && g.month === m && (!manager || g.manager === manager)).toArray()
   for (const g of goals) {
-    const cur = map.get(g.product) || { product: g.product, quantity: 0, value: 0, target: 0 }
-    cur.target += g.targetQuantity || 0
+    const cur = map.get(g.product) || { product: g.product, quantity: 0, value: 0, targetQty: 0, targetVal: 0 }
+    cur.targetQty += g.targetQuantity || 0
+    cur.targetVal += g.targetValue || 0
     map.set(g.product, cur)
   }
-  return [...map.values()].sort((a, b) => b.quantity - a.quantity)
+
+  return [...map.values()]
+    .map((b) => {
+      const useValue = VALUE_PRODUCTS.has(b.product)
+      const realized = useValue ? b.value : b.quantity
+      const metricTarget = useValue ? b.targetVal : b.targetQty
+      // compatibilidade retroativa: target = targetQty para graficos
+      return { ...b, target: b.targetQty, useValue, realized, metricTarget }
+    })
+    .sort((a, b) => b.realized - a.realized)
 }

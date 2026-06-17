@@ -2,9 +2,8 @@ import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { upsertGoal, deleteGoal } from '../api/localApi.js'
-import { PRODUCTS, MONTHS, num } from '../lib/format.js'
+import { PRODUCTS, MONTHS, VALUE_PRODUCTS, num, brl } from '../lib/format.js'
 
-// Tela de metas — define meta mensal por produto e gerente.
 export default function GoalsPage() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
@@ -13,19 +12,21 @@ export default function GoalsPage() {
 
   const goals = useLiveQuery(
     () => db.goals.filter((g) => g.year === Number(year) && g.month === Number(month)).toArray(),
-    [year, month],
-    []
+    [year, month], []
   )
-  // realizado do periodo, por produto, para mostrar "meta realizada"
   const done = useLiveQuery(
     () => db.records.where({ year: Number(year), month: Number(month) }).toArray(),
-    [year, month],
-    []
+    [year, month], []
   )
 
+  // agrega quantidade E valor por produto
   const realizedByProduct = useMemo(() => {
     const map = {}
-    for (const r of done) map[r.product] = (map[r.product] || 0) + (r.quantity || 0)
+    for (const r of done) {
+      map[r.product] = map[r.product] || { quantity: 0, value: 0 }
+      map[r.product].quantity += r.quantity || 0
+      map[r.product].value += r.value || 0
+    }
     return map
   }, [done])
 
@@ -42,17 +43,20 @@ export default function GoalsPage() {
       <div className="card grid grid-cols-2 md:grid-cols-3 gap-3">
         <div>
           <label className="label" htmlFor="g-year">Ano</label>
-          <input id="g-year" type="number" className="input" value={year} onChange={(e) => setYear(e.target.value)} />
+          <input id="g-year" type="number" className="input" value={year}
+            onChange={(e) => setYear(e.target.value)} />
         </div>
         <div>
-          <label className="label" htmlFor="g-month">Mes</label>
-          <select id="g-month" className="input" value={month} onChange={(e) => setMonth(e.target.value)}>
+          <label className="label" htmlFor="g-month">Mês</label>
+          <select id="g-month" className="input" value={month}
+            onChange={(e) => setMonth(e.target.value)}>
             {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
           </select>
         </div>
         <div>
           <label className="label" htmlFor="g-manager">Gerente (opcional)</label>
-          <input id="g-manager" className="input" value={manager} onChange={(e) => setManager(e.target.value)} placeholder="Todos" />
+          <input id="g-manager" className="input" value={manager}
+            onChange={(e) => setManager(e.target.value)} placeholder="Todos" />
         </div>
       </div>
 
@@ -61,8 +65,7 @@ export default function GoalsPage() {
           <thead>
             <tr className="text-left" style={{ color: 'var(--c-muted)' }}>
               <th className="p-3">Produto</th>
-              <th className="p-3 text-right">Meta (un)</th>
-              <th className="p-3 text-right">Meta (R$)</th>
+              <th className="p-3 text-right">Meta</th>
               <th className="p-3 text-right">Realizado</th>
               <th className="p-3 text-right">%</th>
               <th className="p-3"></th>
@@ -71,26 +74,33 @@ export default function GoalsPage() {
           <tbody>
             {PRODUCTS.map((product) => {
               const g = goalFor(product)
-              const realized = realizedByProduct[product] || 0
-              const pct = g?.targetQuantity ? Math.round((realized / g.targetQuantity) * 100) : null
+              const isVal = VALUE_PRODUCTS.has(product)
+              const rec = realizedByProduct[product] || { quantity: 0, value: 0 }
+              const realized = isVal ? rec.value : rec.quantity
+              const target = isVal ? (g?.targetValue || 0) : (g?.targetQuantity || 0)
+              const pct = target > 0 ? Math.round((realized / target) * 100) : null
               return (
-                <GoalRow key={product} product={product} goal={g} realized={realized} pct={pct}
+                <GoalRow key={product} product={product} goal={g} isValueProduct={isVal}
+                  realized={realized} pct={pct}
                   onSave={save} onDelete={() => g && deleteGoal(g.id)} />
               )
             })}
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-muted">A coluna "%" e a meta realizada calculada automaticamente (realizado ÷ meta).</p>
+      <p className="text-xs text-muted">
+        % = realizado ÷ meta. Crédito Pessoal usa valor (R$) como métrica.
+      </p>
     </section>
   )
 }
 
-function GoalRow({ product, goal, realized, pct, onSave }) {
+function GoalRow({ product, goal, isValueProduct, realized, pct, onSave }) {
   const [qty, setQty] = useState(goal?.targetQuantity ?? '')
   const [val, setVal] = useState(goal?.targetValue ?? '')
-  // mantem sincronizado quando muda o mes/ano
+
   if (goal && qty === '' && goal.targetQuantity) setQty(goal.targetQuantity)
+  if (goal && val === '' && goal.targetValue) setVal(goal.targetValue)
 
   const color = pct == null ? 'var(--c-muted)' : pct >= 100 ? 'var(--c-good)' : pct >= 60 ? 'var(--c-warn)' : 'var(--c-bad)'
 
@@ -98,17 +108,32 @@ function GoalRow({ product, goal, realized, pct, onSave }) {
     <tr className="border-t" style={{ borderColor: 'var(--c-border)' }}>
       <td className="p-3 font-medium">{product}</td>
       <td className="p-3 text-right">
-        <input type="number" min="0" className="input w-24 text-right" value={qty}
-          onChange={(e) => setQty(e.target.value)} aria-label={`Meta de quantidade para ${product}`} />
+        {isValueProduct ? (
+          /* Crédito Pessoal: apenas meta em R$ */
+          <input type="number" min="0" step="0.01" className="input w-32 text-right" value={val}
+            onChange={(e) => setVal(e.target.value)} aria-label={`Meta de valor para ${product}`} />
+        ) : (
+          /* demais produtos: meta em unidades (+ campo de valor oculto mas salvo) */
+          <div className="flex flex-col items-end gap-1">
+            <input type="number" min="0" className="input w-24 text-right" value={qty}
+              onChange={(e) => setQty(e.target.value)} aria-label={`Meta de quantidade para ${product}`} />
+            <input type="number" min="0" step="0.01" className="input w-28 text-right text-xs"
+              value={val} placeholder="R$ opcional"
+              onChange={(e) => setVal(e.target.value)} aria-label={`Meta de valor para ${product}`} />
+          </div>
+        )}
+      </td>
+      <td className="p-3 text-right font-medium">
+        {isValueProduct ? brl(realized) : num(realized)}
+      </td>
+      <td className="p-3 text-right font-semibold" style={{ color }}>
+        {pct == null ? '—' : pct + '%'}
       </td>
       <td className="p-3 text-right">
-        <input type="number" min="0" step="0.01" className="input w-28 text-right" value={val}
-          onChange={(e) => setVal(e.target.value)} aria-label={`Meta de valor para ${product}`} />
-      </td>
-      <td className="p-3 text-right">{num(realized)}</td>
-      <td className="p-3 text-right font-semibold" style={{ color }}>{pct == null ? '—' : pct + '%'}</td>
-      <td className="p-3 text-right">
-        <button className="btn btn-brand px-2 py-1" onClick={() => onSave(product, qty, val)}>Salvar</button>
+        <button className="btn btn-brand px-2 py-1"
+          onClick={() => onSave(product, isValueProduct ? 0 : qty, val)}>
+          Salvar
+        </button>
       </td>
     </tr>
   )

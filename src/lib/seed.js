@@ -11,7 +11,7 @@ export async function seedIfEmpty() {
   const y = new Date().getFullYear()
   const manager = 'Marco Silva'
   const account = 'AG 0234 / GER 17'
-  const products = ['Conta Corrente', 'Seguro de Vida', 'Consorcio', 'Cartao de Credito', 'Previdencia']
+  const products = ['Abertura de Conta', 'Seguro de Vida - Unico', 'Consorcio', 'Cartao de Credito', 'Previdencia - Unica', 'Credito Pessoal']
 
   const records = []
   const pad = (n) => String(n).padStart(2, '0')
@@ -45,11 +45,12 @@ export async function seedIfEmpty() {
 
   // metas mensais por produto (mesmo alvo todos os meses)
   const targets = {
-    'Conta Corrente': 20,
-    'Seguro de Vida': 12,
+    'Abertura de Conta': 20,
+    'Seguro de Vida - Unico': 12,
     Consorcio: 8,
     'Cartao de Credito': 25,
-    Previdencia: 10
+    'Previdencia - Unica': 10,
+    'Credito Pessoal': 500000
   }
   const goals = []
   for (let m = 1; m <= 12; m++) {

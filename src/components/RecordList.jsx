@@ -1,46 +1,81 @@
-import { brl, num } from '../lib/format.js'
+import { useState } from 'react'
+import { brl, num, VALUE_PRODUCTS } from '../lib/format.js'
 
-/*
-  ListRecords — tabela com acoes editar/excluir.
-  Responsiva: vira cards no mobile via CSS utilitario do Tailwind.
-*/
+const shortDate = (iso) => {
+  const [, m, d] = iso.split('-')
+  return `${d}/${m}`
+}
+
 export default function RecordList({ records, onEdit, onDelete }) {
+  const [openId, setOpenId] = useState(null)
+
   if (!records?.length) {
     return <div className="card text-center text-muted py-8">Nenhum registro para os filtros atuais.</div>
   }
+
   return (
-    <div className="card overflow-x-auto p-0">
-      <table className="w-full text-sm">
-        <caption className="sr-only">Lista de registros de producao</caption>
-        <thead>
-          <tr className="text-left" style={{ color: 'var(--c-muted)' }}>
-            <th className="p-3">Data</th>
-            <th className="p-3">Produto</th>
-            <th className="p-3 hidden sm:table-cell">Conta</th>
-            <th className="p-3 text-right">Qtd</th>
-            <th className="p-3 text-right hidden sm:table-cell">Valor</th>
-            <th className="p-3 text-right">Acoes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {records.map((r) => (
-            <tr key={r.id} className="border-t" style={{ borderColor: 'var(--c-border)' }}>
-              <td className="p-3 whitespace-nowrap">{r.date.split('-').reverse().join('/')}</td>
-              <td className="p-3">
+    <div className="card p-0 overflow-hidden">
+      <ul className="divide-y" style={{ borderColor: 'var(--c-border)' }}>
+        {records.map((r) => (
+          <li key={r.id} className="relative flex items-center gap-3 p-3"
+            style={{ borderColor: 'var(--c-border)' }}>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 font-medium truncate">
                 {r.product}
-                {r.notes && <span className="block text-xs text-muted">{r.notes}</span>}
-              </td>
-              <td className="p-3 hidden sm:table-cell text-muted">{r.account || '—'}</td>
-              <td className="p-3 text-right font-medium">{num(r.quantity)}</td>
-              <td className="p-3 text-right hidden sm:table-cell">{brl(r.value)}</td>
-              <td className="p-3 text-right whitespace-nowrap">
-                <button className="btn px-2 py-1" onClick={() => onEdit(r)} aria-label={`Editar registro de ${r.date}`}>✏️</button>
-                <button className="btn px-2 py-1 ml-1" onClick={() => onDelete(r)} aria-label={`Excluir registro de ${r.date}`}>🗑️</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                {/* ✓ sutil para conta qualificada */}
+                {r.qualified && (
+                  <span className="text-xs font-bold shrink-0"
+                    style={{ color: 'var(--c-good)' }} title="Conta qualificada">✓</span>
+                )}
+              </div>
+              <div className="text-xs text-muted truncate">
+                {shortDate(r.date)}
+                {r.account ? ` · ${r.account}` : ''}
+                {/* valor só aparece na linha de detalhe se NÃO for o campo principal */}
+                {!VALUE_PRODUCTS.has(r.product) && r.value != null ? ` · ${brl(r.value)}` : ''}
+              </div>
+            </div>
+
+            <div className="text-right shrink-0">
+              {VALUE_PRODUCTS.has(r.product)
+                ? <>
+                    <div className="text-base font-bold leading-none">{brl(r.value)}</div>
+                    <div className="text-[10px] text-muted">valor</div>
+                  </>
+                : <>
+                    <div className="text-lg font-bold leading-none">{num(r.quantity)}</div>
+                    <div className="text-[10px] text-muted">qtd</div>
+                  </>
+              }
+            </div>
+
+            <button className="btn px-2 py-1 shrink-0" aria-haspopup="menu"
+              aria-expanded={openId === r.id}
+              aria-label={`Ações de ${r.product}`}
+              onClick={() => setOpenId(openId === r.id ? null : r.id)}>
+              ⋯
+            </button>
+
+            {openId === r.id && (
+              <>
+                <button className="fixed inset-0 z-10 cursor-default" aria-hidden tabIndex={-1}
+                  onClick={() => setOpenId(null)} />
+                <div role="menu"
+                  className="absolute right-3 top-12 z-20 card p-1 shadow-lg min-w-[140px]">
+                  <button role="menuitem"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:opacity-80"
+                    onClick={() => { setOpenId(null); onEdit(r) }}>✏️ Editar</button>
+                  <button role="menuitem"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:opacity-80"
+                    style={{ color: 'var(--c-bad)' }}
+                    onClick={() => { setOpenId(null); onDelete(r) }}>🗑️ Excluir</button>
+                </div>
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

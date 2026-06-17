@@ -8,7 +8,6 @@ import ChartsPage from './pages/ChartsPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import { useAuth } from './context/AuthContext.jsx'
-import { seedIfEmpty } from './lib/seed.js'
 
 export default function App() {
   const { hasPin, unlocked } = useAuth()
@@ -19,7 +18,7 @@ export default function App() {
     const off = () => setOnline(false)
     window.addEventListener('online', on)
     window.addEventListener('offline', off)
-    seedIfEmpty() // popula dados de teste na primeira execucao
+    // dados de teste so via Ajustes -> "Gerar dados de teste" (nunca automatico)
     return () => {
       window.removeEventListener('online', on)
       window.removeEventListener('offline', off)
