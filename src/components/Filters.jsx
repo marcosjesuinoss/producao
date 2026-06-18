@@ -1,10 +1,8 @@
-import { MONTHS, PRODUCTS } from '../lib/format.js'
+import { MONTHS } from '../lib/format.js'
+import { useProducts } from '../hooks/useProducts.js'
 
-/*
-  Filtros por mes, ano, produto e conta.
-  `value` e um objeto controlado; `onChange` recebe o objeto atualizado.
-*/
 export default function Filters({ value, onChange, accounts = [] }) {
+  const { allProducts } = useProducts()
   const set = (k, v) => onChange({ ...value, [k]: v })
   const years = []
   const cy = new Date().getFullYear()
@@ -30,7 +28,7 @@ export default function Filters({ value, onChange, accounts = [] }) {
         <label className="label" htmlFor="f-product">Produto</label>
         <select id="f-product" className="input" value={value.product || ''} onChange={(e) => set('product', e.target.value)}>
           <option value="">Todos</option>
-          {PRODUCTS.map((p) => <option key={p} value={p}>{p}</option>)}
+          {allProducts.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
       </div>
       <div>

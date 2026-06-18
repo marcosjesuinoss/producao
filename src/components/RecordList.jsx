@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { brl, num, VALUE_PRODUCTS } from '../lib/format.js'
+import { brl, num } from '../lib/format.js'
+import { useProducts } from '../hooks/useProducts.js'
 
 const shortDate = (iso) => {
   const [, m, d] = iso.split('-')
@@ -7,6 +8,7 @@ const shortDate = (iso) => {
 }
 
 export default function RecordList({ records, onEdit, onDelete }) {
+  const { isValue } = useProducts()
   const [openId, setOpenId] = useState(null)
 
   if (!records?.length) {
@@ -33,12 +35,12 @@ export default function RecordList({ records, onEdit, onDelete }) {
                 {shortDate(r.date)}
                 {r.account ? ` · ${r.account}` : ''}
                 {/* valor só aparece na linha de detalhe se NÃO for o campo principal */}
-                {!VALUE_PRODUCTS.has(r.product) && r.value != null ? ` · ${brl(r.value)}` : ''}
+                {!isValue(r.product) && r.value != null ? ` · ${brl(r.value)}` : ''}
               </div>
             </div>
 
             <div className="text-right shrink-0">
-              {VALUE_PRODUCTS.has(r.product)
+              {isValue(r.product)
                 ? <>
                     <div className="text-base font-bold leading-none">{brl(r.value)}</div>
                     <div className="text-[10px] text-muted">valor</div>

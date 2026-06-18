@@ -8,6 +8,7 @@ import ChartsPage from './pages/ChartsPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import { useAuth } from './context/AuthContext.jsx'
+import { RecordModalProvider } from './context/RecordModalContext.jsx'
 
 export default function App() {
   const { hasPin, unlocked } = useAuth()
@@ -18,7 +19,6 @@ export default function App() {
     const off = () => setOnline(false)
     window.addEventListener('online', on)
     window.addEventListener('offline', off)
-    // dados de teste so via Ajustes -> "Gerar dados de teste" (nunca automatico)
     return () => {
       window.removeEventListener('online', on)
       window.removeEventListener('offline', off)
@@ -28,18 +28,20 @@ export default function App() {
   if (hasPin && !unlocked) return <LoginPage />
 
   return (
-    <div className="min-h-screen">
-      <Header online={online} />
-      <main className="max-w-5xl mx-auto p-4">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/registros" element={<RecordsPage />} />
-          <Route path="/metas" element={<GoalsPage />} />
-          <Route path="/graficos" element={<ChartsPage />} />
-          <Route path="/ajustes" element={<SettingsPage />} />
-          <Route path="*" element={<HomePage />} />
-        </Routes>
-      </main>
-    </div>
+    <RecordModalProvider>
+      <div className="min-h-screen">
+        <Header online={online} />
+        <main className="max-w-5xl mx-auto p-4">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/registros" element={<RecordsPage />} />
+            <Route path="/metas" element={<GoalsPage />} />
+            <Route path="/graficos" element={<ChartsPage />} />
+            <Route path="/ajustes" element={<SettingsPage />} />
+            <Route path="*" element={<HomePage />} />
+          </Routes>
+        </main>
+      </div>
+    </RecordModalProvider>
   )
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { PRODUCTS, VALUE_PRODUCTS, BR_NUM_RE, todayISO } from '../lib/format.js'
+import { PRODUCTS, BR_NUM_RE, todayISO } from '../lib/format.js'
+import { useProducts } from '../hooks/useProducts.js'
 
 const ABERTURA = 'Abertura de Conta'
 
@@ -13,6 +14,20 @@ const empty = {
   qualified: false
 }
 
+// Auto-mascara pt-BR: remove pontos antigos (milhar), re-adiciona a cada 3 dígitos
+const applyMask = (v) => {
+  let raw = String(v ?? '').replace(/\./g, '').replace(/[^0-9,]/g, '')
+  const ci = raw.indexOf(',')
+  if (ci !== -1) raw = raw.slice(0, ci + 1) + raw.slice(ci + 1).replace(/,/g, '')
+  const [int = '', dec] = raw.split(',')
+  const fInt = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return dec !== undefined ? `${fInt},${dec}` : fInt
+}
+
+// Número salvo no banco → string formatada para exibição ao editar
+const numToDisplay = (n) =>
+  n == null || n === '' ? '' : Number(n).toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+
 // Retorna o numero, null se vazio, ou undefined se formato invalido
 const parseBR = (v) => {
   const s = String(v ?? '').trim()
@@ -22,9 +37,9 @@ const parseBR = (v) => {
   return Number.isFinite(n) ? n : null
 }
 
-const validate = (f) => {
+const validate = (f, isValueFn) => {
   const e = {}
-  const isValueProd = VALUE_PRODUCTS.has(f.product)
+  const isValueProd = isValueFn(f.product)
   if (!f.date) e.date = 'Informe a data'
   if (!f.product) e.product = 'Informe o produto'
   if (!f.account?.trim()) e.account = 'Informe a conta de produção'
@@ -40,12 +55,15 @@ const validate = (f) => {
   return e
 }
 
-export default function RecordForm({ initial, onSubmit, onCancel }) {
+export default function RecordForm({ initial, onSubmit, onCancel, noCard = false }) {
+  const { allProducts, isValue } = useProducts()
   const [form, setForm] = useState(empty)
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    setForm(initial ? { ...empty, ...initial } : empty)
+    setForm(initial
+      ? { ...empty, ...initial, value: numToDisplay(initial.value), quantity: numToDisplay(initial.quantity) }
+      : empty)
     setErrors({})
   }, [initial])
 
@@ -54,9 +72,17 @@ export default function RecordForm({ initial, onSubmit, onCancel }) {
     setErrors((e) => { const n = { ...e }; delete n[k]; return n })
   }
 
+  // Intercepta tecla "." e insere "," no lugar (ponto = milhar, não decimal)
+  const onDotKey = (field) => (e) => {
+    if (e.key !== '.') return
+    e.preventDefault()
+    const { selectionStart: s, selectionEnd: en, value } = e.target
+    set(field, applyMask(value.slice(0, s) + ',' + value.slice(en)))
+  }
+
   const submit = (e) => {
     e.preventDefault()
-    const errs = validate(form)
+    const errs = validate(form, isValue)
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
     onSubmit(form)
@@ -64,13 +90,13 @@ export default function RecordForm({ initial, onSubmit, onCancel }) {
   }
 
   const isAbertura = form.product === ABERTURA
-  const isValueProd = VALUE_PRODUCTS.has(form.product)
+  const isValueProd = isValue(form.product)
 
   const inputCls = (field) =>
     `input${errors[field] ? ' !border-[color:var(--c-bad)]' : ''}`
 
   return (
-    <form className="card grid grid-cols-1 sm:grid-cols-2 gap-3" onSubmit={submit}
+    <form className={`${noCard ? '' : 'card '}grid grid-cols-1 sm:grid-cols-2 gap-3`} onSubmit={submit}
       aria-label={initial ? 'Editar registro' : 'Novo registro'} noValidate>
 
       <div>
@@ -84,7 +110,7 @@ export default function RecordForm({ initial, onSubmit, onCancel }) {
         <label className="label" htmlFor="r-product">Produto *</label>
         <select id="r-product" className={inputCls('product')}
           value={form.product} onChange={(e) => set('product', e.target.value)}>
-          {PRODUCTS.map((p) => <option key={p} value={p}>{p}</option>)}
+          {allProducts.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
         {errors.product && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.product}</p>}
       </div>
@@ -103,7 +129,8 @@ export default function RecordForm({ initial, onSubmit, onCancel }) {
           <input id="r-value" type="text" inputMode="decimal" className={inputCls('value')}
             placeholder="100.000,00"
             value={form.value}
-            onChange={(e) => set('value', e.target.value.replace(/[^0-9.,]/g, ''))} />
+            onChange={(e) => set('value', applyMask(e.target.value))}
+            onKeyDown={onDotKey('value')} />
           {errors.value && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.value}</p>}
         </div>
       ) : (
@@ -113,7 +140,8 @@ export default function RecordForm({ initial, onSubmit, onCancel }) {
             <input id="r-qty" type="text" inputMode="decimal" className={inputCls('quantity')}
               placeholder="ex: 1 ou 1,5"
               value={form.quantity}
-              onChange={(e) => set('quantity', e.target.value.replace(/[^0-9.,]/g, ''))} />
+              onChange={(e) => set('quantity', applyMask(e.target.value))}
+              onKeyDown={onDotKey('quantity')} />
             {errors.quantity && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.quantity}</p>}
           </div>
 
@@ -122,7 +150,8 @@ export default function RecordForm({ initial, onSubmit, onCancel }) {
             <input id="r-value" type="text" inputMode="decimal" className="input"
               placeholder="100.000,00"
               value={form.value}
-              onChange={(e) => set('value', e.target.value.replace(/[^0-9.,]/g, ''))} />
+              onChange={(e) => set('value', applyMask(e.target.value))}
+              onKeyDown={onDotKey('value')} />
           </div>
         </>
       )}

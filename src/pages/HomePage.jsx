@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { productBreakdown } from '../lib/summaries.js'
 import { MONTHS, num, brl, CREDIT_HIERARCHY, CREDIT_GROUPS, CREDIT_LEAVES } from '../lib/format.js'
+import { useRecordModal } from '../context/RecordModalContext.jsx'
 
 const pctColor = (p) =>
   p == null ? 'var(--c-muted)' : p >= 100 ? 'var(--c-good)' : p >= 60 ? 'var(--c-warn)' : 'var(--c-bad)'
@@ -118,6 +119,7 @@ function ProductCard({ b }) {
 }
 
 export default function HomePage() {
+  const { open } = useRecordModal()
   const now = new Date()
   const [breakdown, setBreakdown] = useState([])
 
@@ -163,7 +165,6 @@ export default function HomePage() {
         <h2 className="text-xl font-bold">
           {MONTHS[now.getMonth()]} / {now.getFullYear()}
         </h2>
-        <Link to="/registros" className="btn btn-brand">+ Novo registro</Link>
       </div>
 
       {/* Card totalizador */}
@@ -193,7 +194,7 @@ export default function HomePage() {
         <div className="card text-center text-muted py-8">
           Nenhuma produção registrada este mês ainda.
           <div className="mt-2">
-            <Link to="/registros" className="btn btn-brand">Adicionar primeiro registro</Link>
+            <button className="btn btn-brand" onClick={() => open()}>Adicionar primeiro registro</button>
           </div>
         </div>
       ) : (

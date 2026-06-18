@@ -11,10 +11,17 @@ import Dexie from 'dexie'
 export const db = new Dexie('controle_producao')
 
 db.version(1).stores({
-  // &id = chave primaria unica; demais campos sao indices secundarios
   records: '&id, date, year, month, product, account, manager, synced',
   goals: '&id, year, month, product, manager',
   users: '&id, name'
+})
+
+// v2: tabela de produtos customizados (nome + tipo de metrica)
+db.version(2).stores({
+  records: '&id, date, year, month, product, account, manager, synced',
+  goals: '&id, year, month, product, manager',
+  users: '&id, name',
+  products: '&id, name'
 })
 
 export const uid = () =>

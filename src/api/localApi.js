@@ -135,6 +135,22 @@ export async function deleteGoal(id) {
   return { ok: true, id }
 }
 
+// ---- PRODUTOS CUSTOMIZADOS ----
+export async function createProduct({ name, useValue }) {
+  const trimmed = (name || '').trim()
+  if (!trimmed) throw new Error('Informe o nome do produto')
+  const dup = await db.products.where('name').equalsIgnoreCase(trimmed).count()
+  if (dup > 0) throw new Error('Produto já existe')
+  const prod = { id: uid(), name: trimmed, useValue: !!useValue, createdAt: Date.now() }
+  await db.products.add(prod)
+  return prod
+}
+
+export async function deleteProduct(id) {
+  await db.products.delete(id)
+  return { ok: true, id }
+}
+
 // ---- SUMMARY ----
 export async function getSummary(period = 'monthly', filters = {}) {
   if (period === 'monthly') return monthlySummary(filters)
