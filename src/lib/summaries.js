@@ -1,5 +1,5 @@
 import { db } from '../db/db.js'
-import { VALUE_PRODUCTS } from './format.js'
+import { VALUE_PRODUCTS, CREDIT_HIERARCHY, CREDIT_GROUPS } from './format.js'
 
 /*
   Queries de somatorios sobre IndexedDB (Dexie).
@@ -111,12 +111,35 @@ export async function productBreakdown({ year, month, manager } = {}) {
     map.set(g.product, cur)
   }
 
+  const customProds = await db.products.toArray()
+  const customMap = new Map(customProds.map((p) => [p.name, p.useValue]))
+  const isValueProduct = (name) => {
+    if (CREDIT_GROUPS.has(name)) return true
+    return customMap.has(name) ? customMap.get(name) : VALUE_PRODUCTS.has(name)
+  }
+
+  // Agrega grupos de crédito de baixo para cima (recursivo)
+  const aggregate = (name) => {
+    const children = CREDIT_HIERARCHY[name]
+    if (!children) return map.get(name) || { quantity: 0, value: 0, targetQty: 0, targetVal: 0 }
+    const entry = { product: name, quantity: 0, value: 0, targetQty: 0, targetVal: 0, isGroup: true }
+    for (const child of children) {
+      const c = aggregate(child)
+      entry.quantity += c.quantity
+      entry.value += c.value
+      entry.targetQty += c.targetQty || 0
+      entry.targetVal += c.targetVal || 0
+    }
+    map.set(name, entry)
+    return entry
+  }
+  aggregate('Credito Total')
+
   return [...map.values()]
     .map((b) => {
-      const useValue = VALUE_PRODUCTS.has(b.product)
+      const useValue = isValueProduct(b.product)
       const realized = useValue ? b.value : b.quantity
       const metricTarget = useValue ? b.targetVal : b.targetQty
-      // compatibilidade retroativa: target = targetQty para graficos
       return { ...b, target: b.targetQty, useValue, realized, metricTarget }
     })
     .sort((a, b) => b.realized - a.realized)

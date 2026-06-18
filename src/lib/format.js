@@ -3,13 +3,16 @@ export const PRODUCTS = [
   'Capitalizacao - Mensal',
   'Capitalizacao - Unica',
   'Cartao de Credito',
+  'CDC',
   'Cobranca - CA',
   'Cobranca - LP',
   'Cobranca - Mora',
   'Consorcio',
+  'Credito Consignado',
+  'Credito Imobiliario',
   'Credito Pessoal',
+  'Credito Rural',
   'Dental',
-  'Financiamento',
   'Investimentos',
   'Previdencia - Mensal',
   'Previdencia - Unica',
@@ -37,8 +40,15 @@ export const todayISO = () => new Date().toISOString().slice(0, 10)
 // Ex INVALIDO: "8.4" (dot sem 3 digitos), "8.44"
 export const BR_NUM_RE = /^(\d{1,3}(\.\d{3})*(,\d*)?|\d+(,\d*)?)$/
 
-// Apenas estes dois produtos usam QUANTIDADE como métrica principal.
-// Todos os demais usam VALOR (R$).
 export const QTY_PRODUCTS = new Set(['Abertura de Conta', 'Cartao de Credito'])
 
 export const VALUE_PRODUCTS = new Set(PRODUCTS.filter((p) => !QTY_PRODUCTS.has(p)))
+
+// Hierarquia de crédito — grupos virtuais (não registráveis, apenas computados)
+export const CREDIT_HIERARCHY = {
+  'Credito Total':    ['Credito < Spread', 'Credito > Spread', 'CDC'],
+  'Credito < Spread': ['Credito Rural', 'Credito Imobiliario'],
+  'Credito > Spread': ['Credito Pessoal', 'Credito Consignado'],
+}
+export const CREDIT_GROUPS = new Set(Object.keys(CREDIT_HIERARCHY))
+export const CREDIT_LEAVES = new Set(['CDC', 'Credito Rural', 'Credito Imobiliario', 'Credito Pessoal', 'Credito Consignado'])
