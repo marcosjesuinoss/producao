@@ -3,8 +3,9 @@ import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { upsertGoal, createProduct, updateProduct, deleteProduct, deleteGoal } from '../api/localApi.js'
-import { MONTHS, num, brl, BR_NUM_RE } from '../lib/format.js'
+import { num, brl, BR_NUM_RE } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
+import { useMonth } from '../context/MonthContext.jsx'
 import { getProgressColor } from '../utils/progressColor.js'
 import ProgressBar from '../components/ui/ProgressBar.jsx'
 import ProductModal from '../components/ProductModal.jsx'
@@ -35,9 +36,7 @@ const fillCentsIf = (setter, condition) => (e) => {
 }
 
 export default function GoalsPage() {
-  const now = new Date()
-  const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth() + 1)
+  const { year, month } = useMonth()
   const [manager] = useState('')
   const [productModalOpen, setProductModalOpen] = useState(false)
 
@@ -82,24 +81,6 @@ export default function GoalsPage() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Metas mensais</h2>
-
-      {/* Filtros */}
-      <div className="card grid grid-cols-2 gap-3">
-        <div>
-          <label className="label" htmlFor="g-year">Ano</label>
-          <input id="g-year" type="number" className="input" value={year}
-            onChange={(e) => setYear(e.target.value)} />
-        </div>
-        <div>
-          <label className="label" htmlFor="g-month">Mês</label>
-          <select id="g-month" className="input" value={month}
-            onChange={(e) => setMonth(e.target.value)}>
-            {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-          </select>
-        </div>
-      </div>
-
       <button className="btn w-full" onClick={() => setProductModalOpen(true)}>
         + Novo produto
       </button>

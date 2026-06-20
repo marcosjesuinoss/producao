@@ -1,7 +1,9 @@
-import { NavLink, useLocation } from 'react-router-dom'
-import { TrendingUp, Plus, Lock } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
+import { TrendingUp, Plus, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
+import { useMonth } from '../context/MonthContext.jsx'
+import { FULL_MONTHS } from '../lib/format.js'
 
 const tabs = [
   { to: '/', label: 'Resumo', end: true },
@@ -25,6 +27,7 @@ const inactiveStyle = {
 export default function Header({ online }) {
   const { hasPin, lock } = useAuth()
   const { open } = useRecordModal()
+  const { year, month, prev, next } = useMonth()
 
   return (
     <header className="surface border-b sticky top-0 z-10" style={{ background: 'var(--c-surface)' }}>
@@ -65,7 +68,31 @@ export default function Header({ online }) {
         )}
       </div>
 
-      {/* Linha 2: botão novo registro */}
+      {/* Linha 2: navegação de mês */}
+      <div className="max-w-5xl mx-auto px-4 pb-2 flex items-center justify-center gap-3">
+        <button
+          className="btn px-2.5 py-1.5 shrink-0"
+          onClick={prev}
+          aria-label="Mês anterior"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <span
+          className="font-semibold text-sm text-center"
+          style={{ color: 'var(--text-primary)', minWidth: '160px' }}
+        >
+          {FULL_MONTHS[month - 1]} / {year}
+        </span>
+        <button
+          className="btn px-2.5 py-1.5 shrink-0"
+          onClick={next}
+          aria-label="Próximo mês"
+        >
+          <ChevronRight size={16} />
+        </button>
+      </div>
+
+      {/* Linha 3: botão novo registro */}
       <div className="max-w-5xl mx-auto px-4 pb-2">
         <button
           className="btn btn-brand w-full sm:w-auto"

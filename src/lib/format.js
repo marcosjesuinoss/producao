@@ -28,6 +28,11 @@ export const MONTHS = [
   'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
 ]
 
+export const FULL_MONTHS = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+]
+
 export const brl = (n) =>
   n == null ? '—' : Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 

@@ -1,3 +1,10 @@
+export function getRemainingLabel(value, target) {
+  if (!target || target <= 0) return null
+  const pct = (value / target) * 100
+  if (pct >= 100) return { type: 'excess', amount: value - target }
+  return { type: 'remaining', amount: target - value }
+}
+
 export function getProgressColor(pct) {
   if (pct === 0) return '#374151'
   if (pct <= 50) return '#ef4444'

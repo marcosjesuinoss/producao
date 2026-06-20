@@ -110,7 +110,7 @@ export default function ProductModal({ onClose, onSubmit, month, year, initial =
               placeholder="Ex: Seguro Empresarial"
               value={name}
               onChange={(e) => { setName(e.target.value); setError('') }}
-              autoFocus
+
             />
           </div>
 

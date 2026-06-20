@@ -16,6 +16,7 @@ import SettingsPage from './pages/SettingsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import { useAuth } from './context/AuthContext.jsx'
 import { RecordModalProvider } from './context/RecordModalContext.jsx'
+import { MonthProvider } from './context/MonthContext.jsx'
 import UpdateToast from './components/UpdateToast.jsx'
 
 export default function App() {
@@ -38,6 +39,7 @@ export default function App() {
   if (hasPin && !unlocked) return <LoginPage />
 
   return (
+    <MonthProvider>
     <RecordModalProvider>
       <div className="min-h-screen">
         <ScrollToTop />
@@ -55,5 +57,6 @@ export default function App() {
       </div>
       <UpdateToast />
     </RecordModalProvider>
+    </MonthProvider>
   )
 }

@@ -11,7 +11,8 @@ const empty = {
   quantity: '',
   value: '',
   notes: '',
-  qualified: false
+  qualified: false,
+  clientName: '',
 }
 
 // Auto-mascara pt-BR: remove pontos antigos (milhar), re-adiciona a cada 3 dígitos
@@ -141,38 +142,34 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
           {errors.value && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.value}</p>}
         </div>
       ) : (
-        <>
-          <div>
-            <label className="label" htmlFor="r-qty">Quantidade *</label>
-            <input id="r-qty" type="text" inputMode="decimal" className={inputCls('quantity')}
-              placeholder="ex: 1 ou 1,5"
-              value={form.quantity}
-              onChange={(e) => set('quantity', applyMask(e.target.value))}
-              onKeyDown={onDotKey('quantity')} />
-            {errors.quantity && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.quantity}</p>}
-          </div>
-
-          <div className="sm:col-span-2">
-            <label className="label" htmlFor="r-value">Valor (R$) — opcional</label>
-            <input id="r-value" type="text" inputMode="decimal" className="input"
-              placeholder="100.000,00"
-              value={form.value}
-              onChange={(e) => set('value', applyMask(e.target.value))}
-              onKeyDown={onDotKey('value')}
-              onBlur={fillCents('value')} />
-          </div>
-        </>
+        <div>
+          <label className="label" htmlFor="r-qty">Quantidade *</label>
+          <input id="r-qty" type="text" inputMode="decimal" className={inputCls('quantity')}
+            placeholder="ex: 1 ou 1,5"
+            value={form.quantity}
+            onChange={(e) => set('quantity', applyMask(e.target.value))}
+            onKeyDown={onDotKey('quantity')} />
+          {errors.quantity && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.quantity}</p>}
+        </div>
       )}
 
-      {/* Conta qualificada — só para Abertura de Conta */}
+      {/* Campos exclusivos de Abertura de Conta */}
       {isAbertura && (
-        <div className="sm:col-span-2 flex items-center gap-2">
-          <input id="r-qualified" type="checkbox" className="w-4 h-4 accent-[color:var(--c-brand)]"
-            checked={form.qualified} onChange={(e) => set('qualified', e.target.checked)} />
-          <label htmlFor="r-qualified" className="text-sm font-medium cursor-pointer select-none">
-            Conta qualificada
-          </label>
-        </div>
+        <>
+          <div className="sm:col-span-2">
+            <label className="label" htmlFor="r-client">Nome do cliente — opcional</label>
+            <input id="r-client" className="input" placeholder="Ex: João da Silva"
+              value={form.clientName}
+              onChange={(e) => set('clientName', e.target.value)} />
+          </div>
+          <div className="sm:col-span-2 flex items-center gap-2">
+            <input id="r-qualified" type="checkbox" className="w-4 h-4 accent-[color:var(--c-brand)]"
+              checked={form.qualified} onChange={(e) => set('qualified', e.target.checked)} />
+            <label htmlFor="r-qualified" className="text-sm font-medium cursor-pointer select-none">
+              Conta já qualificada
+            </label>
+          </div>
+        </>
       )}
 
       <div className="sm:col-span-2">

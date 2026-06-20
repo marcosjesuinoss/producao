@@ -7,12 +7,17 @@ import { exportCsv } from '../lib/csv.js'
 import Filters from '../components/Filters.jsx'
 import RecordList from '../components/RecordList.jsx'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
+import { useMonth } from '../context/MonthContext.jsx'
 
 export default function RecordsPage() {
   const { open } = useRecordModal()
+  const { year, month } = useMonth()
   const [filters, setFilters] = useState({})
 
-  const all = useLiveQuery(() => db.records.orderBy('date').reverse().toArray(), [], [])
+  const all = useLiveQuery(
+    () => db.records.where({ year: Number(year), month: Number(month) }).reverse().sortBy('date'),
+    [year, month], []
+  )
   const accounts = useMemo(() => [...new Set(all.map((r) => r.account).filter(Boolean))], [all])
 
   const records = useMemo(() => {

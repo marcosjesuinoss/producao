@@ -70,6 +70,7 @@ export async function createRecord(payload) {
     value: parseNumOrNull(payload.value),
     notes: payload.notes?.trim() || '',
     qualified: !!payload.qualified,
+    clientName: payload.clientName?.trim() || '',
     createdAt: now,
     updatedAt: now,
     synced: false
@@ -149,7 +150,22 @@ export async function createProduct({ name, useValue }) {
 export async function updateProduct(id, { name, useValue }) {
   const trimmed = (name || '').trim()
   if (!trimmed) throw new Error('Informe o nome do produto')
-  await db.products.update(id, { name: trimmed, useValue: !!useValue })
+
+  const current = await db.products.get(id)
+  const oldName = current?.name
+
+  await db.transaction('rw', db.products, db.records, db.goals, async () => {
+    await db.products.update(id, { name: trimmed, useValue: !!useValue })
+
+    if (oldName && oldName !== trimmed) {
+      const recordIds = (await db.records.where('product').equals(oldName).toArray()).map(r => r.id)
+      for (const rid of recordIds) await db.records.update(rid, { product: trimmed })
+
+      const goalIds = (await db.goals.where('product').equals(oldName).toArray()).map(g => g.id)
+      for (const gid of goalIds) await db.goals.update(gid, { product: trimmed })
+    }
+  })
+
   return { id, name: trimmed, useValue: !!useValue }
 }
 

@@ -1,15 +1,37 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, CornerDownRight, Check } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { productBreakdown } from '../lib/summaries.js'
-import { MONTHS, num, brl, CREDIT_HIERARCHY, CREDIT_GROUPS, CREDIT_LEAVES } from '../lib/format.js'
+import { num, brl, CREDIT_HIERARCHY, CREDIT_GROUPS, CREDIT_LEAVES } from '../lib/format.js'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
-import { getProgressColor } from '../utils/progressColor.js'
+import { useMonth } from '../context/MonthContext.jsx'
+import { getProgressColor, getRemainingLabel } from '../utils/progressColor.js'
 import ProgressBar from '../components/ui/ProgressBar.jsx'
 
 const ALL_CREDIT = new Set([...CREDIT_GROUPS, ...CREDIT_LEAVES])
+
+function RemainingLine({ value, target, fmt = brl, fontSize = '11px' }) {
+  const info = getRemainingLabel(value, target)
+  if (!info) return null
+  if (info.type === 'excess') {
+    return (
+      <div className="flex items-center gap-1" style={{ fontSize }}>
+        <Check size={12} style={{ color: 'var(--accent-green)', flexShrink: 0 }} />
+        <span style={{ color: 'var(--accent-green)' }}>
+          meta batida — excedente de <span style={{ fontWeight: 600 }}>{fmt(info.amount)}</span>
+        </span>
+      </div>
+    )
+  }
+  return (
+    <div style={{ fontSize }}>
+      <span style={{ color: 'var(--text-muted)' }}>faltam </span>
+      <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{fmt(info.amount)}</span>
+    </div>
+  )
+}
 
 function CreditNode({ name, dataMap, depth = 0 }) {
   const [open, setOpen] = useState(true)
@@ -89,12 +111,17 @@ function CreditNode({ name, dataMap, depth = 0 }) {
     />
   ) : null
 
+  const remainingRow = (
+    <RemainingLine value={realized} target={metricTarget} fmt={brl} fontSize={depth === 0 ? '12px' : '11px'} />
+  )
+
   if (depth === 0) {
     return (
       <div className="card space-y-1">
         {labelRow}
         {valueRow}
         {barRow}
+        {remainingRow}
         {open && children && (
           <div className="mt-3 pt-3 border-t space-y-3" style={{ borderColor: 'var(--c-border)' }}>
             {children.map((child) => (
@@ -111,6 +138,7 @@ function CreditNode({ name, dataMap, depth = 0 }) {
       {labelRow}
       {valueRow}
       {barRow}
+      {remainingRow}
       {open && children && (
         <div className="mt-3 space-y-2">
           {children.map((child) => (
@@ -152,13 +180,14 @@ function ProductCard({ b }) {
           <ProgressBar value={b.realized} max={b.metricTarget} height={4} />
         </div>
       )}
+      <RemainingLine value={b.realized} target={b.metricTarget} fmt={fmt} fontSize="11px" />
     </div>
   )
 }
 
 export default function HomePage() {
   const { open } = useRecordModal()
-  const now = new Date()
+  const { year, month } = useMonth()
   const [breakdown, setBreakdown] = useState([])
 
   const tick = useLiveQuery(
@@ -169,11 +198,11 @@ export default function HomePage() {
 
   useEffect(() => {
     let alive = true
-    productBreakdown().then((data) => {
+    productBreakdown({ year, month }).then((data) => {
       if (alive) setBreakdown(data)
     })
     return () => { alive = false }
-  }, [tick])
+  }, [tick, year, month])
 
   const dataMap = useMemo(() => new Map(breakdown.map((b) => [b.product, b])), [breakdown])
   const flatActive = breakdown.filter((b) => b.realized > 0 && !ALL_CREDIT.has(b.product))
@@ -183,22 +212,6 @@ export default function HomePage() {
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          {MONTHS[now.getMonth()]} / {now.getFullYear()}
-        </h2>
-      </div>
-
-      <div className="card space-y-1">
-        <div
-          className="font-bold uppercase tracking-widest"
-          style={{ fontSize: '11px', color: 'var(--text-faint)', letterSpacing: '0.08em' }}
-        >
-          Desempenho do mês
-        </div>
-        <div className="text-sm py-2" style={{ color: 'var(--text-muted)' }}>— a definir —</div>
-      </div>
-
       {!hasAnyProduction ? (
         <div className="card text-center py-8" style={{ color: 'var(--text-muted)' }}>
           Nenhuma produção registrada este mês ainda.
