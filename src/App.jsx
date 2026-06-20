@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
+import { seedStandardProducts } from './lib/seed.js'
+
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [pathname])
+  return null
+}
 import Header from './components/Header.jsx'
 import HomePage from './pages/HomePage.jsx'
 import RecordsPage from './pages/RecordsPage.jsx'
@@ -9,10 +16,13 @@ import SettingsPage from './pages/SettingsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import { useAuth } from './context/AuthContext.jsx'
 import { RecordModalProvider } from './context/RecordModalContext.jsx'
+import UpdateToast from './components/UpdateToast.jsx'
 
 export default function App() {
   const { hasPin, unlocked } = useAuth()
   const [online, setOnline] = useState(navigator.onLine)
+
+  useEffect(() => { seedStandardProducts() }, [])
 
   useEffect(() => {
     const on = () => setOnline(true)
@@ -30,6 +40,7 @@ export default function App() {
   return (
     <RecordModalProvider>
       <div className="min-h-screen">
+        <ScrollToTop />
         <Header online={online} />
         <main className="max-w-5xl mx-auto p-4">
           <Routes>
@@ -42,6 +53,7 @@ export default function App() {
           </Routes>
         </main>
       </div>
+      <UpdateToast />
     </RecordModalProvider>
   )
 }

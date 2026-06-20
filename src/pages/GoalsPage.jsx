@@ -1,9 +1,13 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
-import { upsertGoal, deleteGoal, createProduct, deleteProduct } from '../api/localApi.js'
+import { upsertGoal, createProduct, updateProduct, deleteProduct, deleteGoal } from '../api/localApi.js'
 import { MONTHS, num, brl, BR_NUM_RE } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
+import { getProgressColor } from '../utils/progressColor.js'
+import ProgressBar from '../components/ui/ProgressBar.jsx'
+import ProductModal from '../components/ProductModal.jsx'
 
 const applyMask = (v) => {
   let raw = String(v ?? '').replace(/\./g, '').replace(/[^0-9,]/g, '')
@@ -24,22 +28,21 @@ const onDotKey = (setter) => (e) => {
   const { selectionStart: s, selectionEnd: en, value } = e.target
   setter(applyMask(value.slice(0, s) + ',' + value.slice(en)))
 }
+const fillCentsIf = (setter, condition) => (e) => {
+  if (!condition) return
+  const v = e.target.value.trim()
+  if (v && !v.includes(',')) setter(v + ',00')
+}
 
 export default function GoalsPage() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
-  const [manager, setManager] = useState('')
-
-  const [newName, setNewName] = useState('')
-  const [newUseValue, setNewUseValue] = useState(true)
-  const [newGoal, setNewGoal] = useState('')
-  const [newMsg, setNewMsg] = useState(null)
-  const [creating, setCreating] = useState(false)
+  const [manager] = useState('')
+  const [productModalOpen, setProductModalOpen] = useState(false)
 
   const { allProducts, custom, isValue } = useProducts()
-  const customNames = useMemo(() => new Set(custom.map((p) => p.name)), [custom])
-  const customById = useMemo(() => new Map(custom.map((p) => [p.name, p.id])), [custom])
+  const productById = useMemo(() => new Map(custom.map((p) => [p.name, p.id])), [custom])
 
   const goals = useLiveQuery(
     () => db.goals.filter((g) => g.year === Number(year) && g.month === Number(month)).toArray(),
@@ -66,42 +69,23 @@ export default function GoalsPage() {
     await upsertGoal({ year, month, product, manager, targetQuantity, targetValue })
   }
 
-  const flash = (ok, text) => {
-    setNewMsg({ ok, text })
-    setTimeout(() => setNewMsg(null), 3500)
-  }
-
-  const handleCreateProduct = async () => {
-    if (!newName.trim()) { flash(false, 'Informe o nome do produto'); return }
-    setCreating(true)
-    try {
-      await createProduct({ name: newName, useValue: newUseValue })
-      const goalVal = parseBRNum(newGoal)
-      if (goalVal > 0) {
-        await upsertGoal({
-          year, month,
-          product: newName.trim(),
-          manager,
-          targetQuantity: newUseValue ? 0 : goalVal,
-          targetValue: newUseValue ? goalVal : null,
-        })
-      }
-      flash(true, `"${newName.trim()}" criado!`)
-      setNewName('')
-      setNewGoal('')
-    } catch (e) {
-      flash(false, e.message)
-    } finally {
-      setCreating(false)
+  const handleCreateProduct = async ({ name, useValue, goalVal }) => {
+    await createProduct({ name, useValue })
+    if (goalVal > 0) {
+      await upsertGoal({
+        year, month, product: name, manager,
+        targetQuantity: useValue ? 0 : goalVal,
+        targetValue: useValue ? goalVal : null,
+      })
     }
   }
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold">Metas mensais</h2>
+      <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Metas mensais</h2>
 
       {/* Filtros */}
-      <div className="card grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="card grid grid-cols-2 gap-3">
         <div>
           <label className="label" htmlFor="g-year">Ano</label>
           <input id="g-year" type="number" className="input" value={year}
@@ -114,146 +98,197 @@ export default function GoalsPage() {
             {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
           </select>
         </div>
-        <div>
-          <label className="label" htmlFor="g-manager">Gerente (opcional)</label>
-          <input id="g-manager" className="input" value={manager}
-            onChange={(e) => setManager(e.target.value)} placeholder="Todos" />
-        </div>
       </div>
 
-      {/* Criar novo produto */}
-      <div className="card space-y-3">
-        <h3 className="font-semibold">Novo produto</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="sm:col-span-2">
-            <label className="label">Nome *</label>
-            <input className="input" placeholder="Ex: Seguro Empresarial"
-              value={newName} onChange={(e) => setNewName(e.target.value)} />
-          </div>
-          <div>
-            <label className="label">Alvo principal</label>
-            <select className="input" value={newUseValue ? '1' : '0'}
-              onChange={(e) => { setNewUseValue(e.target.value === '1'); setNewGoal('') }}>
-              <option value="1">Valor (R$)</option>
-              <option value="0">Quantidade</option>
-            </select>
-          </div>
-          <div>
-            <label className="label">
-              Meta {newUseValue ? '(R$)' : '(qtd)'} — {MONTHS[Number(month) - 1]}/{year} — opcional
-            </label>
-            <input type="text" inputMode="decimal" className="input"
-              placeholder={newUseValue ? '100.000,00' : '20'}
-              value={newGoal}
-              onChange={(e) => setNewGoal(applyMask(e.target.value))}
-              onKeyDown={onDotKey(setNewGoal)} />
-          </div>
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <button className="btn btn-brand" onClick={handleCreateProduct} disabled={creating}>
-            {creating ? 'Criando…' : '+ Criar produto'}
-          </button>
-          {newMsg && (
-            <span className="text-sm" style={{ color: newMsg.ok ? 'var(--c-good)' : 'var(--c-bad)' }}>
-              {newMsg.text}
-            </span>
-          )}
-        </div>
-      </div>
+      <button className="btn w-full" onClick={() => setProductModalOpen(true)}>
+        + Novo produto
+      </button>
 
-      {/* Tabela */}
-      <div className="card p-0 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left" style={{ color: 'var(--c-muted)' }}>
-              <th className="p-3">Produto</th>
-              <th className="p-3 text-right">Meta</th>
-              <th className="p-3 text-right">Realizado</th>
-              <th className="p-3 text-right">%</th>
-              <th className="p-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {allProducts.map((product) => {
-              const g = goalFor(product)
-              const isVal = isValue(product)
-              const rec = realizedByProduct[product] || { quantity: 0, value: 0 }
-              const realized = isVal ? rec.value : rec.quantity
-              const target = isVal ? (g?.targetValue || 0) : (g?.targetQuantity || 0)
-              const pct = target > 0 ? Math.round((realized / target) * 100) : null
-              const isCustom = customNames.has(product)
-              return (
-                <GoalRow key={product} product={product} goal={g} isValueProduct={isVal}
-                  realized={realized} pct={pct} isCustom={isCustom}
-                  onSave={save}
-                  onDelete={isCustom ? () => deleteProduct(customById.get(product)) : null} />
-              )
-            })}
-          </tbody>
-        </table>
+      {productModalOpen && (
+        <ProductModal
+          month={month}
+          year={year}
+          onClose={() => setProductModalOpen(false)}
+          onSubmit={handleCreateProduct}
+        />
+      )}
+
+      <div className="space-y-3">
+        {allProducts.map((product) => {
+          const g = goalFor(product)
+          const isVal = isValue(product)
+          const rec = realizedByProduct[product] || { quantity: 0, value: 0 }
+          const realized = isVal ? rec.value : rec.quantity
+          const target = isVal ? (g?.targetValue || 0) : (g?.targetQuantity || 0)
+          const pct = target > 0 ? Math.round((realized / target) * 100) : realized > 0 ? 100 : null
+          const productId = productById.get(product) ?? null
+          return (
+            <GoalCard
+              key={product}
+              product={product}
+              goal={g}
+              isValueProduct={isVal}
+              realized={realized}
+              pct={pct}
+              productId={productId}
+              month={month}
+              year={year}
+              onSave={save}
+              onDeleteGoal={g ? () => deleteGoal(g.id) : null}
+              onDeleteProduct={productId ? () => deleteProduct(productId) : null}
+            />
+          )
+        })}
       </div>
-      <p className="text-xs text-muted">
-        % = realizado ÷ meta. Produtos marcados como "custom" foram criados neste app.
-      </p>
     </section>
   )
 }
 
-function GoalRow({ product, goal, isValueProduct, realized, pct, isCustom, onSave, onDelete }) {
-  const [qty, setQty] = useState(goal?.targetQuantity ?? '')
-  const [val, setVal] = useState(goal?.targetValue ?? '')
+function GoalCard({ product, goal, isValueProduct, realized, pct, productId, month, year, onSave, onDeleteGoal, onDeleteProduct }) {
+  const [inputVal, setInputVal] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
 
-  if (goal && qty === '' && goal.targetQuantity) setQty(goal.targetQuantity)
-  if (goal && val === '' && goal.targetValue) setVal(goal.targetValue)
+  useEffect(() => {
+    const raw = isValueProduct ? (goal?.targetValue ?? '') : (goal?.targetQuantity ?? '')
+    if (!raw) {
+      setInputVal('')
+    } else if (isValueProduct) {
+      setInputVal(Number(raw).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
+    } else {
+      setInputVal(Number(raw).toLocaleString('pt-BR', { maximumFractionDigits: 2 }))
+    }
+  }, [goal?.id, goal?.targetValue, goal?.targetQuantity, isValueProduct])
 
-  const color = pct == null ? 'var(--c-muted)' : pct >= 100 ? 'var(--c-good)' : pct >= 60 ? 'var(--c-warn)' : 'var(--c-bad)'
+  const color = pct != null ? getProgressColor(pct) : 'var(--text-faint)'
+
+  const handleSave = () => {
+    const n = parseBRNum(inputVal)
+    if (isValueProduct) {
+      onSave(product, 0, n || null)
+    } else {
+      onSave(product, n || 0, null)
+    }
+  }
 
   return (
-    <tr className="border-t" style={{ borderColor: 'var(--c-border)' }}>
-      <td className="p-3 font-medium">
-        {product}
-        {isCustom && (
-          <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full"
-            style={{ background: 'var(--c-border)', color: 'var(--c-muted)' }}>
-            custom
+    <div className="card space-y-3">
+      {/* Linha 1: nome + badge + % */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="font-semibold truncate" style={{ color: 'var(--text-secondary)' }}>{product}</span>
+        </div>
+        {pct != null && (
+          <span className="text-sm font-bold shrink-0" style={{ color }}>{pct}%</span>
+        )}
+      </div>
+
+      {/* Linha 2: campo de meta */}
+      <div>
+        <label className="label">
+          {isValueProduct ? 'Meta (R$)' : 'Meta (quantidade)'}
+        </label>
+        <input
+          type="text"
+          inputMode="decimal"
+          className="input"
+          placeholder={isValueProduct ? '100.000,00' : 'Ex: 20'}
+          value={inputVal}
+          onChange={(e) => setInputVal(applyMask(e.target.value))}
+          onKeyDown={onDotKey(setInputVal)}
+          onBlur={fillCentsIf(setInputVal, isValueProduct)}
+        />
+      </div>
+
+      {/* Linha 3: realizado + salvar + ⋯ */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-sm">
+          <span style={{ color: 'var(--text-muted)' }}>Realizado: </span>
+          <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+            {isValueProduct ? brl(realized) : num(realized)}
           </span>
-        )}
-      </td>
-      <td className="p-3 text-right">
-        {isValueProduct ? (
-          <input type="number" min="0" step="0.01" className="input w-32 text-right" value={val}
-            onChange={(e) => setVal(e.target.value)} aria-label={`Meta de valor para ${product}`} />
-        ) : (
-          <div className="flex flex-col items-end gap-1">
-            <input type="number" min="0" className="input w-24 text-right" value={qty}
-              onChange={(e) => setQty(e.target.value)} aria-label={`Meta de quantidade para ${product}`} />
-            <input type="number" min="0" step="0.01" className="input w-28 text-right text-xs"
-              value={val} placeholder="R$ opcional"
-              onChange={(e) => setVal(e.target.value)} aria-label={`Meta de valor para ${product}`} />
-          </div>
-        )}
-      </td>
-      <td className="p-3 text-right font-medium">
-        {isValueProduct ? brl(realized) : num(realized)}
-      </td>
-      <td className="p-3 text-right font-semibold" style={{ color }}>
-        {pct == null ? '—' : pct + '%'}
-      </td>
-      <td className="p-3 text-right">
-        <div className="flex gap-1 justify-end">
-          <button className="btn btn-brand px-2 py-1 text-xs"
-            onClick={() => onSave(product, isValueProduct ? 0 : qty, val)}>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button className="btn btn-brand text-xs px-3 py-1.5" onClick={handleSave}>
             Salvar
           </button>
-          {onDelete && (
-            <button className="btn px-2 py-1 text-xs" style={{ color: 'var(--c-bad)' }}
-              title="Excluir produto customizado"
-              onClick={() => window.confirm(`Excluir produto "${product}"?`) && onDelete()}>
-              ×
+          <div className="relative">
+            <button
+              className="btn px-2.5 py-1.5"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Opções do produto"
+            >
+              <MoreHorizontal size={16} />
             </button>
-          )}
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                <div
+                  className="absolute right-0 bottom-full mb-1 z-20 overflow-hidden shadow-lg"
+                  style={{
+                    background: 'var(--c-surface)',
+                    border: '1px solid var(--input-border)',
+                    borderRadius: '12px',
+                    minWidth: '10rem',
+                  }}
+                >
+                  <button
+                    className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2"
+                    style={{ color: 'var(--text-secondary)' }}
+                    onClick={() => { setMenuOpen(false); setEditOpen(true) }}
+                  >
+                    <Pencil size={14} />
+                    Editar produto
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2"
+                    style={{ color: onDeleteProduct ? 'var(--accent-red)' : 'var(--text-faint)' }}
+                    disabled={!onDeleteProduct}
+                    onClick={() => {
+                      if (!onDeleteProduct) return
+                      setMenuOpen(false)
+                      if (window.confirm(`Excluir produto "${product}"?`)) onDeleteProduct()
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    Excluir produto
+                  </button>
+                  <div style={{ height: '1px', background: 'var(--c-border)' }} />
+                  <button
+                    className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2"
+                    style={{ color: onDeleteGoal ? 'var(--accent-red)' : 'var(--text-faint)' }}
+                    disabled={!onDeleteGoal}
+                    onClick={() => {
+                      if (!onDeleteGoal) return
+                      setMenuOpen(false)
+                      if (window.confirm(`Excluir meta de "${product}" neste período?`)) onDeleteGoal()
+                    }}
+                  >
+                    <Trash2 size={14} />
+                    Excluir meta
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </td>
-    </tr>
+      </div>
+
+      {/* Barra de progresso */}
+      {pct != null && (
+        <ProgressBar value={realized} max={isValueProduct ? (goal?.targetValue || 0) : (goal?.targetQuantity || 0)} height={4} />
+      )}
+
+      {/* Modal de edição */}
+      {editOpen && (
+        <ProductModal
+          initial={{ name: product, useValue: isValueProduct }}
+          month={month}
+          year={year}
+          onClose={() => setEditOpen(false)}
+          onSubmit={({ name, useValue }) => updateProduct(productId, { name, useValue })}
+        />
+      )}
+    </div>
   )
 }

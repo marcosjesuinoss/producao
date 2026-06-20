@@ -146,6 +146,13 @@ export async function createProduct({ name, useValue }) {
   return prod
 }
 
+export async function updateProduct(id, { name, useValue }) {
+  const trimmed = (name || '').trim()
+  if (!trimmed) throw new Error('Informe o nome do produto')
+  await db.products.update(id, { name: trimmed, useValue: !!useValue })
+  return { id, name: trimmed, useValue: !!useValue }
+}
+
 export async function deleteProduct(id) {
   await db.products.delete(id)
   return { ok: true, id }

@@ -2,70 +2,147 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
-  Paletas sugeridas — controladas por CSS variables.
-  Tema claro = :root | Tema escuro = .dark
-  Contraste AA garantido entre texto (--c-fg) e fundo (--c-bg).
-*/
+/* ─── TOKENS — light ─────────────────────────────── */
 :root {
-  --c-bg: #f1f5f9;        /* slate-100  */
-  --c-surface: #ffffff;   /* cards       */
-  --c-fg: #0f172a;        /* slate-900   */
-  --c-muted: #475569;     /* slate-600   */
-  --c-border: #cbd5e1;    /* slate-300   */
-  --c-brand: #0f766e;     /* teal-700    */
-  --c-brand-soft: #99f6e4;/* teal-200    */
-  --c-good: #15803d;      /* green-700   */
-  --c-bad: #b91c1c;       /* red-700     */
-  --c-warn: #b45309;      /* amber-700   */
+  /* legacy aliases (used throughout existing components) */
+  --c-bg:         #f1f5f9;
+  --c-surface:    #ffffff;
+  --c-fg:         #0f172a;
+  --c-muted:      #64748b;
+  --c-border:     #e2e8f0;
+  --c-brand:      #6366f1;
+  --c-brand-soft: rgba(99,102,241,0.12);
+  --c-good:       #16a34a;
+  --c-bad:        #dc2626;
+  --c-warn:       #ca8a04;
   --font-scale: 1;
+
+  /* new design tokens */
+  --bg-base:        #f1f5f9;
+  --bg-card:        #ffffff;
+  --bg-card-deep:   #f8fafc;
+  --bg-bar:         #e2e8f0;
+  --border-subtle:  #e2e8f0;
+  --input-border:   #cbd5e1;
+  --text-primary:   #0f172a;
+  --text-secondary: #334155;
+  --text-muted:     #64748b;
+  --text-faint:     #94a3b8;
+  --accent-indigo:  #6366f1;
+  --accent-green:   #16a34a;
+  --accent-yellow:  #ca8a04;
+  --accent-red:     #dc2626;
+  --accent-cyan:    #0891b2;
 }
 
+/* ─── TOKENS — dark ──────────────────────────────── */
 .dark {
-  --c-bg: #0b1220;        /* azul quase preto */
-  --c-surface: #131c2e;
-  --c-fg: #e6edf6;
-  --c-muted: #93a4bd;
-  --c-border: #26344b;
-  --c-brand: #2dd4bf;     /* teal-400 */
-  --c-brand-soft: #134e4a;/* teal-900 */
-  --c-good: #4ade80;
-  --c-bad: #f87171;
-  --c-warn: #fbbf24;
+  /* legacy aliases */
+  --c-bg:         #0f172a;
+  --c-surface:    #1e293b;
+  --c-fg:         #f9fafb;
+  --c-muted:      #9ca3af;
+  --c-border:     #1f2937;
+  --c-brand:      #818cf8;
+  --c-brand-soft: rgba(99,102,241,0.12);
+  --c-good:       #22c55e;
+  --c-bad:        #ef4444;
+  --c-warn:       #eab308;
+
+  /* new design tokens */
+  --bg-base:        #0f172a;
+  --bg-card:        #1e293b;
+  --bg-card-deep:   #111827;
+  --bg-bar:         #334155;
+  --border-subtle:  #1f2937;
+  --input-border:   #2d3748;
+  --text-primary:   #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted:     #9ca3af;
+  --text-faint:     #6b7280;
+  --accent-indigo:  #818cf8;
+  --accent-green:   #22c55e;
+  --accent-yellow:  #eab308;
+  --accent-red:     #ef4444;
+  --accent-cyan:    #06b6d4;
 }
 
-html { font-size: calc(100% * var(--font-scale)); }
+html {
+  font-size: calc(100% * var(--font-scale));
+  overscroll-behavior: none;
+}
 
 body {
+  overscroll-behavior: none;
   background: var(--c-bg);
   color: var(--c-fg);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Helpers semanticos */
+/* ─── HELPERS ─────────────────────────────────────── */
 .surface { background: var(--c-surface); border-color: var(--c-border); }
 .text-muted { color: var(--c-muted); }
-.btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition;
+
+/* ─── CARD ────────────────────────────────────────── */
+.card {
+  @apply p-4;
+  border-radius: 14px;
+  background: var(--c-surface);
   border: 1px solid var(--c-border);
 }
-.btn-brand { background: var(--c-brand); color: #fff; border-color: transparent; }
-.btn-brand:hover { filter: brightness(1.08); }
+
+/* ─── BUTTONS ─────────────────────────────────────── */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 text-sm font-medium transition;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-card-deep);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+}
+.btn:hover { opacity: 0.85; }
+.btn:active { opacity: 0.7; }
+
+.btn-brand {
+  background: linear-gradient(135deg, #06b6d4, #818cf8);
+  border-color: transparent;
+  border-radius: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+.btn-brand:hover { opacity: 0.9; filter: brightness(1.05); }
+
+.btn-danger {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 8px;
+  color: var(--accent-red);
+}
+
+/* ─── INPUTS ──────────────────────────────────────── */
 .input {
-  @apply w-full rounded-lg px-3 py-2 text-sm outline-none;
-  background: var(--c-surface);
-  color: var(--c-fg);
-  border: 1px solid var(--c-border);
+  @apply w-full outline-none;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-card-deep);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 .input:focus { border-color: var(--c-brand); box-shadow: 0 0 0 2px var(--c-brand-soft); }
-.card { @apply rounded-xl border p-4; background: var(--c-surface); border-color: var(--c-border); }
+
+/* ─── LABEL ───────────────────────────────────────── */
 .label { @apply block text-sm font-medium mb-1; color: var(--c-muted); }
 
-/* Foco visivel para acessibilidade por teclado */
+/* ─── ACCESSIBILITY ───────────────────────────────── */
 :focus-visible { outline: 2px solid var(--c-brand); outline-offset: 2px; }
 
-/* Animações do modal */
+/* ─── SCROLLBAR HIDDEN ────────────────────────────── */
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; }
+
+/* ─── MODAL ANIMATIONS ────────────────────────────── */
 @keyframes modal-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }

@@ -1,15 +1,14 @@
 import { useEffect } from 'react'
+import { X } from 'lucide-react'
 import RecordForm from './RecordForm.jsx'
 
 export default function RecordModal({ initial, onSubmit, onClose }) {
-  // Bloqueia scroll do body enquanto o modal está aberto
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = prev }
   }, [])
 
-  // Fecha ao pressionar Escape
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handler)
@@ -20,26 +19,20 @@ export default function RecordModal({ initial, onSubmit, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      {/* Backdrop */}
       <div
         className="modal-backdrop absolute inset-0"
-        style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
         onClick={onClose}
         aria-hidden
       />
 
-      {/* Sheet */}
       <div
         className="modal-sheet relative w-full sm:max-w-lg flex flex-col"
-        style={{
-          background: 'var(--c-surface)',
-          borderRadius: '24px 24px 0 0',
-          maxHeight: '92dvh',
-        }}
+        style={{ background: 'var(--c-surface)', borderRadius: '24px 24px 0 0', maxHeight: '92dvh' }}
       >
-        {/* Handle (mobile) */}
+        {/* Handle */}
         <div className="flex justify-center pt-2.5 pb-1 sm:hidden shrink-0">
-          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--c-border)' }} />
+          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--input-border)' }} />
         </div>
 
         {/* Cabeçalho */}
@@ -52,35 +45,27 @@ export default function RecordModal({ initial, onSubmit, onClose }) {
               >
                 {isEditing ? 'Editando' : 'Novo lançamento'}
               </p>
-              <h2 className="text-xl font-bold leading-tight">
+              <h2 className="text-xl font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
                 {isEditing ? 'Editar registro' : 'Novo registro'}
               </h2>
             </div>
             <button
               onClick={onClose}
-              className="shrink-0 mt-0.5 w-9 h-9 rounded-full flex items-center justify-center text-xl leading-none font-light"
-              style={{ background: 'var(--c-border)', color: 'var(--c-muted)' }}
+              className="shrink-0 mt-0.5 w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: 'var(--bg-card-deep)', color: 'var(--text-muted)' }}
               aria-label="Fechar"
             >
-              ×
+              <X size={18} />
             </button>
           </div>
-
-          {/* Linha brand */}
           <div
             className="mt-3 h-0.5 rounded-full"
-            style={{ background: `linear-gradient(90deg, var(--c-brand), transparent)` }}
+            style={{ background: 'linear-gradient(90deg, var(--c-brand), transparent)' }}
           />
         </div>
 
-        {/* Formulário — área rolável */}
         <div className="overflow-y-auto px-5 pb-8">
-          <RecordForm
-            initial={initial}
-            onSubmit={onSubmit}
-            onCancel={onClose}
-            noCard
-          />
+          <RecordForm initial={initial} onSubmit={onSubmit} onCancel={onClose} noCard />
         </div>
       </div>
     </div>

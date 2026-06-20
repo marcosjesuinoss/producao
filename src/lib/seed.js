@@ -1,4 +1,14 @@
 import { db, uid } from '../db/db.js'
+import { STANDARD_PRODUCTS } from './format.js'
+
+// Garante que todos os produtos padrão existam no DB (idempotente)
+export async function seedStandardProducts() {
+  const existing = new Set((await db.products.toArray()).map((p) => p.name))
+  const toAdd = STANDARD_PRODUCTS
+    .filter((p) => !existing.has(p.name))
+    .map((p) => ({ id: uid(), name: p.name, useValue: p.useValue, createdAt: Date.now() }))
+  if (toAdd.length > 0) await db.products.bulkAdd(toAdd)
+}
 
 /*
   Dados de teste. Popula records + goals para o ano corrente,

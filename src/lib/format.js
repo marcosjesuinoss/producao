@@ -42,6 +42,12 @@ export const BR_NUM_RE = /^(\d{1,3}(\.\d{3})*(,\d*)?|\d+(,\d*)?)$/
 
 export const QTY_PRODUCTS = new Set(['Abertura de Conta', 'Cartao de Credito'])
 
+// Lista canônica de produtos padrão com seus tipos — usada para seed inicial no DB
+export const STANDARD_PRODUCTS = PRODUCTS.map((name) => ({
+  name,
+  useValue: !QTY_PRODUCTS.has(name),
+}))
+
 export const VALUE_PRODUCTS = new Set(PRODUCTS.filter((p) => !QTY_PRODUCTS.has(p)))
 
 // Hierarquia de crédito — grupos virtuais (não registráveis, apenas computados)

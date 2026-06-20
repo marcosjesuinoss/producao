@@ -1,30 +1,26 @@
 import { useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
-import { PRODUCTS, VALUE_PRODUCTS, CREDIT_GROUPS } from '../lib/format.js'
+import { CREDIT_GROUPS } from '../lib/format.js'
 
 /**
- * Retorna todos os produtos (estáticos + customizados) e uma função isValue(name).
- * isValue(name) → true = alvo é valor (R$), false = alvo é quantidade.
+ * Retorna todos os produtos do DB (padrão + criados pelo usuário)
+ * e uma função isValue(name).
+ * CREDIT_GROUPS são virtuais (nunca no DB) e sempre retornam isValue=true.
  */
 export function useProducts() {
-  const custom = useLiveQuery(() => db.products.orderBy('name').toArray(), [], [])
+  const dbProducts = useLiveQuery(() => db.products.orderBy('name').toArray(), [], [])
 
-  const allProducts = useMemo(() => {
-    const customNames = new Set((custom || []).map((p) => p.name))
-    const merged = [
-      ...PRODUCTS.filter((p) => !customNames.has(p)),
-      ...(custom || []).map((p) => p.name),
-    ]
-    return merged.sort((a, b) => a.localeCompare(b, 'pt-BR'))
-  }, [custom])
+  const allProducts = useMemo(
+    () => (dbProducts || []).map((p) => p.name),
+    [dbProducts]
+  )
 
   const isValue = useMemo(() => {
-    const map = new Map(PRODUCTS.map((p) => [p, VALUE_PRODUCTS.has(p)]))
+    const map = new Map((dbProducts || []).map((p) => [p.name, p.useValue]))
     for (const group of CREDIT_GROUPS) map.set(group, true)
-    for (const p of (custom || [])) map.set(p.name, p.useValue)
     return (name) => map.get(name) ?? true
-  }, [custom])
+  }, [dbProducts])
 
-  return { allProducts, custom: custom || [], isValue }
+  return { allProducts, custom: dbProducts || [], isValue }
 }

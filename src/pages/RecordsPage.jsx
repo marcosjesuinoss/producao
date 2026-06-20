@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Download } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { deleteRecord } from '../api/localApi.js'
@@ -16,8 +17,7 @@ export default function RecordsPage() {
 
   const records = useMemo(() => {
     return all.filter((r) => {
-      if (filters.year && r.year !== Number(filters.year)) return false
-      if (filters.month && r.month !== Number(filters.month)) return false
+      if (filters.date && r.date !== filters.date) return false
       if (filters.product && r.product !== filters.product) return false
       if (filters.account && r.account !== filters.account) return false
       return true
@@ -31,9 +31,13 @@ export default function RecordsPage() {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h2 className="text-xl font-bold">Registros</h2>
-        <button className="btn" onClick={() => exportCsv(records, 'producao-filtrada.csv')}>
-          ⬇️ CSV ({records.length})
+        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Registros</h2>
+        <button
+          className="btn flex items-center gap-1.5"
+          onClick={() => exportCsv(records, 'producao-filtrada.csv')}
+        >
+          <Download size={16} />
+          CSV ({records.length})
         </button>
       </div>
 

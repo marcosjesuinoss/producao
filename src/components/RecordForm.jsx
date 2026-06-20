@@ -80,6 +80,12 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
     set(field, applyMask(value.slice(0, s) + ',' + value.slice(en)))
   }
 
+  // Ao sair do campo de valor R$, completa ",00" se não houver centavos
+  const fillCents = (field) => (e) => {
+    const v = e.target.value.trim()
+    if (v && !v.includes(',')) set(field, v + ',00')
+  }
+
   const submit = (e) => {
     e.preventDefault()
     const errs = validate(form, isValue)
@@ -130,7 +136,8 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
             placeholder="100.000,00"
             value={form.value}
             onChange={(e) => set('value', applyMask(e.target.value))}
-            onKeyDown={onDotKey('value')} />
+            onKeyDown={onDotKey('value')}
+            onBlur={fillCents('value')} />
           {errors.value && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.value}</p>}
         </div>
       ) : (
@@ -151,7 +158,8 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
               placeholder="100.000,00"
               value={form.value}
               onChange={(e) => set('value', applyMask(e.target.value))}
-              onKeyDown={onDotKey('value')} />
+              onKeyDown={onDotKey('value')}
+              onBlur={fillCents('value')} />
           </div>
         </>
       )}
