@@ -169,7 +169,21 @@ export async function updateProduct(id, { name, useValue }) {
   return { id, name: trimmed, useValue: !!useValue }
 }
 
+const DELETED_PRODUCTS_KEY = 'deleted_product_names'
+
+function markProductDeleted(name) {
+  try {
+    const list = JSON.parse(localStorage.getItem(DELETED_PRODUCTS_KEY) ?? '[]')
+    if (!list.includes(name)) {
+      list.push(name)
+      localStorage.setItem(DELETED_PRODUCTS_KEY, JSON.stringify(list))
+    }
+  } catch {}
+}
+
 export async function deleteProduct(id) {
+  const prod = await db.products.get(id)
+  if (prod?.name) markProductDeleted(prod.name)
   await db.products.delete(id)
   return { ok: true, id }
 }
