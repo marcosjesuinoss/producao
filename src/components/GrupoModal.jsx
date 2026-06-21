@@ -4,8 +4,8 @@ import {
   getAllAncestors,
   wouldCreateConflict,
   wouldExceedMaxDepth,
-} from '../utils/classeCalculations.js'
-import { createClasse, updateClasse } from '../api/localApi.js'
+} from '../utils/grupoCalculations.js'
+import { createGrupo, updateGrupo } from '../api/localApi.js'
 
 // Split `${type}:${refId}` safely (UUID contains - but not :)
 const splitKey = (key) => {
@@ -13,7 +13,7 @@ const splitKey = (key) => {
   return { type: key.slice(0, i), refId: key.slice(i + 1) }
 }
 
-function getConflictAncestorName(childType, childId, targetId, memberships, allClasses) {
+function getConflictAncestorName(childType, childId, targetId, memberships, allGrupos) {
   const targetAncestors = new Set([
     targetId,
     ...getAllAncestors('classe', targetId, memberships),
@@ -21,18 +21,18 @@ function getConflictAncestorName(childType, childId, targetId, memberships, allC
   const childAncestors = getAllAncestors(childType, childId, memberships)
   const conflictId = childAncestors.find((a) => targetAncestors.has(a))
   return conflictId
-    ? (allClasses.find((c) => c.id === conflictId)?.name ?? 'outro grupo')
+    ? (allGrupos.find((g) => g.id === conflictId)?.name ?? 'outro grupo')
     : 'outro grupo'
 }
 
-function getAllDescendantIds(classeId, allClasses) {
+function getAllDescendantIds(grupoId, allGrupos) {
   const result = new Set()
-  const stack = [classeId]
+  const stack = [grupoId]
   while (stack.length) {
     const id = stack.pop()
-    const cls = allClasses.find((c) => c.id === id)
-    if (!cls) continue
-    for (const child of cls.children ?? []) {
+    const grp = allGrupos.find((g) => g.id === id)
+    if (!grp) continue
+    for (const child of grp.children ?? []) {
       if (child.type === 'classe' && !result.has(child.refId)) {
         result.add(child.refId)
         stack.push(child.refId)
@@ -52,15 +52,15 @@ const modeCardStyle = (active) => ({
   transition: 'all 0.15s',
 })
 
-export default function ClasseModal({
-  editing,   // null = create, classe object = edit
-  allClasses,
+export default function GrupoModal({
+  editing,     // null = create, grupo object = edit
+  allGrupos,
   allProducts,
   memberships,
   onClose,
 }) {
   const isEditing = !!editing
-  const targetId = editing?.id ?? null   // null means new classe, skip conflict checks
+  const targetId = editing?.id ?? null
 
   const [step, setStep] = useState(1)
   const [name, setName] = useState(editing?.name ?? '')
@@ -68,7 +68,7 @@ export default function ClasseModal({
   const [nameError, setNameError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // Pre-selected keys from the existing classe being edited
+  // Pre-selected keys from the existing grupo being edited
   const preSelected = useMemo(() => {
     const s = new Set()
     for (const ch of editing?.children ?? []) s.add(`${ch.type}:${ch.refId}`)
@@ -77,10 +77,10 @@ export default function ClasseModal({
 
   const [selected, setSelected] = useState(preSelected)
 
-  // Classes that are descendants of the editing classe (must be excluded from the list)
+  // Grupos that are descendants of the editing grupo (excluded from list to prevent cycles)
   const descendants = useMemo(
-    () => (editing ? getAllDescendantIds(editing.id, allClasses) : new Set()),
-    [editing, allClasses]
+    () => (editing ? getAllDescendantIds(editing.id, allGrupos) : new Set()),
+    [editing, allGrupos]
   )
 
   useEffect(() => {
@@ -108,13 +108,13 @@ export default function ClasseModal({
       if (!isPreSelected && targetId) {
         if (wouldCreateConflict('product', p.id, targetId, memberships)) {
           disabled = true
-          disabledReason = `indisponível — conflito com ${getConflictAncestorName('product', p.id, targetId, memberships, allClasses)}`
+          disabledReason = `indisponível — conflito com ${getConflictAncestorName('product', p.id, targetId, memberships, allGrupos)}`
         }
       }
 
       const otherParents = memberships
-        .filter((m) => m.childType === 'product' && m.childId === p.id && m.classeId !== editing?.id)
-        .map((m) => allClasses.find((c) => c.id === m.classeId)?.name)
+        .filter((m) => m.childType === 'product' && m.childId === p.id && m.grupoId !== editing?.id)
+        .map((m) => allGrupos.find((g) => g.id === m.grupoId)?.name)
         .filter(Boolean)
 
       const baseSubtext = 'produto'
@@ -128,48 +128,48 @@ export default function ClasseModal({
       })
     }
 
-    // --- Classes ---
-    for (const c of allClasses) {
-      if (c.id === editing?.id) continue        // skip self
-      if (descendants.has(c.id)) continue       // skip descendants (would be circular)
+    // --- Grupos ---
+    for (const g of allGrupos) {
+      if (g.id === editing?.id) continue
+      if (descendants.has(g.id)) continue
 
-      const key = `classe:${c.id}`
+      // key uses 'classe' to match the stored child.type value in DB
+      const key = `classe:${g.id}`
       const isPreSelected = preSelected.has(key)
 
       let disabled = false
       let disabledReason = ''
 
       if (!isPreSelected && targetId) {
-        if (wouldCreateConflict('classe', c.id, targetId, memberships)) {
+        if (wouldCreateConflict('classe', g.id, targetId, memberships)) {
           disabled = true
-          disabledReason = `indisponível — conflito com ${getConflictAncestorName('classe', c.id, targetId, memberships, allClasses)}`
-        } else if (wouldExceedMaxDepth(c.id, targetId, allClasses, memberships)) {
+          disabledReason = `indisponível — conflito com ${getConflictAncestorName('classe', g.id, targetId, memberships, allGrupos)}`
+        } else if (wouldExceedMaxDepth(g.id, targetId, allGrupos, memberships)) {
           disabled = true
           disabledReason = 'indisponível — excederia o limite de 3 níveis'
         }
       }
 
       const otherParents = memberships
-        .filter((m) => m.childType === 'classe' && m.childId === c.id && m.classeId !== editing?.id)
-        .map((m) => allClasses.find((cl) => cl.id === m.classeId)?.name)
+        .filter((m) => m.childType === 'classe' && m.childId === g.id && m.grupoId !== editing?.id)
+        .map((m) => allGrupos.find((gl) => gl.id === m.grupoId)?.name)
         .filter(Boolean)
 
-      const childCount = c.children?.length ?? 0
-      const baseSubtext = `classe · ${childCount} ${childCount === 1 ? 'item' : 'itens'} dentro`
+      const childCount = g.children?.length ?? 0
+      const baseSubtext = `grupo · ${childCount} ${childCount === 1 ? 'item' : 'itens'} dentro`
       const alsoIn = otherParents.length > 0 ? ` · também em ${otherParents[0]}` : ''
       result.push({
-        type: 'classe',
-        refId: c.id,
-        name: c.name,
+        type: 'classe',   // stored type value — must match DB
+        refId: g.id,
+        name: g.name,
         subtext: disabled ? disabledReason : baseSubtext + alsoIn,
         disabled,
       })
     }
 
     return result
-  }, [allProducts, allClasses, editing, preSelected, descendants, memberships, targetId])
+  }, [allProducts, allGrupos, editing, preSelected, descendants, memberships, targetId])
 
-  // Conflict warning: selected items that are now disabled (edge case during edit)
   const conflictingSelected = useMemo(
     () => items.filter((item) => item.disabled && selected.has(`${item.type}:${item.refId}`)),
     [items, selected]
@@ -186,7 +186,7 @@ export default function ClasseModal({
   }
 
   const handleNext = () => {
-    if (!name.trim()) { setNameError('Informe o nome da classe'); return }
+    if (!name.trim()) { setNameError('Informe o nome do grupo'); return }
     setNameError('')
     setStep(2)
   }
@@ -196,9 +196,9 @@ export default function ClasseModal({
     setSaving(true)
     try {
       if (isEditing) {
-        await updateClasse(editing.id, { name: name.trim(), aggregationMode: mode, children })
+        await updateGrupo(editing.id, { name: name.trim(), aggregationMode: mode, children })
       } else {
-        await createClasse({ name: name.trim(), aggregationMode: mode, children })
+        await createGrupo({ name: name.trim(), aggregationMode: mode, children })
       }
       onClose()
     } finally {
@@ -231,14 +231,14 @@ export default function ClasseModal({
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'var(--c-brand)' }}>
-                Classe
+                Grupo
               </p>
               <h2 className="text-xl font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
-                {step === 1 ? (isEditing ? 'Editar classe' : 'Nova classe') : 'Selecionar itens'}
+                {step === 1 ? (isEditing ? 'Editar grupo' : 'Novo grupo') : 'Selecionar itens'}
               </h2>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 {step === 1
-                  ? 'Agrupe produtos ou outras classes para somar metas'
+                  ? 'Agrupe produtos ou outros grupos para somar metas'
                   : `O que faz parte de "${name}"?`}
               </p>
             </div>
@@ -260,7 +260,7 @@ export default function ClasseModal({
           {step === 1 ? (
             <div className="space-y-4 pb-2">
               <div>
-                <label className="label">Nome da classe *</label>
+                <label className="label">Nome do grupo *</label>
                 <input
                   className="input"
                   placeholder="Ex: Crédito Habitacional"
@@ -323,7 +323,7 @@ export default function ClasseModal({
               {/* Item list */}
               {items.length === 0 ? (
                 <p className="text-sm text-center py-6" style={{ color: 'var(--text-muted)' }}>
-                  Nenhum produto ou classe disponível.
+                  Nenhum produto ou grupo disponível.
                 </p>
               ) : (
                 <div>
@@ -389,7 +389,7 @@ export default function ClasseModal({
                 disabled={!canSave}
                 style={{ opacity: canSave ? 1 : 0.4, pointerEvents: canSave ? 'auto' : 'none' }}
               >
-                {saving ? 'Salvando…' : (isEditing ? 'Salvar' : 'Criar classe')}
+                {saving ? 'Salvando…' : (isEditing ? 'Salvar' : 'Criar grupo')}
               </button>
             </div>
           )}

@@ -181,29 +181,29 @@ export async function getSummary(period = 'monthly', filters = {}) {
   return generalSummary(filters)
 }
 
-// ---- CLASSES ----
-export async function createClasse({ name, aggregationMode, children }) {
+// ---- GRUPOS ----
+export async function createGrupo({ name, aggregationMode, children }) {
   const trimmed = (name || '').trim()
-  if (!trimmed) throw new Error('Informe o nome da classe')
-  const cls = {
+  if (!trimmed) throw new Error('Informe o nome do grupo')
+  const grp = {
     id: uid(),
     name: trimmed,
     aggregationMode: aggregationMode || 'sum',
     children: children || [],
     createdAt: Date.now(),
   }
-  await db.classes.add(cls)
-  return cls
+  await db.classes.add(grp)
+  return grp
 }
 
-export async function updateClasse(id, { name, aggregationMode, children }) {
+export async function updateGrupo(id, { name, aggregationMode, children }) {
   const trimmed = (name || '').trim()
-  if (!trimmed) throw new Error('Informe o nome da classe')
+  if (!trimmed) throw new Error('Informe o nome do grupo')
   await db.classes.update(id, { name: trimmed, aggregationMode, children })
   return { id, name: trimmed, aggregationMode, children }
 }
 
-export async function deleteClasse(id) {
+export async function deleteGrupo(id) {
   await db.classes.delete(id)
   return { ok: true, id }
 }

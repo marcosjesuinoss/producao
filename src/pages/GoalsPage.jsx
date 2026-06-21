@@ -113,13 +113,13 @@ export default function GoalsPage() {
           + Novo produto
         </button>
         <button
-          className="btn shrink-0 flex items-center gap-1.5"
+          className="btn flex-1 flex items-center gap-1.5"
           style={{ background: 'rgba(99,102,241,0.1)', borderColor: 'rgba(99,102,241,0.35)', color: '#818cf8' }}
-          onClick={() => navigate('/classes')}
-          aria-label="Gerenciar classes"
+          onClick={() => navigate('/grupos')}
+          aria-label="Gerenciar grupos"
         >
           <FolderTree size={14} />
-          <span className="text-sm">Gerenciar classes</span>
+          <span className="text-sm">Gerenciar grupos</span>
         </button>
       </div>
 

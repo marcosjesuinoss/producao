@@ -9,10 +9,10 @@ import { useRecordModal } from '../context/RecordModalContext.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
 import { getProgressColor, getRemainingLabel } from '../utils/progressColor.js'
 import ProgressBar from '../components/ui/ProgressBar.jsx'
-import { computeClasseProgress, deriveMemberships } from '../utils/classeCalculations.js'
+import { computeGrupoProgress, deriveMemberships } from '../utils/grupoCalculations.js'
 
 // ---------------------------------------------------------------------------
-// Helpers shared by ClasseNode and ProductLeaf
+// Helpers shared by GrupoNode and ProductLeaf
 // ---------------------------------------------------------------------------
 
 function GroupsBadge({ count }) {
@@ -50,7 +50,7 @@ function RemainingLine({ value, target, fmt = brl, fontSize = '11px' }) {
 }
 
 // ---------------------------------------------------------------------------
-// Product leaf — renders a single product inside a ClasseNode
+// Product leaf — renders a single product inside a GrupoNode
 // ---------------------------------------------------------------------------
 
 function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
@@ -93,20 +93,20 @@ function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
 }
 
 // ---------------------------------------------------------------------------
-// ClasseNode — recursive renderer for a DB classe and its children
+// GrupoNode — recursive renderer for a DB grupo and its children
 // ---------------------------------------------------------------------------
 
-function ClasseNode({ classeId, allClasses, productDataMap, memberships, productById, depth = 0 }) {
+function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productById, depth = 0 }) {
   const [open, setOpen] = useState(true)
 
-  const classe = allClasses.find((c) => c.id === classeId)
-  if (!classe) return null
+  const grupo = allGrupos.find((c) => c.id === grupoId)
+  if (!grupo) return null
 
-  const children = classe.children ?? []
+  const children = grupo.children ?? []
   const hasChildren = children.length > 0
-  const isAvgPct = classe.aggregationMode === 'average_pct'
+  const isAvgPct = grupo.aggregationMode === 'average_pct'
 
-  const { realized, target, pct: rawPct } = computeClasseProgress(classeId, allClasses, productDataMap)
+  const { realized, target, pct: rawPct } = computeGrupoProgress(grupoId, allGrupos, productDataMap)
   // Match original CreditNode logic: no % badge when target=0 and realized=0
   const pct = isAvgPct
     ? (rawPct > 0 ? Math.round(rawPct) : null)
@@ -117,7 +117,7 @@ function ClasseNode({ classeId, allClasses, productDataMap, memberships, product
       : null
   const color = pct != null ? getProgressColor(pct) : '#374151'
 
-  const parentCount = memberships.filter((m) => m.childType === 'classe' && m.childId === classeId).length
+  const parentCount = memberships.filter((m) => m.childType === 'classe' && m.childId === grupoId).length
 
   const nodeStyle =
     depth === 0 ? {} :
@@ -138,7 +138,7 @@ function ClasseNode({ classeId, allClasses, productDataMap, memberships, product
     >
       <div className="flex items-center gap-1.5 min-w-0">
         <span className="truncate" style={{ fontWeight: labelWeight, fontSize: labelSize, color: 'var(--text-secondary)' }}>
-          {classe.name}
+          {grupo.name}
         </span>
         <GroupsBadge count={parentCount} />
       </div>
@@ -164,6 +164,7 @@ function ClasseNode({ classeId, allClasses, productDataMap, memberships, product
           : children.length === 1
           ? '1 item'
           : `média entre ${children.length} itens`}
+
       </span>
       {pct != null && pct > 0 && (
         <span className="text-sm font-bold shrink-0 tabular-nums" style={{ color }}>{pct}%</span>
@@ -212,10 +213,10 @@ function ClasseNode({ classeId, allClasses, productDataMap, memberships, product
       {children.map((child) => {
         if (child.type === 'classe') {
           return (
-            <ClasseNode
+            <GrupoNode
               key={child.refId}
-              classeId={child.refId}
-              allClasses={allClasses}
+              grupoId={child.refId}
+              allGrupos={allGrupos}
               productDataMap={productDataMap}
               memberships={memberships}
               productById={productById}
@@ -319,7 +320,7 @@ export default function HomePage() {
     0
   )
 
-  const allClasses  = useLiveQuery(() => db.classes.toArray(),  [], [])
+  const allGrupos   = useLiveQuery(() => db.classes.toArray(),  [], [])
   const allProducts = useLiveQuery(() => db.products.toArray(), [], [])
 
   useEffect(() => {
@@ -354,36 +355,36 @@ export default function HomePage() {
 
   // Flat membership list and derived sets
   const memberships = useMemo(
-    () => deriveMemberships(allClasses ?? []),
-    [allClasses]
+    () => deriveMemberships(allGrupos ?? []),
+    [allGrupos]
   )
 
-  const childClasseIds = useMemo(
+  const childGrupoIds = useMemo(
     () => new Set(memberships.filter((m) => m.childType === 'classe').map((m) => m.childId)),
     [memberships]
   )
 
-  const rootClasses = useMemo(
-    () => (allClasses ?? []).filter((c) => !childClasseIds.has(c.id)),
-    [allClasses, childClasseIds]
+  const rootGrupos = useMemo(
+    () => (allGrupos ?? []).filter((c) => !childGrupoIds.has(c.id)),
+    [allGrupos, childGrupoIds]
   )
 
-  // Products that belong to at least one classe → excluded from standalone cards
-  const classChildProductIds = useMemo(
+  // Products that belong to at least one grupo → excluded from standalone cards
+  const grupoChildProductIds = useMemo(
     () => new Set(memberships.filter((m) => m.childType === 'product').map((m) => m.childId)),
     [memberships]
   )
 
-  // Standalone products: not in any classe AND have production data this month
+  // Standalone products: not in any grupo AND have production data this month
   const standaloneBreakdown = useMemo(
     () => breakdown.filter((b) => {
       const prod = productsByName.get(b.product)
-      return prod && !classChildProductIds.has(prod.id) && b.realized > 0
+      return prod && !grupoChildProductIds.has(prod.id) && b.realized > 0
     }),
-    [breakdown, productsByName, classChildProductIds]
+    [breakdown, productsByName, grupoChildProductIds]
   )
 
-  const hasAnyProduction = standaloneBreakdown.length > 0 || rootClasses.length > 0
+  const hasAnyProduction = standaloneBreakdown.length > 0 || rootGrupos.length > 0
 
   return (
     <section className="space-y-4">
@@ -396,11 +397,11 @@ export default function HomePage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {rootClasses.map((cls) => (
-            <ClasseNode
-              key={cls.id}
-              classeId={cls.id}
-              allClasses={allClasses ?? []}
+          {rootGrupos.map((grp) => (
+            <GrupoNode
+              key={grp.id}
+              grupoId={grp.id}
+              allGrupos={allGrupos ?? []}
               productDataMap={productDataMap}
               memberships={memberships}
               productById={productById}

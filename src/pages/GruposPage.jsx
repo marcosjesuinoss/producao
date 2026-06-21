@@ -3,32 +3,32 @@ import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, FolderTree, Pencil, Trash2 } from 'lucide-react'
 import { db } from '../db/db.js'
-import { deriveMemberships } from '../utils/classeCalculations.js'
-import { deleteClasse } from '../api/localApi.js'
-import ClasseModal from '../components/ClasseModal.jsx'
+import { deriveMemberships } from '../utils/grupoCalculations.js'
+import { deleteGrupo } from '../api/localApi.js'
+import GrupoModal from '../components/GrupoModal.jsx'
 
-export default function ClassesPage() {
+export default function GruposPage() {
   const navigate = useNavigate()
-  const [modalState, setModalState] = useState(null) // null | { editing: null | classeObj }
+  const [modalState, setModalState] = useState(null) // null | { editing: null | grupoObj }
 
-  const allClasses  = useLiveQuery(() => db.classes.toArray(), [], [])
+  const allGrupos   = useLiveQuery(() => db.classes.toArray(), [], [])
   const allProducts = useLiveQuery(() => db.products.toArray(), [], [])
 
-  const memberships = useMemo(() => deriveMemberships(allClasses ?? []), [allClasses])
+  const memberships = useMemo(() => deriveMemberships(allGrupos ?? []), [allGrupos])
 
-  // Classes that appear as children in some other classe
-  const childClasseIds = useMemo(
+  // Grupos that appear as children in some other grupo
+  const childGrupoIds = useMemo(
     () => new Set(memberships.filter((m) => m.childType === 'classe').map((m) => m.childId)),
     [memberships]
   )
 
-  // Top-level classes: not a child of any other classe
-  const rootClasses = useMemo(
-    () => (allClasses ?? []).filter((c) => !childClasseIds.has(c.id)),
-    [allClasses, childClasseIds]
+  // Top-level grupos: not a child of any other grupo
+  const rootGrupos = useMemo(
+    () => (allGrupos ?? []).filter((g) => !childGrupoIds.has(g.id)),
+    [allGrupos, childGrupoIds]
   )
 
-  // parentCount(type, id) → how many classes this item belongs to
+  // parentCount(type, id) → how many grupos this item belongs to
   const parentCount = useMemo(() => {
     const map = new Map()
     for (const m of memberships) {
@@ -43,12 +43,12 @@ export default function ClassesPage() {
     [allProducts]
   )
 
-  const handleDelete = (cls) => {
-    if (!window.confirm(`Excluir "${cls.name}"? Os itens dentro dela ficarão sem grupo.`)) return
-    deleteClasse(cls.id)
+  const handleDelete = (grp) => {
+    if (!window.confirm(`Excluir "${grp.name}"? Os itens dentro dele ficarão sem grupo.`)) return
+    deleteGrupo(grp.id)
   }
 
-  if (!allClasses || !allProducts) return null
+  if (!allGrupos || !allProducts) return null
 
   return (
     <section className="space-y-4">
@@ -63,7 +63,7 @@ export default function ClassesPage() {
         </button>
         <div className="min-w-0">
           <h1 className="font-bold text-base truncate" style={{ color: 'var(--text-primary)' }}>
-            Gerenciar Classes
+            Gerenciar Grupos
           </h1>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
             Crie e organize como suas metas se agrupam
@@ -76,25 +76,25 @@ export default function ClassesPage() {
         className="btn btn-brand w-full"
         onClick={() => setModalState({ editing: null })}
       >
-        + Nova classe
+        + Novo grupo
       </button>
 
       {/* Tree */}
-      {rootClasses.length === 0 ? (
+      {rootGrupos.length === 0 ? (
         <div className="card text-center py-8" style={{ color: 'var(--text-muted)' }}>
-          Nenhuma classe criada ainda.
+          Nenhum grupo criado ainda.
         </div>
       ) : (
         <div className="space-y-2">
-          {rootClasses.map((cls) => (
-            <ClasseCard
-              key={cls.id}
-              cls={cls}
-              allClasses={allClasses}
+          {rootGrupos.map((grp) => (
+            <GrupoCard
+              key={grp.id}
+              grp={grp}
+              allGrupos={allGrupos}
               productById={productById}
               parentCount={parentCount}
               depth={0}
-              onEdit={(c) => setModalState({ editing: c })}
+              onEdit={(g) => setModalState({ editing: g })}
               onDelete={handleDelete}
             />
           ))}
@@ -103,9 +103,9 @@ export default function ClassesPage() {
 
       {/* Create / Edit modal */}
       {modalState && (
-        <ClasseModal
+        <GrupoModal
           editing={modalState.editing}
-          allClasses={allClasses}
+          allGrupos={allGrupos}
           allProducts={allProducts}
           memberships={memberships}
           onClose={() => setModalState(null)}
@@ -115,7 +115,7 @@ export default function ClassesPage() {
   )
 }
 
-// Badge shown when an item belongs to more than one parent classe
+// Badge shown when an item belongs to more than one parent grupo
 function GroupsBadge({ count }) {
   if (count <= 1) return null
   return (
@@ -134,33 +134,33 @@ function GroupsBadge({ count }) {
   )
 }
 
-function ClasseCard({ cls, allClasses, productById, parentCount, depth, onEdit, onDelete }) {
+function GrupoCard({ grp, allGrupos, productById, parentCount, depth, onEdit, onDelete }) {
   const labelSize   = depth === 0 ? '14px' : depth === 1 ? '13px' : '12px'
   const labelWeight = depth === 0 ? 600 : 500
 
   const inner = (
     <div className="space-y-2">
-      {/* Classe header row */}
+      {/* Grupo header row */}
       <div className="flex items-center gap-2 min-w-0">
         <FolderTree size={14} style={{ color: '#818cf8', flexShrink: 0 }} />
         <span
           className="flex-1 min-w-0 truncate"
           style={{ fontSize: labelSize, fontWeight: labelWeight, color: 'var(--text-secondary)' }}
         >
-          {cls.name}
+          {grp.name}
         </span>
-        <GroupsBadge count={parentCount('classe', cls.id)} />
+        <GroupsBadge count={parentCount('classe', grp.id)} />
         <button
           className="btn px-2 py-1.5 shrink-0"
-          onClick={() => onEdit(cls)}
-          aria-label={`Editar ${cls.name}`}
+          onClick={() => onEdit(grp)}
+          aria-label={`Editar ${grp.name}`}
         >
           <Pencil size={13} />
         </button>
         <button
           className="btn px-2 py-1.5 shrink-0"
-          onClick={() => onDelete(cls)}
-          aria-label={`Excluir ${cls.name}`}
+          onClick={() => onDelete(grp)}
+          aria-label={`Excluir ${grp.name}`}
           style={{ color: 'var(--accent-red)' }}
         >
           <Trash2 size={13} />
@@ -168,20 +168,20 @@ function ClasseCard({ cls, allClasses, productById, parentCount, depth, onEdit, 
       </div>
 
       {/* Children */}
-      {(cls.children ?? []).length > 0 && (
+      {(grp.children ?? []).length > 0 && (
         <div
           className="space-y-1.5"
           style={{ borderLeft: '2px solid rgba(99,102,241,0.25)', paddingLeft: '10px', marginLeft: '6px' }}
         >
-          {(cls.children ?? []).map((child) => {
+          {(grp.children ?? []).map((child) => {
             if (child.type === 'classe') {
-              const childCls = allClasses.find((c) => c.id === child.refId)
-              if (!childCls) return null
+              const childGrp = allGrupos.find((g) => g.id === child.refId)
+              if (!childGrp) return null
               return (
-                <ClasseCard
+                <GrupoCard
                   key={child.refId}
-                  cls={childCls}
-                  allClasses={allClasses}
+                  grp={childGrp}
+                  allGrupos={allGrupos}
                   productById={productById}
                   parentCount={parentCount}
                   depth={depth + 1}
@@ -215,6 +215,6 @@ function ClasseCard({ cls, allClasses, productById, parentCount, depth, onEdit, 
   // Root level: wrapped in a card
   if (depth === 0) return <div className="card">{inner}</div>
 
-  // Nested: no card, just content (parent's children container already indents)
+  // Nested: no card, just content
   return <div>{inner}</div>
 }

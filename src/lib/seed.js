@@ -84,13 +84,13 @@ export async function seedIfEmpty() {
   return true
 }
 
-// Idempotently seeds the 3 credit hierarchy classes using product UUIDs
+// Idempotently seeds the 3 credit hierarchy grupos using product UUIDs
 // looked up by name. Must run AFTER seedStandardProducts().
 // Wrapped in a transaction so concurrent calls (React StrictMode) don't duplicate rows.
-export async function seedClasses() {
+export async function seedGrupos() {
   await db.transaction('rw', db.classes, db.products, async () => {
-  const existingClasses = await db.classes.toArray()
-  const existingByName  = new Map(existingClasses.map((c) => [c.name, c]))
+  const existingGrupos = await db.classes.toArray()
+  const existingByName = new Map(existingGrupos.map((g) => [g.name, g]))
 
   if (
     existingByName.has('Credito Total') &&
@@ -98,14 +98,14 @@ export async function seedClasses() {
     existingByName.has('Credito > Spread')
   ) return
 
-  const products  = await db.products.toArray()
-  const idByName  = new Map(products.map((p) => [p.name, p.id]))
+  const products = await db.products.toArray()
+  const idByName = new Map(products.map((p) => [p.name, p.id]))
 
-  // Helper: return id of an existing classe or generate a new one
-  const resolveClasseId = (name) => existingByName.get(name)?.id ?? uid()
+  // Helper: return id of an existing grupo or generate a new one
+  const resolveGrupoId = (name) => existingByName.get(name)?.id ?? uid()
 
-  const creditMenorId = resolveClasseId('Credito < Spread')
-  const creditMaiorId = resolveClasseId('Credito > Spread')
+  const creditMenorId = resolveGrupoId('Credito < Spread')
+  const creditMaiorId = resolveGrupoId('Credito > Spread')
 
   const toAdd = []
 

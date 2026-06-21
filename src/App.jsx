@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { seedStandardProducts, seedClasses } from './lib/seed.js'
+import { seedStandardProducts, seedGrupos } from './lib/seed.js'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -12,7 +12,7 @@ import HomePage from './pages/HomePage.jsx'
 import RecordsPage from './pages/RecordsPage.jsx'
 import GoalsPage from './pages/GoalsPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
-import ClassesPage from './pages/ClassesPage.jsx'
+import GruposPage from './pages/GruposPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import { useAuth } from './context/AuthContext.jsx'
 import { RecordModalProvider } from './context/RecordModalContext.jsx'
@@ -23,7 +23,7 @@ export default function App() {
   const { hasPin, unlocked } = useAuth()
   const [online, setOnline] = useState(navigator.onLine)
 
-  useEffect(() => { seedStandardProducts().then(seedClasses) }, [])
+  useEffect(() => { seedStandardProducts().then(seedGrupos) }, [])
 
   useEffect(() => {
     const on = () => setOnline(true)
@@ -50,7 +50,7 @@ export default function App() {
             <Route path="/registros" element={<RecordsPage />} />
             <Route path="/metas" element={<GoalsPage />} />
             <Route path="/ajustes" element={<SettingsPage />} />
-            <Route path="/classes" element={<ClassesPage />} />
+            <Route path="/grupos" element={<GruposPage />} />
             <Route path="*" element={<HomePage />} />
           </Routes>
         </main>
