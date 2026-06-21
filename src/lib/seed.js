@@ -1,22 +1,15 @@
 import { db, uid } from '../db/db.js'
 import { STANDARD_PRODUCTS } from './format.js'
 
-function getDeletedProductNames() {
-  try { return new Set(JSON.parse(localStorage.getItem('deleted_product_names') ?? '[]')) }
-  catch { return new Set() }
-}
-
-// Garante que todos os produtos padrão existam no DB (idempotente).
-// Respeita produtos que o usuário deletou manualmente (blocklist no localStorage).
+// Popula os produtos padrão apenas na primeira instalação (DB vazio).
+// Depois que o usuário tem produtos, nunca mais interfere.
 export async function seedStandardProducts() {
-  const deleted = getDeletedProductNames()
-  await db.transaction('rw', db.products, async () => {
-    const existing = new Set((await db.products.toArray()).map((p) => p.name))
-    const toAdd = STANDARD_PRODUCTS
-      .filter((p) => !existing.has(p.name) && !deleted.has(p.name))
-      .map((p) => ({ id: uid(), name: p.name, useValue: p.useValue, createdAt: Date.now() }))
-    if (toAdd.length > 0) await db.products.bulkAdd(toAdd)
-  })
+  const count = await db.products.count()
+  if (count > 0) return
+  const toAdd = STANDARD_PRODUCTS.map((p) => ({
+    id: uid(), name: p.name, useValue: p.useValue, createdAt: Date.now(),
+  }))
+  await db.products.bulkAdd(toAdd)
 }
 
 /*
