@@ -181,7 +181,11 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
     }
   }, [goal?.id, goal?.targetValue, goal?.targetQuantity, isValueProduct])
 
-  const color = pct != null ? getProgressColor(pct) : 'var(--text-faint)'
+  const rawPctGoal = (() => {
+    const t = isValueProduct ? (goal?.targetValue ?? 0) : (goal?.targetQuantity ?? 0)
+    return t > 0 ? (realized / t) * 100 : realized > 0 ? 100 : 0
+  })()
+  const color = pct != null ? getProgressColor(rawPctGoal) : 'var(--text-faint)'
 
   const handleSave = () => {
     const n = parseBRNum(inputVal)

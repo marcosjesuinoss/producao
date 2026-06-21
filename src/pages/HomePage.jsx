@@ -81,8 +81,9 @@ function RemainingLine({ value, target, fmt = brl, fontSize = '11px' }) {
 
 function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
   const fmt = useValue ? brl : num
-  const pct = target > 0 ? Math.round((realized / target) * 100) : realized > 0 ? 100 : null
-  const color = pct != null ? getProgressColor(pct) : '#374151'
+  const rawPctLeaf = target > 0 ? (realized / target) * 100 : realized > 0 ? 100 : 0
+  const pct = target > 0 ? Math.round(rawPctLeaf) : realized > 0 ? 100 : null
+  const color = pct != null ? getProgressColor(rawPctLeaf) : '#374151'
   const nodeStyle =
     depth === 1
       ? { borderLeft: `2px solid ${color}`, paddingLeft: '8px', marginLeft: '2px' }
@@ -146,7 +147,7 @@ function GrupoNode({
       : (realized ?? 0) > 0
       ? 100
       : null
-  const color = pct != null ? getProgressColor(pct) : '#374151'
+  const color = pct != null ? getProgressColor(rawPct) : '#374151'
 
   const parentCount = memberships.filter((m) => m.childType === 'classe' && m.childId === grupoId).length
 
@@ -313,8 +314,9 @@ function GrupoNode({
 // ---------------------------------------------------------------------------
 
 function ProductCard({ b, reordering, onMove, isFirst, isLast }) {
-  const pct = b.metricTarget > 0 ? Math.round((b.realized / b.metricTarget) * 100) : b.realized > 0 ? 100 : null
-  const color = pct != null ? getProgressColor(pct) : 'var(--text-faint)'
+  const rawPctCard = b.metricTarget > 0 ? (b.realized / b.metricTarget) * 100 : b.realized > 0 ? 100 : 0
+  const pct = b.metricTarget > 0 ? Math.round(rawPctCard) : b.realized > 0 ? 100 : null
+  const color = pct != null ? getProgressColor(rawPctCard) : 'var(--text-faint)'
   const fmt = (v) => (b.useValue ? brl(v) : num(v))
 
   return (
