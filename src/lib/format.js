@@ -55,11 +55,3 @@ export const STANDARD_PRODUCTS = PRODUCTS.map((name) => ({
 
 export const VALUE_PRODUCTS = new Set(PRODUCTS.filter((p) => !QTY_PRODUCTS.has(p)))
 
-// Hierarquia de crédito — grupos virtuais (não registráveis, apenas computados)
-export const CREDIT_HIERARCHY = {
-  'Credito Total':    ['Credito < Spread', 'Credito > Spread', 'CDC'],
-  'Credito < Spread': ['Credito Rural', 'Credito Imobiliario'],
-  'Credito > Spread': ['Credito Pessoal', 'Credito Consignado'],
-}
-export const CREDIT_GROUPS = new Set(Object.keys(CREDIT_HIERARCHY))
-export const CREDIT_LEAVES = new Set(['CDC', 'Credito Rural', 'Credito Imobiliario', 'Credito Pessoal', 'Credito Consignado'])

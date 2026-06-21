@@ -1,16 +1,32 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, CornerDownRight, Check } from 'lucide-react'
+import { ChevronRight, Check } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { productBreakdown } from '../lib/summaries.js'
-import { num, brl, CREDIT_HIERARCHY, CREDIT_GROUPS, CREDIT_LEAVES } from '../lib/format.js'
+import { brl, num } from '../lib/format.js'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
 import { getProgressColor, getRemainingLabel } from '../utils/progressColor.js'
 import ProgressBar from '../components/ui/ProgressBar.jsx'
+import { computeClasseProgress, deriveMemberships } from '../utils/classeCalculations.js'
 
-const ALL_CREDIT = new Set([...CREDIT_GROUPS, ...CREDIT_LEAVES])
+// ---------------------------------------------------------------------------
+// Helpers shared by ClasseNode and ProductLeaf
+// ---------------------------------------------------------------------------
+
+function GroupsBadge({ count }) {
+  if (count <= 1) return null
+  return (
+    <span style={{
+      fontSize: '9px', fontWeight: 600, background: 'rgba(99,102,241,0.15)',
+      color: '#818cf8', borderRadius: '99px', padding: '2px 6px',
+      flexShrink: 0, whiteSpace: 'nowrap',
+    }}>
+      {count} grupos
+    </span>
+  )
+}
 
 function RemainingLine({ value, target, fmt = brl, fontSize = '11px' }) {
   const info = getRemainingLabel(value, target)
@@ -33,42 +49,100 @@ function RemainingLine({ value, target, fmt = brl, fontSize = '11px' }) {
   )
 }
 
-function CreditNode({ name, dataMap, depth = 0 }) {
-  const [open, setOpen] = useState(true)
-  const children = CREDIT_HIERARCHY[name]
-  const isLeaf = !children
-  const entry = dataMap.get(name)
-  const realized = entry?.realized ?? 0
-  const metricTarget = entry?.metricTarget ?? 0
-  const pct = metricTarget > 0 ? Math.round((realized / metricTarget) * 100) : realized > 0 ? 100 : null
-  const color = pct != null ? getProgressColor(pct) : '#374151'
+// ---------------------------------------------------------------------------
+// Product leaf — renders a single product inside a ClasseNode
+// ---------------------------------------------------------------------------
 
-  // Left border accent per level (unchanged)
+function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
+  const fmt = useValue ? brl : num
+  const pct = target > 0 ? Math.round((realized / target) * 100) : realized > 0 ? 100 : null
+  const color = pct != null ? getProgressColor(pct) : '#374151'
   const nodeStyle =
     depth === 1
       ? { borderLeft: `2px solid ${color}`, paddingLeft: '8px', marginLeft: '2px' }
-      : depth >= 2
-      ? { borderLeft: '2px solid rgba(99,102,241,0.2)', paddingLeft: '12px', marginLeft: '8px' }
-      : {}
+      : { borderLeft: '2px solid rgba(99,102,241,0.2)', paddingLeft: '12px', marginLeft: '8px' }
+  const labelSize = depth === 1 ? '13px' : '12px'
+  const labelWeight = depth === 1 ? 500 : 400
+  const valueSize = depth === 1 ? '15px' : '13px'
 
-  // Font sizes per level
-  const labelSize = depth === 0 ? '14px' : depth === 1 ? '13px' : '12px'
-  const labelWeight = depth === 0 ? 600 : depth === 1 ? 500 : 400
-  const labelColor = 'var(--text-secondary)'
-  const valueSize = depth === 0 ? '20px' : depth === 1 ? '15px' : '13px'
+  return (
+    <div style={nodeStyle} className="space-y-1">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="truncate" style={{ fontWeight: labelWeight, fontSize: labelSize, color: 'var(--text-secondary)' }}>
+          {name}
+        </span>
+        <GroupsBadge count={parentCount} />
+      </div>
+      <div className="flex items-baseline justify-between gap-2">
+        <div>
+          <span className="font-bold tabular-nums" style={{ fontSize: valueSize, color: 'var(--text-primary)' }}>
+            {fmt(realized)}
+          </span>
+          {target > 0 && (
+            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{' / '}{fmt(target)}</span>
+          )}
+        </div>
+        {pct != null && (
+          <span className="text-sm font-bold shrink-0 tabular-nums" style={{ color }}>{pct}%</span>
+        )}
+      </div>
+      <ProgressBar value={realized} max={target} height={depth === 1 ? 4 : 3} />
+      <RemainingLine value={realized} target={target} fmt={fmt} fontSize="11px" />
+    </div>
+  )
+}
 
-  // Row 1 — label + chevron (entire row clickable when has children)
+// ---------------------------------------------------------------------------
+// ClasseNode — recursive renderer for a DB classe and its children
+// ---------------------------------------------------------------------------
+
+function ClasseNode({ classeId, allClasses, productDataMap, memberships, productById, depth = 0 }) {
+  const [open, setOpen] = useState(true)
+
+  const classe = allClasses.find((c) => c.id === classeId)
+  if (!classe) return null
+
+  const children = classe.children ?? []
+  const hasChildren = children.length > 0
+  const isAvgPct = classe.aggregationMode === 'average_pct'
+
+  const { realized, target, pct: rawPct } = computeClasseProgress(classeId, allClasses, productDataMap)
+  // Match original CreditNode logic: no % badge when target=0 and realized=0
+  const pct = isAvgPct
+    ? (rawPct > 0 ? Math.round(rawPct) : null)
+    : (target ?? 0) > 0
+      ? Math.round(rawPct)
+      : (realized ?? 0) > 0
+      ? 100
+      : null
+  const color = pct != null ? getProgressColor(pct) : '#374151'
+
+  const parentCount = memberships.filter((m) => m.childType === 'classe' && m.childId === classeId).length
+
+  const nodeStyle =
+    depth === 0 ? {} :
+    depth === 1
+      ? { borderLeft: `2px solid ${color}`, paddingLeft: '8px', marginLeft: '2px' }
+      : { borderLeft: '2px solid rgba(99,102,241,0.2)', paddingLeft: '12px', marginLeft: '8px' }
+
+  const labelSize   = depth === 0 ? '14px' : depth === 1 ? '13px' : '12px'
+  const labelWeight = depth === 0 ? 600    : depth === 1 ? 500    : 400
+  const valueSize   = depth === 0 ? '20px' : depth === 1 ? '15px' : '13px'
+
   const labelRow = (
     <div
       className="flex items-center justify-between gap-2"
-      onClick={children ? () => setOpen((o) => !o) : undefined}
-      style={children ? { cursor: 'pointer', userSelect: 'none' } : {}}
-      aria-expanded={children ? open : undefined}
+      onClick={hasChildren ? () => setOpen((o) => !o) : undefined}
+      style={hasChildren ? { cursor: 'pointer', userSelect: 'none' } : {}}
+      aria-expanded={hasChildren ? open : undefined}
     >
-      <span className="truncate" style={{ fontWeight: labelWeight, fontSize: labelSize, color: labelColor }}>
-        {name}
-      </span>
-      {children && (
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="truncate" style={{ fontWeight: labelWeight, fontSize: labelSize, color: 'var(--text-secondary)' }}>
+          {classe.name}
+        </span>
+        <GroupsBadge count={parentCount} />
+      </div>
+      {hasChildren && (
         <ChevronRight
           size={14}
           style={{
@@ -82,16 +156,26 @@ function CreditNode({ name, dataMap, depth = 0 }) {
     </div>
   )
 
-  // Row 2 — value bold + "/ target" muted | % badge
-  const valueRow = (
+  const valueRow = isAvgPct ? (
+    <div className="flex items-baseline justify-between gap-2">
+      <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+        {hasChildren
+          ? `média entre ${children.length} ${children.length === 1 ? 'item' : 'itens'}`
+          : 'sem itens'}
+      </span>
+      {pct != null && pct > 0 && (
+        <span className="text-sm font-bold shrink-0 tabular-nums" style={{ color }}>{pct}%</span>
+      )}
+    </div>
+  ) : (
     <div className="flex items-baseline justify-between gap-2">
       <div>
         <span className="font-bold tabular-nums" style={{ fontSize: valueSize, color: 'var(--text-primary)' }}>
-          {brl(realized)}
+          {brl(realized ?? 0)}
         </span>
-        {metricTarget > 0 && (
+        {(target ?? 0) > 0 && (
           <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            {' / '}{brl(metricTarget)}
+            {' / '}{brl(target)}
           </span>
         )}
       </div>
@@ -101,18 +185,59 @@ function CreditNode({ name, dataMap, depth = 0 }) {
     </div>
   )
 
-  // Row 3 — ProgressBar (leaves always; groups only when has target)
-  const showBar = isLeaf || metricTarget > 0
-  const barRow = showBar ? (
+  const barRow = (
     <ProgressBar
-      value={realized}
-      max={metricTarget}
+      value={realized ?? 0}
+      max={target ?? 0}
       height={depth === 0 ? 5 : depth === 1 ? 4 : 3}
     />
-  ) : null
+  )
 
-  const remainingRow = (
-    <RemainingLine value={realized} target={metricTarget} fmt={brl} fontSize={depth === 0 ? '12px' : '11px'} />
+  const remainingRow = isAvgPct ? null : (
+    <RemainingLine
+      value={realized ?? 0}
+      target={target ?? 0}
+      fmt={brl}
+      fontSize={depth === 0 ? '12px' : '11px'}
+    />
+  )
+
+  const childrenContent = hasChildren && open && (
+    <div
+      className={depth === 0 ? 'mt-3 pt-3 border-t space-y-3' : 'mt-3 space-y-2'}
+      style={depth === 0 ? { borderColor: 'var(--c-border)' } : {}}
+    >
+      {children.map((child) => {
+        if (child.type === 'classe') {
+          return (
+            <ClasseNode
+              key={child.refId}
+              classeId={child.refId}
+              allClasses={allClasses}
+              productDataMap={productDataMap}
+              memberships={memberships}
+              productById={productById}
+              depth={depth + 1}
+            />
+          )
+        }
+        // product leaf
+        const prod = productById.get(child.refId)
+        const data = productDataMap.get(child.refId) || { realized: 0, target: 0 }
+        const pCount = memberships.filter((m) => m.childType === 'product' && m.childId === child.refId).length
+        return (
+          <ProductLeaf
+            key={child.refId}
+            name={prod?.name ?? '(removido)'}
+            realized={data.realized}
+            target={data.target}
+            useValue={prod?.useValue ?? true}
+            depth={depth + 1}
+            parentCount={pCount}
+          />
+        )
+      })}
+    </div>
   )
 
   if (depth === 0) {
@@ -122,13 +247,7 @@ function CreditNode({ name, dataMap, depth = 0 }) {
         {valueRow}
         {barRow}
         {remainingRow}
-        {open && children && (
-          <div className="mt-3 pt-3 border-t space-y-3" style={{ borderColor: 'var(--c-border)' }}>
-            {children.map((child) => (
-              <CreditNode key={child} name={child} dataMap={dataMap} depth={1} />
-            ))}
-          </div>
-        )}
+        {childrenContent}
       </div>
     )
   }
@@ -139,16 +258,14 @@ function CreditNode({ name, dataMap, depth = 0 }) {
       {valueRow}
       {barRow}
       {remainingRow}
-      {open && children && (
-        <div className="mt-3 space-y-2">
-          {children.map((child) => (
-            <CreditNode key={child} name={child} dataMap={dataMap} depth={depth + 1} />
-          ))}
-        </div>
-      )}
+      {childrenContent}
     </div>
   )
 }
+
+// ---------------------------------------------------------------------------
+// Standalone product card (not part of any classe)
+// ---------------------------------------------------------------------------
 
 function ProductCard({ b }) {
   const pct = b.metricTarget > 0 ? Math.round((b.realized / b.metricTarget) * 100) : b.realized > 0 ? 100 : null
@@ -185,6 +302,10 @@ function ProductCard({ b }) {
   )
 }
 
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default function HomePage() {
   const { open } = useRecordModal()
   const { year, month } = useMonth()
@@ -196,6 +317,9 @@ export default function HomePage() {
     0
   )
 
+  const allClasses  = useLiveQuery(() => db.classes.toArray(),  [], [])
+  const allProducts = useLiveQuery(() => db.products.toArray(), [], [])
+
   useEffect(() => {
     let alive = true
     productBreakdown({ year, month }).then((data) => {
@@ -204,11 +328,60 @@ export default function HomePage() {
     return () => { alive = false }
   }, [tick, year, month])
 
-  const dataMap = useMemo(() => new Map(breakdown.map((b) => [b.product, b])), [breakdown])
-  const flatActive = breakdown.filter((b) => b.realized > 0 && !ALL_CREDIT.has(b.product))
-  const creditEntry = dataMap.get('Credito Total')
-  const showCredit = creditEntry && (creditEntry.realized > 0 || creditEntry.metricTarget > 0)
-  const hasAnyProduction = flatActive.length > 0 || showCredit
+  // Map<productId, product> for name/useValue lookup
+  const productById = useMemo(
+    () => new Map((allProducts ?? []).map((p) => [p.id, p])),
+    [allProducts]
+  )
+
+  // Map<productName, product> — for joining breakdown (keyed by name) to product IDs
+  const productsByName = useMemo(
+    () => new Map((allProducts ?? []).map((p) => [p.name, p])),
+    [allProducts]
+  )
+
+  // Map<productId, {realized, target}> — metric values from the async breakdown
+  const productDataMap = useMemo(() => {
+    const map = new Map()
+    for (const b of breakdown) {
+      const prod = productsByName.get(b.product)
+      if (prod) map.set(prod.id, { realized: b.realized, target: b.metricTarget })
+    }
+    return map
+  }, [breakdown, productsByName])
+
+  // Flat membership list and derived sets
+  const memberships = useMemo(
+    () => deriveMemberships(allClasses ?? []),
+    [allClasses]
+  )
+
+  const childClasseIds = useMemo(
+    () => new Set(memberships.filter((m) => m.childType === 'classe').map((m) => m.childId)),
+    [memberships]
+  )
+
+  const rootClasses = useMemo(
+    () => (allClasses ?? []).filter((c) => !childClasseIds.has(c.id)),
+    [allClasses, childClasseIds]
+  )
+
+  // Products that belong to at least one classe → excluded from standalone cards
+  const classChildProductIds = useMemo(
+    () => new Set(memberships.filter((m) => m.childType === 'product').map((m) => m.childId)),
+    [memberships]
+  )
+
+  // Standalone products: not in any classe AND have production data this month
+  const standaloneBreakdown = useMemo(
+    () => breakdown.filter((b) => {
+      const prod = productsByName.get(b.product)
+      return prod && !classChildProductIds.has(prod.id) && b.realized > 0
+    }),
+    [breakdown, productsByName, classChildProductIds]
+  )
+
+  const hasAnyProduction = standaloneBreakdown.length > 0 || rootClasses.length > 0
 
   return (
     <section className="space-y-4">
@@ -221,10 +394,18 @@ export default function HomePage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {showCredit && (
-            <CreditNode name="Credito Total" dataMap={dataMap} depth={0} />
-          )}
-          {flatActive.map((b) => (
+          {rootClasses.map((cls) => (
+            <ClasseNode
+              key={cls.id}
+              classeId={cls.id}
+              allClasses={allClasses ?? []}
+              productDataMap={productDataMap}
+              memberships={memberships}
+              productById={productById}
+              depth={0}
+            />
+          ))}
+          {standaloneBreakdown.map((b) => (
             <ProductCard key={b.product} b={b} />
           ))}
         </div>
