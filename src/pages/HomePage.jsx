@@ -189,8 +189,8 @@ function ClasseNode({ classeId, allClasses, productDataMap, memberships, product
 
   const barRow = (
     <ProgressBar
-      value={realized ?? 0}
-      max={target ?? 0}
+      value={isAvgPct ? rawPct : (realized ?? 0)}
+      max={isAvgPct ? 100 : (target ?? 0)}
       height={depth === 0 ? 5 : depth === 1 ? 4 : 3}
     />
   )

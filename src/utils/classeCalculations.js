@@ -40,7 +40,7 @@ export function computeClasseProgress(classeId, allClasses, productDataMap) {
 
   if (classe.aggregationMode === 'average_pct') {
     const avgPct = childResults.length > 0
-      ? childResults.reduce((s, r) => s + r.pct, 0) / childResults.length
+      ? childResults.reduce((s, r) => s + Math.min(r.pct, 100), 0) / childResults.length
       : 0
     return { pct: avgPct, realized: null, target: null }
   }
