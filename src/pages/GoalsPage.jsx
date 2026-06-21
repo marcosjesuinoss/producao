@@ -114,6 +114,7 @@ export default function GoalsPage() {
         </button>
         <button
           className="btn shrink-0 flex items-center gap-1.5"
+          style={{ background: 'rgba(99,102,241,0.1)', borderColor: 'rgba(99,102,241,0.35)', color: '#818cf8' }}
           onClick={() => navigate('/classes')}
           aria-label="Gerenciar classes"
         >

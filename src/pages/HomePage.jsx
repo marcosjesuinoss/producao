@@ -159,9 +159,11 @@ function ClasseNode({ classeId, allClasses, productDataMap, memberships, product
   const valueRow = isAvgPct ? (
     <div className="flex items-baseline justify-between gap-2">
       <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-        {hasChildren
-          ? `média entre ${children.length} ${children.length === 1 ? 'item' : 'itens'}`
-          : 'sem itens'}
+        {!hasChildren
+          ? 'sem itens'
+          : children.length === 1
+          ? '1 item'
+          : `média entre ${children.length} itens`}
       </span>
       {pct != null && pct > 0 && (
         <span className="text-sm font-bold shrink-0 tabular-nums" style={{ color }}>{pct}%</span>
