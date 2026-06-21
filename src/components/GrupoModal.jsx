@@ -215,6 +215,11 @@ export default function GrupoModal({
       })
     }
 
+    result.sort((a, b) => {
+      if (a.type === 'classe' && b.type === 'product') return -1
+      if (a.type === 'product' && b.type === 'classe') return 1
+      return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' })
+    })
     return result
   }, [allProducts, allGrupos, editing, preSelected, descendants, memberships, targetId, selected])
 
@@ -313,7 +318,6 @@ export default function GrupoModal({
                   className="input"
                   placeholder="Ex: Crédito Habitacional"
                   value={name}
-                  autoFocus
                   onChange={(e) => { setName(e.target.value); setNameError('') }}
                 />
                 {nameError && (
