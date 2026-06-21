@@ -13,7 +13,7 @@ import { computeGrupoProgress, deriveMemberships } from '../utils/grupoCalculati
 import { useDisplayOrder } from '../hooks/useDisplayOrder.js'
 
 // ---------------------------------------------------------------------------
-// Helpers shared by GrupoNode and ProductLeaf
+// Helpers
 // ---------------------------------------------------------------------------
 
 function GroupsBadge({ count }) {
@@ -37,7 +37,7 @@ function OrderControls({ onMoveUp, onMoveDown, isFirst, isLast }) {
         disabled={isFirst}
         onClick={onMoveUp}
         aria-label="Mover para cima"
-        style={{ opacity: isFirst ? 0.25 : 0.6 }}
+        style={{ opacity: isFirst ? 0.25 : 0.7 }}
       >
         <ChevronUp size={13} />
       </button>
@@ -46,7 +46,7 @@ function OrderControls({ onMoveUp, onMoveDown, isFirst, isLast }) {
         disabled={isLast}
         onClick={onMoveDown}
         aria-label="Mover para baixo"
-        style={{ opacity: isLast ? 0.25 : 0.6 }}
+        style={{ opacity: isLast ? 0.25 : 0.7 }}
       >
         <ChevronDown size={13} />
       </button>
@@ -76,7 +76,7 @@ function RemainingLine({ value, target, fmt = brl, fontSize = '11px' }) {
 }
 
 // ---------------------------------------------------------------------------
-// Product leaf — renders a single product inside a GrupoNode
+// Product leaf — inside a GrupoNode
 // ---------------------------------------------------------------------------
 
 function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
@@ -87,9 +87,9 @@ function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
     depth === 1
       ? { borderLeft: `2px solid ${color}`, paddingLeft: '8px', marginLeft: '2px' }
       : { borderLeft: '2px solid rgba(99,102,241,0.2)', paddingLeft: '12px', marginLeft: '8px' }
-  const labelSize = depth === 1 ? '13px' : '12px'
+  const labelSize   = depth === 1 ? '13px' : '12px'
   const labelWeight = depth === 1 ? 500 : 400
-  const valueSize = depth === 1 ? '15px' : '13px'
+  const valueSize   = depth === 1 ? '15px' : '13px'
 
   return (
     <div style={nodeStyle} className="space-y-1">
@@ -119,10 +119,13 @@ function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
 }
 
 // ---------------------------------------------------------------------------
-// GrupoNode — recursive renderer for a DB grupo and its children
+// GrupoNode — recursive renderer
 // ---------------------------------------------------------------------------
 
-function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productById, depth = 0, onMove, isFirst, isLast }) {
+function GrupoNode({
+  grupoId, allGrupos, productDataMap, memberships, productById,
+  depth = 0, reordering, onMove, isFirst, isLast,
+}) {
   const [open, setOpen] = useState(true)
 
   const grupo = allGrupos.find((c) => c.id === grupoId)
@@ -131,6 +134,9 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productByI
   const children = grupo.children ?? []
   const hasChildren = children.length > 0
   const isAvgPct = grupo.aggregationMode === 'average_pct'
+
+  // In reorder mode root nodes are always collapsed
+  const isOpen = (depth === 0 && reordering) ? false : open
 
   const { realized, target, pct: rawPct } = computeGrupoProgress(grupoId, allGrupos, productDataMap)
   const pct = isAvgPct
@@ -154,14 +160,15 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productByI
   const labelWeight = depth === 0 ? 600    : depth === 1 ? 500    : 400
   const valueSize   = depth === 0 ? '20px' : depth === 1 ? '15px' : '13px'
 
-  const showOrderControls = depth === 0 && onMove
+  const canToggle = !reordering && hasChildren
+  const showOrderControls = depth === 0 && reordering && onMove
 
   const labelRow = (
     <div
       className="flex items-center justify-between gap-2"
-      onClick={hasChildren ? () => setOpen((o) => !o) : undefined}
-      style={hasChildren ? { cursor: 'pointer', userSelect: 'none' } : {}}
-      aria-expanded={hasChildren ? open : undefined}
+      onClick={canToggle ? () => setOpen((o) => !o) : undefined}
+      style={canToggle ? { cursor: 'pointer', userSelect: 'none' } : {}}
+      aria-expanded={canToggle ? isOpen : undefined}
     >
       <div className="flex items-center gap-1.5 min-w-0">
         <span className="truncate" style={{ fontWeight: labelWeight, fontSize: labelSize, color: 'var(--text-secondary)' }}>
@@ -178,12 +185,12 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productByI
             onMoveDown={(e) => { e.stopPropagation(); onMove(grupoId, 'down') }}
           />
         )}
-        {hasChildren && (
+        {!reordering && hasChildren && (
           <ChevronRight
             size={14}
             style={{
               transition: 'transform 0.2s',
-              transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+              transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
               color: 'var(--text-faint)',
               flexShrink: 0,
             }}
@@ -241,7 +248,7 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productByI
     />
   )
 
-  const childrenContent = hasChildren && open && (
+  const childrenContent = hasChildren && isOpen && (
     <div
       className={depth === 0 ? 'mt-3 pt-3 border-t space-y-3' : 'mt-3 space-y-2'}
       style={depth === 0 ? { borderColor: 'var(--c-border)' } : {}}
@@ -305,7 +312,7 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productByI
 // Standalone product card (not part of any grupo)
 // ---------------------------------------------------------------------------
 
-function ProductCard({ b, onMove, isFirst, isLast }) {
+function ProductCard({ b, reordering, onMove, isFirst, isLast }) {
   const pct = b.metricTarget > 0 ? Math.round((b.realized / b.metricTarget) * 100) : b.realized > 0 ? 100 : null
   const color = pct != null ? getProgressColor(pct) : 'var(--text-faint)'
   const fmt = (v) => (b.useValue ? brl(v) : num(v))
@@ -314,7 +321,7 @@ function ProductCard({ b, onMove, isFirst, isLast }) {
     <div className="card space-y-1">
       <div className="flex items-center justify-between gap-2">
         <div className="font-semibold text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{b.product}</div>
-        {onMove && (
+        {reordering && onMove && (
           <OrderControls
             isFirst={isFirst}
             isLast={isLast}
@@ -358,6 +365,8 @@ export default function HomePage() {
   const { open } = useRecordModal()
   const { year, month } = useMonth()
   const [breakdown, setBreakdown] = useState([])
+  const [showZero, setShowZero] = useState(false)
+  const [reordering, setReordering] = useState(false)
   const { getSorted, move } = useDisplayOrder()
 
   const tick = useLiveQuery(
@@ -368,6 +377,11 @@ export default function HomePage() {
 
   const allGrupos   = useLiveQuery(() => db.classes.toArray(),  [], [])
   const allProducts = useLiveQuery(() => db.products.toArray(), [], [])
+  const monthGoals  = useLiveQuery(
+    () => db.goals.filter((g) => g.year === Number(year) && g.month === Number(month)).toArray(),
+    [year, month],
+    []
+  )
 
   useEffect(() => {
     let alive = true
@@ -416,17 +430,41 @@ export default function HomePage() {
     [memberships]
   )
 
-  const standaloneBreakdown = useMemo(
-    () => breakdown.filter((b) => {
+  const standaloneBreakdown = useMemo(() => {
+    const withProduction = breakdown.filter((b) => {
       const prod = productsByName.get(b.product)
       return prod && !grupoChildProductIds.has(prod.id) && b.realized > 0
-    }),
-    [breakdown, productsByName, grupoChildProductIds]
-  )
+    })
+
+    if (!showZero) return withProduction
+
+    // Add products with goals but zero production (deduplicated by name)
+    const shown = new Set(withProduction.map((b) => b.product))
+    const extras = []
+    const seen = new Set()
+    for (const g of (monthGoals ?? [])) {
+      const prod = productsByName.get(g.product)
+      if (!prod) continue
+      if (grupoChildProductIds.has(prod.id)) continue
+      if (shown.has(g.product)) continue
+      if (seen.has(g.product)) continue
+      seen.add(g.product)
+      const useValue = prod.useValue ?? false
+      extras.push({
+        product: g.product,
+        realized: 0,
+        value: 0,
+        quantity: 0,
+        metricTarget: useValue ? (g.targetValue ?? 0) : (g.targetQuantity ?? 0),
+        useValue,
+      })
+    }
+    return [...withProduction, ...extras]
+  }, [showZero, breakdown, productsByName, grupoChildProductIds, monthGoals])
 
   // Build sorted display list combining root grupos and standalone products
   const sortedItems = useMemo(() => {
-    const grupoKeys = rootGrupos.map((g) => `g:${g.id}`)
+    const grupoKeys   = rootGrupos.map((g) => `g:${g.id}`)
     const productKeys = standaloneBreakdown.map((b) => {
       const prod = productsByName.get(b.product)
       return `p:${prod?.id ?? b.product}`
@@ -471,6 +509,7 @@ export default function HomePage() {
                   memberships={memberships}
                   productById={productById}
                   depth={0}
+                  reordering={reordering}
                   onMove={(gId, dir) => move(`g:${gId}`, sortedKeys, dir)}
                   isFirst={isFirst}
                   isLast={isLast}
@@ -481,6 +520,7 @@ export default function HomePage() {
               <ProductCard
                 key={b.product}
                 b={b}
+                reordering={reordering}
                 onMove={(dir) => move(key, sortedKeys, dir)}
                 isFirst={isFirst}
                 isLast={isLast}
@@ -489,6 +529,32 @@ export default function HomePage() {
           })}
         </div>
       )}
+
+      {/* Bottom controls */}
+      <div className="flex gap-2">
+        <button
+          className="btn flex-1 text-sm"
+          style={showZero ? {
+            background: 'rgba(99,102,241,0.12)',
+            borderColor: 'rgba(99,102,241,0.4)',
+            color: '#818cf8',
+          } : {}}
+          onClick={() => setShowZero((v) => !v)}
+        >
+          {showZero ? 'Ocultar zerados' : 'Mostrar zerados'}
+        </button>
+        <button
+          className="btn flex-1 text-sm"
+          style={reordering ? {
+            background: 'rgba(99,102,241,0.12)',
+            borderColor: 'rgba(99,102,241,0.4)',
+            color: '#818cf8',
+          } : {}}
+          onClick={() => setReordering((v) => !v)}
+        >
+          {reordering ? 'Salvar' : 'Reordenar'}
+        </button>
+      </div>
 
       <p className="text-xs text-center" style={{ color: 'var(--text-faint)' }}>
         Dados locais · offline-first · Defina metas em{' '}
