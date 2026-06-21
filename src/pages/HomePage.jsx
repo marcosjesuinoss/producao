@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, Check } from 'lucide-react'
+import { ChevronRight, ChevronUp, ChevronDown, Check } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { productBreakdown } from '../lib/summaries.js'
@@ -10,6 +10,7 @@ import { useMonth } from '../context/MonthContext.jsx'
 import { getProgressColor, getRemainingLabel } from '../utils/progressColor.js'
 import ProgressBar from '../components/ui/ProgressBar.jsx'
 import { computeGrupoProgress, deriveMemberships } from '../utils/grupoCalculations.js'
+import { useDisplayOrder } from '../hooks/useDisplayOrder.js'
 
 // ---------------------------------------------------------------------------
 // Helpers shared by GrupoNode and ProductLeaf
@@ -25,6 +26,31 @@ function GroupsBadge({ count }) {
     }}>
       {count} grupos
     </span>
+  )
+}
+
+function OrderControls({ onMoveUp, onMoveDown, isFirst, isLast }) {
+  return (
+    <div className="flex gap-0.5 shrink-0">
+      <button
+        className="btn px-1.5 py-1"
+        disabled={isFirst}
+        onClick={onMoveUp}
+        aria-label="Mover para cima"
+        style={{ opacity: isFirst ? 0.25 : 0.6 }}
+      >
+        <ChevronUp size={13} />
+      </button>
+      <button
+        className="btn px-1.5 py-1"
+        disabled={isLast}
+        onClick={onMoveDown}
+        aria-label="Mover para baixo"
+        style={{ opacity: isLast ? 0.25 : 0.6 }}
+      >
+        <ChevronDown size={13} />
+      </button>
+    </div>
   )
 }
 
@@ -96,7 +122,7 @@ function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
 // GrupoNode — recursive renderer for a DB grupo and its children
 // ---------------------------------------------------------------------------
 
-function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productById, depth = 0 }) {
+function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productById, depth = 0, onMove, isFirst, isLast }) {
   const [open, setOpen] = useState(true)
 
   const grupo = allGrupos.find((c) => c.id === grupoId)
@@ -107,7 +133,6 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productByI
   const isAvgPct = grupo.aggregationMode === 'average_pct'
 
   const { realized, target, pct: rawPct } = computeGrupoProgress(grupoId, allGrupos, productDataMap)
-  // Match original CreditNode logic: no % badge when target=0 and realized=0
   const pct = isAvgPct
     ? (rawPct > 0 ? Math.round(rawPct) : null)
     : (target ?? 0) > 0
@@ -129,6 +154,8 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productByI
   const labelWeight = depth === 0 ? 600    : depth === 1 ? 500    : 400
   const valueSize   = depth === 0 ? '20px' : depth === 1 ? '15px' : '13px'
 
+  const showOrderControls = depth === 0 && onMove
+
   const labelRow = (
     <div
       className="flex items-center justify-between gap-2"
@@ -142,17 +169,27 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productByI
         </span>
         <GroupsBadge count={parentCount} />
       </div>
-      {hasChildren && (
-        <ChevronRight
-          size={14}
-          style={{
-            transition: 'transform 0.2s',
-            transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
-            color: 'var(--text-faint)',
-            flexShrink: 0,
-          }}
-        />
-      )}
+      <div className="flex items-center gap-1 shrink-0">
+        {showOrderControls && (
+          <OrderControls
+            isFirst={isFirst}
+            isLast={isLast}
+            onMoveUp={(e) => { e.stopPropagation(); onMove(grupoId, 'up') }}
+            onMoveDown={(e) => { e.stopPropagation(); onMove(grupoId, 'down') }}
+          />
+        )}
+        {hasChildren && (
+          <ChevronRight
+            size={14}
+            style={{
+              transition: 'transform 0.2s',
+              transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
+              color: 'var(--text-faint)',
+              flexShrink: 0,
+            }}
+          />
+        )}
+      </div>
     </div>
   )
 
@@ -164,7 +201,6 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productByI
           : children.length === 1
           ? '1 item'
           : `média entre ${children.length} itens`}
-
       </span>
       {pct != null && pct > 0 && (
         <span className="text-sm font-bold shrink-0 tabular-nums" style={{ color }}>{pct}%</span>
@@ -224,7 +260,6 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productByI
             />
           )
         }
-        // product leaf
         const prod = productById.get(child.refId)
         const data = productDataMap.get(child.refId) || { realized: 0, target: 0 }
         const pCount = memberships.filter((m) => m.childType === 'product' && m.childId === child.refId).length
@@ -267,17 +302,27 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, memberships, productByI
 }
 
 // ---------------------------------------------------------------------------
-// Standalone product card (not part of any classe)
+// Standalone product card (not part of any grupo)
 // ---------------------------------------------------------------------------
 
-function ProductCard({ b }) {
+function ProductCard({ b, onMove, isFirst, isLast }) {
   const pct = b.metricTarget > 0 ? Math.round((b.realized / b.metricTarget) * 100) : b.realized > 0 ? 100 : null
   const color = pct != null ? getProgressColor(pct) : 'var(--text-faint)'
   const fmt = (v) => (b.useValue ? brl(v) : num(v))
 
   return (
     <div className="card space-y-1">
-      <div className="font-semibold text-sm" style={{ color: 'var(--text-secondary)' }}>{b.product}</div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="font-semibold text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{b.product}</div>
+        {onMove && (
+          <OrderControls
+            isFirst={isFirst}
+            isLast={isLast}
+            onMoveUp={() => onMove('up')}
+            onMoveDown={() => onMove('down')}
+          />
+        )}
+      </div>
       <div className="flex items-baseline justify-between gap-2">
         <div>
           <span className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{fmt(b.realized)}</span>
@@ -313,6 +358,7 @@ export default function HomePage() {
   const { open } = useRecordModal()
   const { year, month } = useMonth()
   const [breakdown, setBreakdown] = useState([])
+  const { getSorted, move } = useDisplayOrder()
 
   const tick = useLiveQuery(
     async () => (await db.records.count()) + (await db.goals.count()),
@@ -331,19 +377,16 @@ export default function HomePage() {
     return () => { alive = false }
   }, [tick, year, month])
 
-  // Map<productId, product> for name/useValue lookup
   const productById = useMemo(
     () => new Map((allProducts ?? []).map((p) => [p.id, p])),
     [allProducts]
   )
 
-  // Map<productName, product> — for joining breakdown (keyed by name) to product IDs
   const productsByName = useMemo(
     () => new Map((allProducts ?? []).map((p) => [p.name, p])),
     [allProducts]
   )
 
-  // Map<productId, {realized, target}> — metric values from the async breakdown
   const productDataMap = useMemo(() => {
     const map = new Map()
     for (const b of breakdown) {
@@ -353,7 +396,6 @@ export default function HomePage() {
     return map
   }, [breakdown, productsByName])
 
-  // Flat membership list and derived sets
   const memberships = useMemo(
     () => deriveMemberships(allGrupos ?? []),
     [allGrupos]
@@ -369,13 +411,11 @@ export default function HomePage() {
     [allGrupos, childGrupoIds]
   )
 
-  // Products that belong to at least one grupo → excluded from standalone cards
   const grupoChildProductIds = useMemo(
     () => new Set(memberships.filter((m) => m.childType === 'product').map((m) => m.childId)),
     [memberships]
   )
 
-  // Standalone products: not in any grupo AND have production data this month
   const standaloneBreakdown = useMemo(
     () => breakdown.filter((b) => {
       const prod = productsByName.get(b.product)
@@ -384,7 +424,28 @@ export default function HomePage() {
     [breakdown, productsByName, grupoChildProductIds]
   )
 
-  const hasAnyProduction = standaloneBreakdown.length > 0 || rootGrupos.length > 0
+  // Build sorted display list combining root grupos and standalone products
+  const sortedItems = useMemo(() => {
+    const grupoKeys = rootGrupos.map((g) => `g:${g.id}`)
+    const productKeys = standaloneBreakdown.map((b) => {
+      const prod = productsByName.get(b.product)
+      return `p:${prod?.id ?? b.product}`
+    })
+    const ordered = getSorted([...grupoKeys, ...productKeys])
+    return ordered.map((key) => {
+      if (key.startsWith('g:')) {
+        const grp = rootGrupos.find((g) => g.id === key.slice(2))
+        return grp ? { key, kind: 'grupo', grp } : null
+      }
+      const prodId = key.slice(2)
+      const b = standaloneBreakdown.find((sb) => productsByName.get(sb.product)?.id === prodId)
+      return b ? { key, kind: 'product', b } : null
+    }).filter(Boolean)
+  }, [rootGrupos, standaloneBreakdown, productsByName, getSorted])
+
+  const sortedKeys = useMemo(() => sortedItems.map((i) => i.key), [sortedItems])
+
+  const hasAnyProduction = sortedItems.length > 0
 
   return (
     <section className="space-y-4">
@@ -397,20 +458,35 @@ export default function HomePage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {rootGrupos.map((grp) => (
-            <GrupoNode
-              key={grp.id}
-              grupoId={grp.id}
-              allGrupos={allGrupos ?? []}
-              productDataMap={productDataMap}
-              memberships={memberships}
-              productById={productById}
-              depth={0}
-            />
-          ))}
-          {standaloneBreakdown.map((b) => (
-            <ProductCard key={b.product} b={b} />
-          ))}
+          {sortedItems.map(({ key, kind, grp, b }, idx) => {
+            const isFirst = idx === 0
+            const isLast  = idx === sortedItems.length - 1
+            if (kind === 'grupo') {
+              return (
+                <GrupoNode
+                  key={grp.id}
+                  grupoId={grp.id}
+                  allGrupos={allGrupos ?? []}
+                  productDataMap={productDataMap}
+                  memberships={memberships}
+                  productById={productById}
+                  depth={0}
+                  onMove={(gId, dir) => move(`g:${gId}`, sortedKeys, dir)}
+                  isFirst={isFirst}
+                  isLast={isLast}
+                />
+              )
+            }
+            return (
+              <ProductCard
+                key={b.product}
+                b={b}
+                onMove={(dir) => move(key, sortedKeys, dir)}
+                isFirst={isFirst}
+                isLast={isLast}
+              />
+            )
+          })}
         </div>
       )}
 
