@@ -3,13 +3,12 @@ import { TrendingUp, Plus, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
-import { FULL_MONTHS } from '../lib/format.js'
+import { MONTHS } from '../lib/format.js'
 
 const tabs = [
   { to: '/', label: 'Resumo', end: true },
   { to: '/registros', label: 'Registros' },
   { to: '/metas', label: 'Metas' },
-  { to: '/graficos', label: 'Graficos' },
   { to: '/ajustes', label: 'Ajustes' }
 ]
 
@@ -22,6 +21,21 @@ const inactiveStyle = {
   color: 'var(--text-faint)',
   borderBottomColor: 'transparent',
   background: 'transparent',
+}
+
+const navBtnStyle = {
+  width: '24px',
+  height: '24px',
+  background: 'transparent',
+  border: 'none',
+  color: '#818cf8',
+  fontSize: '16px',
+  fontWeight: 700,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+  flexShrink: 0,
 }
 
 export default function Header({ online }) {
@@ -41,26 +55,51 @@ export default function Header({ online }) {
         </defs>
       </svg>
 
-      {/* Linha 1: título + status + lock */}
-      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
-        <div className="flex items-center gap-2 mr-auto min-w-0">
-          <div style={{ padding: '6px', background: 'rgba(99,102,241,0.12)', borderRadius: '10px', shrink: 0 }}>
-            <TrendingUp size={24} stroke="url(#iconGrad)" strokeWidth={2} />
-          </div>
-          <h1 className="font-bold text-lg truncate" style={{ color: 'var(--text-primary)' }}>
-            Controle de Producao
-          </h1>
-          <span
-            className="text-xs px-2 py-0.5 rounded-full shrink-0"
-            style={{
-              background: online ? 'var(--c-brand-soft)' : 'var(--c-border)',
-              color: online ? 'var(--c-brand)' : 'var(--text-faint)',
-            }}
-            title={online ? 'Online' : 'Offline'}
-          >
-            {online ? 'online' : 'offline'}
-          </span>
+      {/* Linha 1: ícone + título + navegação de mês + lock */}
+      <div
+        className="max-w-5xl mx-auto px-4"
+        style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingTop: '12px' }}
+      >
+        <div style={{ padding: '6px', background: 'rgba(99,102,241,0.12)', borderRadius: '10px', flexShrink: 0 }}>
+          <TrendingUp size={24} stroke="url(#iconGrad)" strokeWidth={2} />
         </div>
+        <h1 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, flexShrink: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          Produção
+        </h1>
+
+        {/* Pill de navegação de mês */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'var(--bg-card)',
+            border: '1px solid #2d3748',
+            borderRadius: '99px',
+            padding: '8px 12px',
+            marginLeft: 'auto',
+            flexShrink: 0,
+          }}
+        >
+          <button
+            onClick={prev}
+            aria-label="Mês anterior"
+            style={navBtnStyle}
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', padding: '0 4px', whiteSpace: 'nowrap' }}>
+            {MONTHS[month - 1]} / {year}
+          </span>
+          <button
+            onClick={next}
+            aria-label="Próximo mês"
+            style={navBtnStyle}
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+
         {hasPin && (
           <button className="btn shrink-0 px-2 py-2" onClick={lock} aria-label="Bloquear app">
             <Lock size={16} />
@@ -68,31 +107,7 @@ export default function Header({ online }) {
         )}
       </div>
 
-      {/* Linha 2: navegação de mês */}
-      <div className="max-w-5xl mx-auto px-4 pb-2 flex items-center justify-center gap-3">
-        <button
-          className="btn px-2.5 py-1.5 shrink-0"
-          onClick={prev}
-          aria-label="Mês anterior"
-        >
-          <ChevronLeft size={16} />
-        </button>
-        <span
-          className="font-semibold text-sm text-center"
-          style={{ color: 'var(--text-primary)', minWidth: '160px' }}
-        >
-          {FULL_MONTHS[month - 1]} / {year}
-        </span>
-        <button
-          className="btn px-2.5 py-1.5 shrink-0"
-          onClick={next}
-          aria-label="Próximo mês"
-        >
-          <ChevronRight size={16} />
-        </button>
-      </div>
-
-      {/* Linha 3: botão novo registro */}
+      {/* Linha 2: botão novo registro */}
       <div className="max-w-5xl mx-auto px-4 pb-2">
         <button
           className="btn btn-brand w-full sm:w-auto"
@@ -106,7 +121,7 @@ export default function Header({ online }) {
 
       {/* Linha 3: abas de navegação */}
       <nav
-        className="max-w-5xl mx-auto px-4 flex gap-1 overflow-x-auto border-t"
+        className="max-w-5xl mx-auto flex border-t"
         style={{ borderColor: 'var(--c-border)' }}
         aria-label="Navegacao principal"
       >
@@ -115,7 +130,7 @@ export default function Header({ online }) {
             key={t.to}
             to={t.to}
             end={t.end}
-            className="inline-flex items-center whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 transition-colors"
+            className="flex-1 flex items-center justify-center whitespace-nowrap py-2 text-sm font-medium border-b-2 transition-colors"
             style={({ isActive }) => (isActive ? activeStyle : inactiveStyle)}
           >
             {t.label}

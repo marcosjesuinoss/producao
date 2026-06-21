@@ -11,7 +11,6 @@ import Header from './components/Header.jsx'
 import HomePage from './pages/HomePage.jsx'
 import RecordsPage from './pages/RecordsPage.jsx'
 import GoalsPage from './pages/GoalsPage.jsx'
-import ChartsPage from './pages/ChartsPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import { useAuth } from './context/AuthContext.jsx'
@@ -49,7 +48,6 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/registros" element={<RecordsPage />} />
             <Route path="/metas" element={<GoalsPage />} />
-            <Route path="/graficos" element={<ChartsPage />} />
             <Route path="/ajustes" element={<SettingsPage />} />
             <Route path="*" element={<HomePage />} />
           </Routes>

@@ -127,14 +127,14 @@ export default function RecordList({ records, onEdit, onDelete }) {
               style={{ borderColor: 'var(--c-border)' }}
             >
               <div className="min-w-0 flex-1">
-                <div className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                  {r.product}
+                <div className="font-medium flex items-baseline gap-2 min-w-0">
+                  <span className="truncate" style={{ color: 'var(--text-primary)' }}>{r.product}</span>
+                  {r.product === ABERTURA && (
+                    <span className="text-xs shrink-0" style={{ color: r.qualified ? 'var(--c-good)' : 'var(--accent-red)' }}>
+                      {r.qualified ? '✓ qualificada' : '✗ não qualificada'}
+                    </span>
+                  )}
                 </div>
-                {r.product === ABERTURA && (
-                  <div className="text-xs truncate mt-0.5" style={{ color: r.qualified ? 'var(--c-good)' : 'var(--accent-red)' }}>
-                    {r.qualified ? '✓ conta qualificada' : '✗ conta não qualificada'}
-                  </div>
-                )}
                 {r.clientName?.trim() && (
                   <div className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
                     {r.clientName.trim()}

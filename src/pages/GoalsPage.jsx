@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
@@ -39,6 +39,14 @@ export default function GoalsPage() {
   const { year, month } = useMonth()
   const [manager] = useState('')
   const [productModalOpen, setProductModalOpen] = useState(false)
+  const [savedToast, setSavedToast] = useState(false)
+  const toastTimer = useRef(null)
+
+  const showSaved = () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setSavedToast(true)
+    toastTimer.current = setTimeout(() => setSavedToast(false), 2000)
+  }
 
   const { allProducts, custom, isValue } = useProducts()
   const productById = useMemo(() => new Map(custom.map((p) => [p.name, p.id])), [custom])
@@ -80,7 +88,24 @@ export default function GoalsPage() {
   }
 
   return (
+    <>
+      {savedToast && (
+        <div
+          className="fixed bottom-6 left-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-lg"
+          style={{
+            transform: 'translateX(-50%)',
+            background: 'var(--c-good)',
+            color: '#fff',
+            fontSize: '14px',
+            fontWeight: 600,
+            pointerEvents: 'none',
+          }}
+        >
+          ✓ Salvo
+        </div>
+      )}
     <section className="space-y-4">
+
       <button className="btn w-full" onClick={() => setProductModalOpen(true)}>
         + Novo produto
       </button>
@@ -115,6 +140,7 @@ export default function GoalsPage() {
               month={month}
               year={year}
               onSave={save}
+              onSaved={showSaved}
               onDeleteGoal={g ? () => deleteGoal(g.id) : null}
               onDeleteProduct={productId ? () => deleteProduct(productId) : null}
             />
@@ -122,10 +148,11 @@ export default function GoalsPage() {
         })}
       </div>
     </section>
+    </>
   )
 }
 
-function GoalCard({ product, goal, isValueProduct, realized, pct, productId, month, year, onSave, onDeleteGoal, onDeleteProduct }) {
+function GoalCard({ product, goal, isValueProduct, realized, pct, productId, month, year, onSave, onSaved, onDeleteGoal, onDeleteProduct }) {
   const [inputVal, setInputVal] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -150,50 +177,31 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
     } else {
       onSave(product, n || 0, null)
     }
+    onSaved?.()
   }
 
   return (
     <div className="card space-y-3">
-      {/* Linha 1: nome + badge + % */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="font-semibold truncate" style={{ color: 'var(--text-secondary)' }}>{product}</span>
-        </div>
-        {pct != null && (
-          <span className="text-sm font-bold shrink-0" style={{ color }}>{pct}%</span>
-        )}
-      </div>
+      {/* Linha 1: nome */}
+      <span className="font-semibold truncate" style={{ color: 'var(--text-secondary)' }}>{product}</span>
 
-      {/* Linha 2: campo de meta */}
-      <div>
-        <label className="label">
-          {isValueProduct ? 'Meta (R$)' : 'Meta (quantidade)'}
-        </label>
+      {/* Linha 2: input + Salvar + ⋯ */}
+      <div className="flex items-center gap-2">
         <input
           type="text"
           inputMode="decimal"
           className="input"
+          style={{ flex: 1, minWidth: 0 }}
           placeholder={isValueProduct ? '100.000,00' : 'Ex: 20'}
           value={inputVal}
           onChange={(e) => setInputVal(applyMask(e.target.value))}
           onKeyDown={onDotKey(setInputVal)}
           onBlur={fillCentsIf(setInputVal, isValueProduct)}
         />
-      </div>
-
-      {/* Linha 3: realizado + salvar + ⋯ */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-sm">
-          <span style={{ color: 'var(--text-muted)' }}>Realizado: </span>
-          <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-            {isValueProduct ? brl(realized) : num(realized)}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <button className="btn btn-brand text-xs px-3 py-1.5" onClick={handleSave}>
-            Salvar
-          </button>
-          <div className="relative">
+        <button className="btn btn-brand text-xs px-3 py-1.5 shrink-0" onClick={handleSave}>
+          Salvar
+        </button>
+        <div className="relative shrink-0">
             <button
               className="btn px-2.5 py-1.5"
               onClick={() => setMenuOpen((o) => !o)}
@@ -252,13 +260,7 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
               </>
             )}
           </div>
-        </div>
       </div>
-
-      {/* Barra de progresso */}
-      {pct != null && (
-        <ProgressBar value={realized} max={isValueProduct ? (goal?.targetValue || 0) : (goal?.targetQuantity || 0)} height={4} />
-      )}
 
       {/* Modal de edição */}
       {editOpen && (
