@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { FolderTree, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { upsertGoal, createProduct, updateProduct, deleteProduct, deleteGoal } from '../api/localApi.js'
@@ -36,6 +37,7 @@ const fillCentsIf = (setter, condition) => (e) => {
 }
 
 export default function GoalsPage() {
+  const navigate = useNavigate()
   const { year, month } = useMonth()
   const [manager] = useState('')
   const [productModalOpen, setProductModalOpen] = useState(false)
@@ -106,9 +108,19 @@ export default function GoalsPage() {
       )}
     <section className="space-y-4">
 
-      <button className="btn w-full" onClick={() => setProductModalOpen(true)}>
-        + Novo produto
-      </button>
+      <div className="flex gap-2">
+        <button className="btn flex-1" onClick={() => setProductModalOpen(true)}>
+          + Novo produto
+        </button>
+        <button
+          className="btn shrink-0 flex items-center gap-1.5"
+          onClick={() => navigate('/classes')}
+          aria-label="Gerenciar classes"
+        >
+          <FolderTree size={14} />
+          <span className="text-sm">Gerenciar classes</span>
+        </button>
+      </div>
 
       {productModalOpen && (
         <ProductModal

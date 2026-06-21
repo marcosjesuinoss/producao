@@ -24,5 +24,15 @@ db.version(2).stores({
   products: '&id, name'
 })
 
+// v3: tabela de classes (agrupamentos hierarquicos de produtos/classes)
+// children e aggregationMode sao armazenados como JSON no objeto
+db.version(3).stores({
+  records: '&id, date, year, month, product, account, manager, synced',
+  goals: '&id, year, month, product, manager',
+  users: '&id, name',
+  products: '&id, name',
+  classes: '&id, name'
+})
+
 export const uid = () =>
   (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2))
