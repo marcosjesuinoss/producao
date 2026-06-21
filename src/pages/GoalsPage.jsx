@@ -155,7 +155,7 @@ export default function GoalsPage() {
               onSave={save}
               onSaved={showSaved}
               onDeleteGoal={g ? () => deleteGoal(g.id) : null}
-              onDeleteProduct={productId ? () => deleteProduct(productId) : null}
+              onDeleteProduct={productId && product !== 'Abertura de Conta' ? () => deleteProduct(productId) : null}
             />
           )
         })}
