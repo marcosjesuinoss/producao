@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { FolderTree, X } from 'lucide-react'
 import {
   getAllAncestors,
+  getAllDescendants,
   wouldCreateConflict,
   wouldExceedMaxDepth,
 } from '../utils/grupoCalculations.js'
@@ -97,6 +98,11 @@ export default function GrupoModal({
   const items = useMemo(() => {
     const result = []
 
+    // Grupo refIds currently checked in this session — used for intra-selection conflict checks
+    const selectedGrupoRefIds = [...selected]
+      .filter((k) => k.startsWith('classe:'))
+      .map((k) => k.slice(7))
+
     // --- Products ---
     for (const p of allProducts) {
       const key = `product:${p.id}`
@@ -105,10 +111,24 @@ export default function GrupoModal({
       let disabled = false
       let disabledReason = ''
 
+      // Direction 1 (existing): saved-DB ancestor conflict
       if (!isPreSelected && targetId) {
         if (wouldCreateConflict('product', p.id, targetId, memberships)) {
           disabled = true
           disabledReason = `indisponível — conflito com ${getConflictAncestorName('product', p.id, targetId, memberships, allGrupos)}`
+        }
+      }
+
+      // Direction 2 (new): is this product a descendant of any currently-selected grupo?
+      if (!disabled && !selected.has(key)) {
+        for (const sId of selectedGrupoRefIds) {
+          const desc = getAllDescendants(sId, allGrupos)
+          if (desc.some((d) => d.type === 'product' && d.refId === p.id)) {
+            const gName = allGrupos.find((g) => g.id === sId)?.name ?? 'grupo selecionado'
+            disabled = true
+            disabledReason = `indisponível — já incluso em "${gName}"`
+            break
+          }
         }
       }
 
@@ -140,6 +160,7 @@ export default function GrupoModal({
       let disabled = false
       let disabledReason = ''
 
+      // Direction 1 (existing): saved-DB ancestor conflict
       if (!isPreSelected && targetId) {
         if (wouldCreateConflict('classe', g.id, targetId, memberships)) {
           disabled = true
@@ -147,6 +168,33 @@ export default function GrupoModal({
         } else if (wouldExceedMaxDepth(g.id, targetId, allGrupos, memberships)) {
           disabled = true
           disabledReason = 'indisponível — excederia o limite de 3 níveis'
+        }
+      }
+
+      if (!disabled && !selected.has(key)) {
+        // Direction 2 (new): is this grupo a descendant of any currently-selected grupo?
+        for (const sId of selectedGrupoRefIds) {
+          const desc = getAllDescendants(sId, allGrupos)
+          if (desc.some((d) => d.type === 'classe' && d.refId === g.id)) {
+            const gName = allGrupos.find((gl) => gl.id === sId)?.name ?? 'grupo selecionado'
+            disabled = true
+            disabledReason = `indisponível — já incluso em "${gName}"`
+            break
+          }
+        }
+
+        // Direction 3 (new): does this grupo contain any currently-selected item?
+        if (!disabled) {
+          const desc = getAllDescendants(g.id, allGrupos)
+          const hit = desc.find((d) => selected.has(`${d.type}:${d.refId}`))
+          if (hit) {
+            const hitName =
+              hit.type === 'product'
+                ? allProducts.find((p) => p.id === hit.refId)?.name
+                : allGrupos.find((gl) => gl.id === hit.refId)?.name
+            disabled = true
+            disabledReason = `indisponível — contém "${hitName ?? 'item selecionado'}"`
+          }
         }
       }
 
@@ -168,7 +216,7 @@ export default function GrupoModal({
     }
 
     return result
-  }, [allProducts, allGrupos, editing, preSelected, descendants, memberships, targetId])
+  }, [allProducts, allGrupos, editing, preSelected, descendants, memberships, targetId, selected])
 
   const conflictingSelected = useMemo(
     () => items.filter((item) => item.disabled && selected.has(`${item.type}:${item.refId}`)),

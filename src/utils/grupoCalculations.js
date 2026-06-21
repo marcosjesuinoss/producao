@@ -88,6 +88,28 @@ export function getAllAncestors(childType, childId, memberships) {
 }
 
 /**
+ * Returns all recursive descendants of grupoId as { type, refId }[].
+ * Traverses both 'product' and 'classe' children.
+ */
+export function getAllDescendants(grupoId, allGrupos) {
+  const result = []
+  const seen = new Set()
+  const stack = [grupoId]
+  while (stack.length) {
+    const id = stack.pop()
+    if (seen.has(id)) continue
+    seen.add(id)
+    const grp = allGrupos.find((g) => g.id === id)
+    if (!grp) continue
+    for (const child of grp.children ?? []) {
+      result.push({ type: child.type, refId: child.refId })
+      if (child.type === 'classe') stack.push(child.refId)
+    }
+  }
+  return result
+}
+
+/**
  * Returns true if adding childType/childId as a child of targetGrupoId
  * would create a shared-ancestor conflict (double-counting risk).
  */
