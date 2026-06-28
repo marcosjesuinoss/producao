@@ -46,7 +46,7 @@ export default function App() {
       <div className="min-h-screen">
         <ScrollToTop />
         <Header online={online} />
-        <main className="max-w-5xl mx-auto p-4 pb-24">
+        <main className="max-w-5xl mx-auto p-4 pb-28">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/registros" element={<RecordsPage />} />
