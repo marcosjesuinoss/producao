@@ -1,27 +1,8 @@
-import { NavLink } from 'react-router-dom'
 import { TrendingUp, Plus, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
 import { MONTHS } from '../lib/format.js'
-
-const tabs = [
-  { to: '/', label: 'Resumo', end: true },
-  { to: '/acumulado', label: 'Acumulado' },
-  { to: '/registros', label: 'Registros' },
-  { to: '/ajustes', label: 'Ajustes' }
-]
-
-const activeStyle = {
-  color: '#818cf8',
-  borderBottomColor: '#818cf8',
-  background: 'rgba(99,102,241,0.12)',
-}
-const inactiveStyle = {
-  color: 'var(--text-faint)',
-  borderBottomColor: 'transparent',
-  background: 'transparent',
-}
 
 const navBtnStyle = {
   width: '24px',
@@ -108,7 +89,7 @@ export default function Header({ online }) {
       </div>
 
       {/* Linha 2: botão novo registro */}
-      <div className="max-w-5xl mx-auto px-4 pb-2">
+      <div className="max-w-5xl mx-auto px-4 pb-3">
         <button
           className="btn btn-brand w-full sm:w-auto"
           onClick={() => open()}
@@ -118,25 +99,6 @@ export default function Header({ online }) {
           Novo registro
         </button>
       </div>
-
-      {/* Linha 3: abas de navegação */}
-      <nav
-        className="max-w-5xl mx-auto flex border-t"
-        style={{ borderColor: 'var(--c-border)' }}
-        aria-label="Navegacao principal"
-      >
-        {tabs.map((t) => (
-          <NavLink
-            key={t.to}
-            to={t.to}
-            end={t.end}
-            className="flex-1 flex items-center justify-center whitespace-nowrap py-2 text-xs font-medium border-b-2 transition-colors"
-            style={({ isActive }) => (isActive ? activeStyle : inactiveStyle)}
-          >
-            {t.label}
-          </NavLink>
-        ))}
-      </nav>
     </header>
   )
 }

@@ -8,6 +8,7 @@ function ScrollToTop() {
   return null
 }
 import Header from './components/Header.jsx'
+import BottomNav from './components/BottomNav.jsx'
 import HomePage from './pages/HomePage.jsx'
 import RecordsPage from './pages/RecordsPage.jsx'
 import GoalsPage from './pages/GoalsPage.jsx'
@@ -45,7 +46,7 @@ export default function App() {
       <div className="min-h-screen">
         <ScrollToTop />
         <Header online={online} />
-        <main className="max-w-5xl mx-auto p-4">
+        <main className="max-w-5xl mx-auto p-4 pb-24">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/registros" element={<RecordsPage />} />
@@ -57,6 +58,7 @@ export default function App() {
           </Routes>
         </main>
       </div>
+      <BottomNav />
       <UpdateToast />
     </RecordModalProvider>
     </MonthProvider>
