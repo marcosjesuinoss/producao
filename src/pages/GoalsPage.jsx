@@ -133,7 +133,7 @@ export default function GoalsPage() {
       )}
 
       <div className="space-y-3">
-        {allProducts.map((product) => {
+        {allProducts.map((product, idx) => {
           const g = goalFor(product)
           const isVal = isValue(product)
           const rec = realizedByProduct[product] || { quantity: 0, value: 0 }
@@ -143,7 +143,7 @@ export default function GoalsPage() {
           const productId = productById.get(product) ?? null
           return (
             <GoalCard
-              key={product}
+              key={`${product}-${idx}`}
               product={product}
               goal={g}
               isValueProduct={isVal}

@@ -4,12 +4,14 @@ import { STANDARD_PRODUCTS } from './format.js'
 // Popula os produtos padrão apenas na primeira instalação (DB vazio).
 // Depois que o usuário tem produtos, nunca mais interfere.
 export async function seedStandardProducts() {
-  const count = await db.products.count()
-  if (count > 0) return
-  const toAdd = STANDARD_PRODUCTS.map((p) => ({
-    id: uid(), name: p.name, useValue: p.useValue, createdAt: Date.now(),
-  }))
-  await db.products.bulkAdd(toAdd)
+  await db.transaction('rw', db.products, async () => {
+    const count = await db.products.count()
+    if (count > 0) return
+    const toAdd = STANDARD_PRODUCTS.map((p) => ({
+      id: uid(), name: p.name, useValue: p.useValue, createdAt: Date.now(),
+    }))
+    await db.products.bulkAdd(toAdd)
+  })
 }
 
 /*

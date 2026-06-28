@@ -44,5 +44,27 @@ db.version(4).stores({
   yearSnapshots: '&id, year'
 })
 
+// v5: remove produtos duplicados causados por race condition no seed (StrictMode dev)
+db.version(5).stores({
+  records: '&id, date, year, month, product, account, manager, synced',
+  goals: '&id, year, month, product, manager',
+  users: '&id, name',
+  products: '&id, name',
+  classes: '&id, name',
+  yearSnapshots: '&id, year'
+}).upgrade(async (tx) => {
+  const all = await tx.table('products').toArray()
+  const seen = new Set()
+  const toDelete = []
+  for (const p of all) {
+    if (seen.has(p.name)) {
+      toDelete.push(p.id)
+    } else {
+      seen.add(p.name)
+    }
+  }
+  if (toDelete.length) await tx.table('products').bulkDelete(toDelete)
+})
+
 export const uid = () =>
   (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2))
