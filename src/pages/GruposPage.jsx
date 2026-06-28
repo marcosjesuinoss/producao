@@ -56,8 +56,8 @@ export default function GruposPage() {
       <div className="flex items-center gap-3">
         <button
           className="btn px-2 py-2 shrink-0"
-          onClick={() => navigate('/metas')}
-          aria-label="Voltar para Metas"
+          onClick={() => navigate('/ajustes')}
+          aria-label="Voltar para Ajustes"
         >
           <ArrowLeft size={16} />
         </button>

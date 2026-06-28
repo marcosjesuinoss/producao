@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FolderTree, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { upsertGoal, createProduct, updateProduct, deleteProduct, deleteGoal } from '../api/localApi.js'
@@ -108,20 +108,28 @@ export default function GoalsPage() {
       )}
     <section className="space-y-4">
 
-      <div className="flex gap-2">
-        <button className="btn flex-1" onClick={() => setProductModalOpen(true)}>
-          + Novo produto
-        </button>
+      {/* Page header */}
+      <div className="flex items-center gap-3">
         <button
-          className="btn flex-1 flex items-center gap-1.5"
-          style={{ background: 'rgba(99,102,241,0.1)', borderColor: 'rgba(99,102,241,0.35)', color: '#818cf8' }}
-          onClick={() => navigate('/grupos')}
-          aria-label="Gerenciar grupos"
+          className="btn px-2 py-2 shrink-0"
+          onClick={() => navigate('/ajustes')}
+          aria-label="Voltar para Ajustes"
         >
-          <FolderTree size={14} />
-          <span className="text-sm">Gerenciar grupos</span>
+          <ArrowLeft size={16} />
         </button>
+        <div className="min-w-0">
+          <h1 className="font-bold text-base truncate" style={{ color: 'var(--text-primary)' }}>
+            Definir Metas
+          </h1>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            Configure as metas mensais por produto
+          </p>
+        </div>
       </div>
+
+      <button className="btn btn-brand w-full" onClick={() => setProductModalOpen(true)}>
+        + Novo produto
+      </button>
 
       {productModalOpen && (
         <ProductModal
