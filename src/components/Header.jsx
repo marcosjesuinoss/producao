@@ -9,7 +9,6 @@ const tabs = [
   { to: '/', label: 'Resumo', end: true },
   { to: '/acumulado', label: 'Acumulado' },
   { to: '/registros', label: 'Registros' },
-  { to: '/metas', label: 'Metas' },
   { to: '/ajustes', label: 'Ajustes' }
 ]
 

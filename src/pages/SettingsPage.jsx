@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Sun, Moon, Trash2, Lock, AlertTriangle, RefreshCw } from 'lucide-react'
+import { Sun, Moon, Trash2, Lock, AlertTriangle, RefreshCw, Target, Layers } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
@@ -95,6 +96,7 @@ function ClearConfirmDialog({ onConfirm, onCancel }) {
 }
 
 export default function SettingsPage() {
+  const navigate = useNavigate()
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW()
   const { hasPin, setPin, removePin } = useAuth()
   const { theme, toggleTheme, fontScale, setFontScale } = useTheme()
@@ -120,6 +122,55 @@ export default function SettingsPage() {
   return (
     <section className="space-y-4 max-w-xl">
       <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Ajustes</h2>
+
+      {/* Metas */}
+      <div className="card space-y-3">
+        <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Metas</h3>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={() => navigate('/metas')}
+            style={{
+              flex: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0.5em 0.75em',
+              fontSize: '0.875em',
+              fontWeight: 500,
+              borderRadius: '8px',
+              border: '1px solid var(--input-border)',
+              background: 'var(--bg-card-deep)',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+            }}
+          >
+            <Target size={14} />
+            Definir metas
+          </button>
+          <button
+            onClick={() => navigate('/grupos')}
+            style={{
+              flex: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0.5em 0.75em',
+              fontSize: '0.875em',
+              fontWeight: 500,
+              borderRadius: '8px',
+              border: '1px solid var(--input-border)',
+              background: 'var(--bg-card-deep)',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+            }}
+          >
+            <Layers size={14} />
+            Gerenciar grupos
+          </button>
+        </div>
+      </div>
 
       {/* Aparência */}
       <div className="card space-y-3">
