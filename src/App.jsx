@@ -13,6 +13,7 @@ import RecordsPage from './pages/RecordsPage.jsx'
 import GoalsPage from './pages/GoalsPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
 import GruposPage from './pages/GruposPage.jsx'
+import AcumuladoPage from './pages/AcumuladoPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import { useAuth } from './context/AuthContext.jsx'
 import { RecordModalProvider } from './context/RecordModalContext.jsx'
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/metas" element={<GoalsPage />} />
             <Route path="/ajustes" element={<SettingsPage />} />
             <Route path="/grupos" element={<GruposPage />} />
+            <Route path="/acumulado" element={<AcumuladoPage />} />
             <Route path="*" element={<HomePage />} />
           </Routes>
         </main>

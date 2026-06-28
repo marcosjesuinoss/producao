@@ -7,6 +7,7 @@ import { MONTHS } from '../lib/format.js'
 
 const tabs = [
   { to: '/', label: 'Resumo', end: true },
+  { to: '/acumulado', label: 'Acumulado' },
   { to: '/registros', label: 'Registros' },
   { to: '/metas', label: 'Metas' },
   { to: '/ajustes', label: 'Ajustes' }
@@ -130,7 +131,7 @@ export default function Header({ online }) {
             key={t.to}
             to={t.to}
             end={t.end}
-            className="flex-1 flex items-center justify-center whitespace-nowrap py-2 text-sm font-medium border-b-2 transition-colors"
+            className="flex-1 flex items-center justify-center whitespace-nowrap py-2 text-xs font-medium border-b-2 transition-colors"
             style={({ isActive }) => (isActive ? activeStyle : inactiveStyle)}
           >
             {t.label}

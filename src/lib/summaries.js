@@ -87,6 +87,45 @@ export async function generalSummary({ product, manager } = {}) {
   return { period: 'general', ...reduceTotals(records) }
 }
 
+// Agregacao acumulada por produto para um intervalo de meses dentro de um ano.
+export async function accumulatedBreakdown({ year, startMonth, endMonth } = {}) {
+  const y  = Number(year)
+  const sm = Number(startMonth)
+  const em = Number(endMonth)
+
+  let records = await db.records.where('year').equals(y).toArray()
+  records = records.filter((r) => r.month >= sm && r.month <= em)
+
+  const map = new Map()
+  for (const r of records) {
+    const cur = map.get(r.product) || { product: r.product, quantity: 0, value: 0, targetQty: 0, targetVal: 0 }
+    cur.quantity += r.quantity || 0
+    cur.value    += r.value    || 0
+    map.set(r.product, cur)
+  }
+
+  const goals = await db.goals.filter((g) => g.year === y && g.month >= sm && g.month <= em).toArray()
+  for (const g of goals) {
+    const cur = map.get(g.product) || { product: g.product, quantity: 0, value: 0, targetQty: 0, targetVal: 0 }
+    cur.targetQty += g.targetQuantity || 0
+    cur.targetVal += g.targetValue    || 0
+    map.set(g.product, cur)
+  }
+
+  const customProds = await db.products.toArray()
+  const customMap   = new Map(customProds.map((p) => [p.name, p.useValue]))
+  const isValueProduct = (name) => customMap.has(name) ? customMap.get(name) : VALUE_PRODUCTS.has(name)
+
+  return [...map.values()]
+    .map((b) => {
+      const useValue     = isValueProduct(b.product)
+      const realized     = useValue ? b.value    : b.quantity
+      const metricTarget = useValue ? b.targetVal : b.targetQty
+      return { ...b, target: b.targetQty, useValue, realized, metricTarget }
+    })
+    .sort((a, b) => b.realized - a.realized)
+}
+
 // Agregacao por produto para o mes vigente.
 // Produtos em VALUE_PRODUCTS usam valor como metrica principal.
 export async function productBreakdown({ year, month, manager } = {}) {

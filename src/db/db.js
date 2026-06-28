@@ -34,5 +34,15 @@ db.version(3).stores({
   classes: '&id, name'
 })
 
+// v4: snapshots da estrutura de grupos por ano (para preservar historico)
+db.version(4).stores({
+  records: '&id, date, year, month, product, account, manager, synced',
+  goals: '&id, year, month, product, manager',
+  users: '&id, name',
+  products: '&id, name',
+  classes: '&id, name',
+  yearSnapshots: '&id, year'
+})
+
 export const uid = () =>
   (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2))

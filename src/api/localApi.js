@@ -208,6 +208,20 @@ export async function deleteGrupo(id) {
   return { ok: true, id }
 }
 
+// ---- YEAR SNAPSHOTS ----
+export async function saveYearSnapshot(year) {
+  const y      = Number(year)
+  const grupos = await db.classes.toArray()
+  const existing = await db.yearSnapshots.where('year').equals(y).first()
+  if (existing) {
+    await db.yearSnapshots.update(existing.id, { grupos, updatedAt: Date.now() })
+    return { id: existing.id, year: y, grupos }
+  }
+  const snap = { id: uid(), year: y, grupos, createdAt: Date.now() }
+  await db.yearSnapshots.add(snap)
+  return snap
+}
+
 // ---- SYNC (opcional / simples) ----
 // Marca registros como sincronizados; aqui simulamos um POST em lote.
 export async function syncNow(endpoint) {
