@@ -53,7 +53,7 @@ function buildSubtitle(type, year, startMonth, endMonth) {
   const start     = MONTHS[startMonth - 1]
   const labelEnd  = type === 'anual' ? 12 : endMonth
   const end       = MONTHS[labelEnd - 1]
-  const n         = endMonth - startMonth + 1
+  const n         = labelEnd - startMonth + 1
   const range     = startMonth === endMonth ? start : `${start} a ${end}`
   const status    = isCurrent && endMonth >= cm ? 'em andamento' : 'concluído'
   return `${range} ${year} · ${n} ${n === 1 ? 'mês' : 'meses'} · ${status}`
