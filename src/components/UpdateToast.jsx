@@ -1,8 +1,18 @@
 import { RefreshCw } from 'lucide-react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
+const CHECK_INTERVAL_MS = 60 * 60 * 1000 // 1 hora
+
 export default function UpdateToast() {
-  const { needRefresh: [needRefresh, setNeedRefresh], updateServiceWorker } = useRegisterSW()
+  const { needRefresh: [needRefresh, setNeedRefresh], updateServiceWorker } = useRegisterSW({
+    onRegisteredSW(_swUrl, registration) {
+      if (!registration) return
+      setInterval(async () => {
+        if (registration.installing || !navigator.onLine) return
+        await registration.update()
+      }, CHECK_INTERVAL_MS)
+    },
+  })
 
   if (!needRefresh) return null
 
