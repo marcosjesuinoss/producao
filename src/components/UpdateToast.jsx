@@ -17,7 +17,7 @@ export default function UpdateToast() {
   if (!needRefresh) return null
 
   return (
-    <div className="fixed left-4 right-4 z-50 max-w-sm mx-auto" style={{ bottom: 'calc(60px + env(safe-area-inset-bottom) + 12px)' }}>
+    <div className="fixed left-4 right-4 z-50 max-w-sm mx-auto" style={{ bottom: 'calc(60px + env(safe-area-inset-bottom) + 64px)' }}>
       <div
         className="card shadow-2xl p-4 flex items-center gap-3"
         style={{ borderColor: 'var(--c-brand)', borderWidth: '1.5px' }}
