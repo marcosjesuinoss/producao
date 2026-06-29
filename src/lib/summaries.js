@@ -32,6 +32,7 @@ export async function monthlySummary({ year, month, product, manager } = {}) {
   const m = Number(month) || now.getMonth() + 1
 
   let records = await db.records.where({ year: y, month: m }).toArray()
+  records = records.filter((r) => !r.ignored)
   if (product) records = records.filter((r) => r.product === product)
   if (manager) records = records.filter((r) => r.manager === manager)
 
@@ -60,6 +61,7 @@ export async function monthlySummary({ year, month, product, manager } = {}) {
 export async function annualSummary({ year, product, manager } = {}) {
   const y = Number(year) || new Date().getFullYear()
   let records = await db.records.where('year').equals(y).toArray()
+  records = records.filter((r) => !r.ignored)
   if (product) records = records.filter((r) => r.product === product)
   if (manager) records = records.filter((r) => r.manager === manager)
 
@@ -82,6 +84,7 @@ export async function annualSummary({ year, product, manager } = {}) {
 // SOMATORIO GERAL (todas as producoes, todos os anos)
 export async function generalSummary({ product, manager } = {}) {
   let records = await db.records.toArray()
+  records = records.filter((r) => !r.ignored)
   if (product) records = records.filter((r) => r.product === product)
   if (manager) records = records.filter((r) => r.manager === manager)
   return { period: 'general', ...reduceTotals(records) }
@@ -94,7 +97,7 @@ export async function accumulatedBreakdown({ year, startMonth, endMonth } = {}) 
   const em = Number(endMonth)
 
   let records = await db.records.where('year').equals(y).toArray()
-  records = records.filter((r) => r.month >= sm && r.month <= em)
+  records = records.filter((r) => r.month >= sm && r.month <= em && !r.ignored)
 
   const map = new Map()
   for (const r of records) {
@@ -133,6 +136,7 @@ export async function productBreakdown({ year, month, manager } = {}) {
   const y = Number(year) || now.getFullYear()
   const m = Number(month) || now.getMonth() + 1
   let records = await db.records.where({ year: y, month: m }).toArray()
+  records = records.filter((r) => !r.ignored)
   if (manager) records = records.filter((r) => r.manager === manager)
 
   const map = new Map()
