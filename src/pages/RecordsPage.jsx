@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Download } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
-import { deleteRecord } from '../api/localApi.js'
+import { deleteRecord, updateRecord } from '../api/localApi.js'
 import { exportCsv } from '../lib/csv.js'
 import Filters from '../components/Filters.jsx'
 import RecordList from '../components/RecordList.jsx'
@@ -33,6 +33,10 @@ export default function RecordsPage() {
     if (confirm(`Excluir registro de ${r.product} em ${r.date}?`)) await deleteRecord(r.id)
   }
 
+  const handleIgnore = async (r, ignored) => {
+    await updateRecord(r.id, { ignored })
+  }
+
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -47,7 +51,7 @@ export default function RecordsPage() {
       </div>
 
       <Filters value={filters} onChange={setFilters} accounts={accounts} />
-      <RecordList records={records} onEdit={(r) => open(r)} onDelete={handleDelete} />
+      <RecordList records={records} onEdit={(r) => open(r)} onDelete={handleDelete} onIgnore={handleIgnore} />
     </section>
   )
 }

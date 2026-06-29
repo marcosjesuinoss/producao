@@ -91,6 +91,7 @@ export async function updateRecord(id, patch) {
   if ('quantity' in patch) next.quantity = parseNum(patch.quantity)
   if ('value' in patch) next.value = parseNumOrNull(patch.value)
   if ('qualified' in patch) next.qualified = !!patch.qualified
+  if ('ignored'   in patch) next.ignored   = !!patch.ignored
   await db.records.put(next)
   return next
 }

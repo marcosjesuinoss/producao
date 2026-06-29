@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MoreHorizontal, Pencil, Trash2, Eye, X } from 'lucide-react'
+import { MoreHorizontal, Pencil, Trash2, Eye, EyeOff, RotateCcw, X } from 'lucide-react'
 import { brl, num } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
 
@@ -103,10 +103,39 @@ function RecordDetailsModal({ record, isValueProd, onClose }) {
   )
 }
 
-export default function RecordList({ records, onEdit, onDelete }) {
+function IgnoreConfirmDialog({ record, onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0"
+        style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
+        onClick={onCancel}
+        aria-hidden
+      />
+      <div
+        className="relative w-full max-w-xs space-y-4 p-5"
+        style={{ background: 'var(--c-surface)', borderRadius: '20px', boxShadow: '0 24px 48px rgba(0,0,0,0.4)' }}
+      >
+        <div>
+          <p className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>Ignorar esta produção?</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+            O registro continua salvo mas será marcado como ignorado.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button className="btn flex-1" onClick={onCancel}>Não</button>
+          <button className="btn btn-brand flex-1" onClick={onConfirm}>Sim</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function RecordList({ records, onEdit, onDelete, onIgnore }) {
   const { isValue } = useProducts()
   const [openId, setOpenId] = useState(null)
   const [detailRecord, setDetailRecord] = useState(null)
+  const [ignoreTarget, setIgnoreTarget] = useState(null)
 
   if (!records?.length) {
     return (
@@ -128,12 +157,14 @@ export default function RecordList({ records, onEdit, onDelete }) {
             >
               <div className="min-w-0 flex-1">
                 <div className="font-medium flex items-baseline gap-2 min-w-0">
-                  <span className="truncate" style={{ color: 'var(--text-primary)' }}>{r.product}</span>
-                  {r.product === ABERTURA && (
+                  <span className="truncate" style={{ color: r.ignored ? 'var(--text-faint)' : 'var(--text-primary)' }}>{r.product}</span>
+                  {r.ignored ? (
+                    <span className="text-xs shrink-0" style={{ color: 'var(--text-faint)' }}>⊘ ignorada</span>
+                  ) : r.product === ABERTURA ? (
                     <span className="text-xs shrink-0" style={{ color: r.qualified ? 'var(--c-good)' : 'var(--accent-red)' }}>
                       {r.qualified ? '✓ qualificada' : '✗ não qualificada'}
                     </span>
-                  )}
+                  ) : null}
                 </div>
                 {r.clientName?.trim() && (
                   <div className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>
@@ -216,6 +247,27 @@ export default function RecordList({ records, onEdit, onDelete }) {
                       <Pencil size={14} />
                       Editar
                     </button>
+                    {r.ignored ? (
+                      <button
+                        role="menuitem"
+                        className="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm"
+                        style={{ color: 'var(--text-secondary)' }}
+                        onClick={() => { setOpenId(null); onIgnore(r, false) }}
+                      >
+                        <RotateCcw size={14} />
+                        Retomar produção
+                      </button>
+                    ) : (
+                      <button
+                        role="menuitem"
+                        className="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm"
+                        style={{ color: 'var(--text-secondary)' }}
+                        onClick={() => { setOpenId(null); setIgnoreTarget(r) }}
+                      >
+                        <EyeOff size={14} />
+                        Ignorar produção
+                      </button>
+                    )}
                     <button
                       role="menuitem"
                       className="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm"
@@ -232,6 +284,14 @@ export default function RecordList({ records, onEdit, onDelete }) {
           ))}
         </ul>
       </div>
+
+      {ignoreTarget && (
+        <IgnoreConfirmDialog
+          record={ignoreTarget}
+          onConfirm={() => { onIgnore(ignoreTarget, true); setIgnoreTarget(null) }}
+          onCancel={() => setIgnoreTarget(null)}
+        />
+      )}
 
       {detailRecord && (
         <RecordDetailsModal
