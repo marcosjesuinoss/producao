@@ -1,5 +1,5 @@
 import { db } from '../db/db.js'
-import { VALUE_PRODUCTS } from './format.js'
+import { VALUE_PRODUCTS, floorPct } from './format.js'
 
 /*
   Queries de somatorios sobre IndexedDB (Dexie).
@@ -52,7 +52,7 @@ export async function monthlySummary({ year, month, product, manager } = {}) {
     ...totals,
     target,
     // meta realizada (%) com base na quantidade
-    achievedPct: target.quantity ? Math.round((totals.quantity / target.quantity) * 100) : null,
+    achievedPct: target.quantity ? floorPct((totals.quantity / target.quantity) * 100) : null,
     diff: totals.quantity - target.quantity
   }
 }

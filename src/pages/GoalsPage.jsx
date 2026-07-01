@@ -4,7 +4,7 @@ import { ArrowLeft, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { upsertGoal, createProduct, updateProduct, deleteProduct, deleteGoal } from '../api/localApi.js'
-import { num, brl, BR_NUM_RE } from '../lib/format.js'
+import { num, brl, BR_NUM_RE, floorPct } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
 import { useMonth } from '../context/MonthContext.jsx'
 import { getProgressColor } from '../utils/progressColor.js'
@@ -147,7 +147,7 @@ export default function GoalsPage() {
           const rec = realizedByProduct[product] || { quantity: 0, value: 0 }
           const realized = isVal ? rec.value : rec.quantity
           const target = isVal ? (g?.targetValue || 0) : (g?.targetQuantity || 0)
-          const pct = target > 0 ? Math.round((realized / target) * 100) : realized > 0 ? 100 : null
+          const pct = target > 0 ? floorPct((realized / target) * 100) : realized > 0 ? 100 : null
           const productId = productById.get(product) ?? null
           return (
             <GoalCard

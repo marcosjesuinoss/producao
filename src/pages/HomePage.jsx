@@ -4,7 +4,7 @@ import { ChevronRight, ChevronUp, ChevronDown, Check } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { productBreakdown } from '../lib/summaries.js'
-import { brl, num } from '../lib/format.js'
+import { brl, num, floorPct } from '../lib/format.js'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
 import { getProgressColor, getRemainingLabel } from '../utils/progressColor.js'
@@ -82,7 +82,7 @@ function RemainingLine({ value, target, fmt = brl, fontSize = '11px' }) {
 function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
   const fmt = useValue ? brl : num
   const rawPctLeaf = target > 0 ? (realized / target) * 100 : realized > 0 ? 100 : 0
-  const pct = target > 0 ? Math.round(rawPctLeaf) : realized > 0 ? 100 : null
+  const pct = target > 0 ? floorPct(rawPctLeaf) : realized > 0 ? 100 : null
   const color = pct != null ? getProgressColor(rawPctLeaf) : '#374151'
   const nodeStyle =
     depth === 1
@@ -141,9 +141,9 @@ function GrupoNode({
 
   const { realized, target, pct: rawPct } = computeGrupoProgress(grupoId, allGrupos, productDataMap)
   const pct = isAvgPct
-    ? (rawPct > 0 ? Math.round(rawPct) : null)
+    ? (rawPct > 0 ? floorPct(rawPct) : null)
     : (target ?? 0) > 0
-      ? Math.round(rawPct)
+      ? floorPct(rawPct)
       : (realized ?? 0) > 0
       ? 100
       : null
@@ -315,7 +315,7 @@ function GrupoNode({
 
 function ProductCard({ b, reordering, onMove, isFirst, isLast }) {
   const rawPctCard = b.metricTarget > 0 ? (b.realized / b.metricTarget) * 100 : b.realized > 0 ? 100 : 0
-  const pct = b.metricTarget > 0 ? Math.round(rawPctCard) : b.realized > 0 ? 100 : null
+  const pct = b.metricTarget > 0 ? floorPct(rawPctCard) : b.realized > 0 ? 100 : null
   const color = pct != null ? getProgressColor(rawPctCard) : 'var(--text-faint)'
   const fmt = (v) => (b.useValue ? brl(v) : num(v))
 

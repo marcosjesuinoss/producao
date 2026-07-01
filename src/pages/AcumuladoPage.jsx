@@ -4,7 +4,7 @@ import { AlertTriangle, Check, ChevronRight, Lock } from 'lucide-react'
 import { db } from '../db/db.js'
 import { accumulatedBreakdown } from '../lib/summaries.js'
 import { saveYearSnapshot } from '../api/localApi.js'
-import { brl, num, MONTHS } from '../lib/format.js'
+import { brl, num, MONTHS, floorPct } from '../lib/format.js'
 import { getProgressColor, getRemainingLabel } from '../utils/progressColor.js'
 import ProgressBar from '../components/ui/ProgressBar.jsx'
 import { computeGrupoProgress, deriveMemberships } from '../utils/grupoCalculations.js'
@@ -91,7 +91,7 @@ function RemainingLine({ value, target, fmt = brl, fontSize = '11px' }) {
 function ProductLeaf({ name, realized, target, useValue, depth }) {
   const fmt    = useValue ? brl : num
   const rawPct = target > 0 ? (realized / target) * 100 : realized > 0 ? 100 : 0
-  const pct    = target > 0 ? Math.round(rawPct) : realized > 0 ? 100 : null
+  const pct    = target > 0 ? floorPct(rawPct) : realized > 0 ? 100 : null
   const color  = pct != null ? getProgressColor(rawPct) : '#374151'
   const nodeStyle = depth === 1
     ? { borderLeft: `2px solid ${color}`, paddingLeft: '8px', marginLeft: '2px' }
@@ -135,9 +135,9 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0 
 
   const { realized, target, pct: rawPct } = computeGrupoProgress(grupoId, allGrupos, productDataMap)
   const pct = isAvgPct
-    ? (rawPct > 0 ? Math.round(rawPct) : null)
+    ? (rawPct > 0 ? floorPct(rawPct) : null)
     : (target ?? 0) > 0
-      ? Math.round(rawPct)
+      ? floorPct(rawPct)
       : (realized ?? 0) > 0 ? 100 : null
   const color = pct != null ? getProgressColor(rawPct) : '#374151'
 
@@ -248,7 +248,7 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0 
 
 function ProductCard({ b }) {
   const rawPct = b.metricTarget > 0 ? (b.realized / b.metricTarget) * 100 : b.realized > 0 ? 100 : 0
-  const pct    = b.metricTarget > 0 ? Math.round(rawPct) : b.realized > 0 ? 100 : null
+  const pct    = b.metricTarget > 0 ? floorPct(rawPct) : b.realized > 0 ? 100 : null
   const color  = pct != null ? getProgressColor(rawPct) : 'var(--text-faint)'
   const fmt    = (v) => (b.useValue ? brl(v) : num(v))
 

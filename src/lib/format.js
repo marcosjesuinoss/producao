@@ -38,6 +38,10 @@ export const brl = (n) =>
 
 export const num = (n) => Number(n || 0).toLocaleString('pt-BR')
 
+// Trunca percentual sem arredondar: 89,99% continua 89%, so vira 90% ao atingir 90% de fato.
+// toFixed(6) elimina ruido de ponto flutuante (ex.: 89.999999999999996) sem afetar o valor real.
+export const floorPct = (n) => Math.floor(Number(n.toFixed(6)))
+
 export const todayISO = () => new Date().toISOString().slice(0, 10)
 
 // Valida numero no formato pt-BR: ponto APENAS como milhar (3 digitos apos),
