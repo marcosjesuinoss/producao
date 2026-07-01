@@ -99,7 +99,7 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW()
   const { hasPin, setPin, removePin } = useAuth()
-  const { theme, toggleTheme, fontScale, setFontScale } = useTheme()
+  const { theme, toggleTheme } = useTheme()
   const [pin, setPinValue] = useState('')
   const [msg, setMsg] = useState('')
   const [showClearDialog, setShowClearDialog] = useState(false)
@@ -197,48 +197,6 @@ export default function SettingsPage() {
           >
             {isDark ? <Sun size={14} /> : <Moon size={14} />}
             {isDark ? 'Tema claro' : 'Tema escuro'}
-          </button>
-
-          <button
-            onClick={() => setFontScale(Math.max(0.9, +(fontScale - 0.1).toFixed(2)))}
-            style={{
-              flex: 1,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0.5em 0.75em',
-              fontSize: '0.875em',
-              fontWeight: 500,
-              borderRadius: '8px',
-              border: '1px solid var(--input-border)',
-              background: 'var(--bg-card-deep)',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-            }}
-            aria-label="Diminuir fonte"
-          >
-            A− Menor
-          </button>
-
-          <button
-            onClick={() => setFontScale(Math.min(1.4, +(fontScale + 0.1).toFixed(2)))}
-            style={{
-              flex: 1,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0.5em 0.75em',
-              fontSize: '0.875em',
-              fontWeight: 500,
-              borderRadius: '8px',
-              border: '1px solid var(--input-border)',
-              background: 'var(--bg-card-deep)',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-            }}
-            aria-label="Aumentar fonte"
-          >
-            A+ Maior
           </button>
         </div>
       </div>

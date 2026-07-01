@@ -61,7 +61,7 @@ controle-producao/
    │  ├─ seed.js          # dados de teste
    │  └─ format.js        # produtos, meses, formatação BRL
    ├─ context/
-   │  ├─ ThemeContext.jsx # tema + escala de fonte (localStorage)
+   │  ├─ ThemeContext.jsx # tema (localStorage)
    │  └─ AuthContext.jsx  # PIN local opcional (SHA-256)
    ├─ components/
    │  ├─ Header.jsx  ThemeToggle.jsx  Filters.jsx
@@ -119,11 +119,10 @@ controle-producao/
   "id": "u1",
   "name": "Marco Silva",
   "pinHash": "sha256…",
-  "theme": "dark",
-  "fontScale": 1
+  "theme": "dark"
 }
 ```
-> No app, `theme`/`fontScale` ficam no `localStorage` e o `pinHash` no `localStorage` (chave `pinHash`). A tabela `users` está disponível no Dexie para evoluções.
+> No app, `theme` fica no `localStorage` e o `pinHash` no `localStorage` (chave `pinHash`). A tabela `users` está disponível no Dexie para evoluções.
 
 ## "Endpoints" locais (em `src/api/localApi.js`)
 

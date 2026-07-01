@@ -15,7 +15,7 @@
   --c-good:       #16a34a;
   --c-bad:        #dc2626;
   --c-warn:       #ca8a04;
-  --font-scale: 1;
+  --font-scale: 0.9;
 
   /* new design tokens */
   --bg-base:        #f1f5f9;
