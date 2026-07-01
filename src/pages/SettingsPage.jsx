@@ -99,7 +99,7 @@ export default function SettingsPage() {
   const navigate = useNavigate()
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW()
   const { hasPin, setPin, removePin } = useAuth()
-  const { theme, toggleTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const [pin, setPinValue] = useState('')
   const [msg, setMsg] = useState('')
   const [showClearDialog, setShowClearDialog] = useState(false)
@@ -175,9 +175,9 @@ export default function SettingsPage() {
       {/* Aparência */}
       <div className="card space-y-3">
         <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Aparência</h3>
-        <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button
-            onClick={toggleTheme}
+            onClick={() => setTheme('light')}
             style={{
               flex: 1,
               display: 'inline-flex',
@@ -195,8 +195,30 @@ export default function SettingsPage() {
               transition: 'all 0.15s',
             }}
           >
-            {isDark ? <Sun size={14} /> : <Moon size={14} />}
-            {isDark ? 'Tema claro' : 'Tema escuro'}
+            <Sun size={14} />
+            Modo claro
+          </button>
+          <button
+            onClick={() => setTheme('dark')}
+            style={{
+              flex: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0.5em 0.75em',
+              fontSize: '0.875em',
+              fontWeight: 500,
+              borderRadius: '8px',
+              border: isDark ? '1px solid #818cf8' : '1px solid var(--input-border)',
+              background: isDark ? 'rgba(99,102,241,0.1)' : 'var(--bg-card-deep)',
+              color: isDark ? '#818cf8' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >
+            <Moon size={14} />
+            Modo escuro
           </button>
         </div>
       </div>
