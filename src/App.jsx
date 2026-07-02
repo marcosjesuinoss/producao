@@ -25,7 +25,10 @@ export default function App() {
   const { hasPin, unlocked } = useAuth()
   const [online, setOnline] = useState(navigator.onLine)
 
-  useEffect(() => { seedStandardProducts().then(seedGrupos) }, [])
+  useEffect(() => {
+    seedStandardProducts().then(seedGrupos)
+    navigator.storage?.persist?.()
+  }, [])
 
   useEffect(() => {
     const on = () => setOnline(true)
