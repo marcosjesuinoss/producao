@@ -85,73 +85,56 @@ export async function seedIfEmpty() {
   return true
 }
 
-// Idempotently seeds the 3 credit hierarchy grupos using product UUIDs
-// looked up by name. Must run AFTER seedStandardProducts().
-// Wrapped in a transaction so concurrent calls (React StrictMode) don't duplicate rows.
+// Popula a hierarquia padrao de grupos de credito apenas na primeira
+// instalacao (tabela de grupos vazia). Depois que o usuario tem grupos
+// (mesmo que tenha apagado algum dos padroes), nunca mais interfere —
+// mesma logica de seedStandardProducts, pra nao reviver grupo apagado.
+// Deve rodar DEPOIS de seedStandardProducts().
 export async function seedGrupos() {
   await db.transaction('rw', db.classes, db.products, async () => {
-  const existingGrupos = await db.classes.toArray()
-  const existingByName = new Map(existingGrupos.map((g) => [g.name, g]))
+    const count = await db.classes.count()
+    if (count > 0) return
 
-  if (
-    existingByName.has('Credito Total') &&
-    existingByName.has('Credito < Spread') &&
-    existingByName.has('Credito > Spread')
-  ) return
+    const products = await db.products.toArray()
+    const idByName = new Map(products.map((p) => [p.name, p.id]))
 
-  const products = await db.products.toArray()
-  const idByName = new Map(products.map((p) => [p.name, p.id]))
+    const creditMenorId = uid()
+    const creditMaiorId = uid()
 
-  // Helper: return id of an existing grupo or generate a new one
-  const resolveGrupoId = (name) => existingByName.get(name)?.id ?? uid()
-
-  const creditMenorId = resolveGrupoId('Credito < Spread')
-  const creditMaiorId = resolveGrupoId('Credito > Spread')
-
-  const toAdd = []
-
-  if (!existingByName.has('Credito < Spread')) {
-    toAdd.push({
-      id:              creditMenorId,
-      name:            'Credito < Spread',
-      aggregationMode: 'sum',
-      children: [
-        { type: 'product', refId: idByName.get('Credito Rural')      },
-        { type: 'product', refId: idByName.get('Credito Imobiliario') },
-      ].filter((c) => c.refId),
-      createdAt: Date.now(),
-    })
-  }
-
-  if (!existingByName.has('Credito > Spread')) {
-    toAdd.push({
-      id:              creditMaiorId,
-      name:            'Credito > Spread',
-      aggregationMode: 'sum',
-      children: [
-        { type: 'product', refId: idByName.get('Credito Pessoal')    },
-        { type: 'product', refId: idByName.get('Credito Consignado') },
-      ].filter((c) => c.refId),
-      createdAt: Date.now(),
-    })
-  }
-
-  if (!existingByName.has('Credito Total')) {
-    toAdd.push({
-      id:              uid(),
-      name:            'Credito Total',
-      aggregationMode: 'sum',
-      children: [
-        { type: 'classe',   refId: creditMenorId              },
-        { type: 'classe',   refId: creditMaiorId              },
-        { type: 'product',  refId: idByName.get('CDC')        },
-      ].filter((c) => c.refId),
-      createdAt: Date.now(),
-    })
-  }
-
-  if (toAdd.length > 0) await db.classes.bulkAdd(toAdd)
-  }) // end transaction
+    await db.classes.bulkAdd([
+      {
+        id:              creditMenorId,
+        name:            'Credito < Spread',
+        aggregationMode: 'sum',
+        children: [
+          { type: 'product', refId: idByName.get('Credito Rural')      },
+          { type: 'product', refId: idByName.get('Credito Imobiliario') },
+        ].filter((c) => c.refId),
+        createdAt: Date.now(),
+      },
+      {
+        id:              creditMaiorId,
+        name:            'Credito > Spread',
+        aggregationMode: 'sum',
+        children: [
+          { type: 'product', refId: idByName.get('Credito Pessoal')    },
+          { type: 'product', refId: idByName.get('Credito Consignado') },
+        ].filter((c) => c.refId),
+        createdAt: Date.now(),
+      },
+      {
+        id:              uid(),
+        name:            'Credito Total',
+        aggregationMode: 'sum',
+        children: [
+          { type: 'classe',   refId: creditMenorId              },
+          { type: 'classe',   refId: creditMaiorId              },
+          { type: 'product',  refId: idByName.get('CDC')        },
+        ].filter((c) => c.refId),
+        createdAt: Date.now(),
+      },
+    ])
+  })
 }
 
 export async function resetAll() {
