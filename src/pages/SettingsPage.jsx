@@ -180,7 +180,7 @@ export default function SettingsPage() {
             }}
           >
             <Target size={14} />
-            Definir metas
+            Gerenciar metas
           </button>
           <button
             onClick={() => navigate('/grupos')}
