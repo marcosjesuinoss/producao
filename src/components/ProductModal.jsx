@@ -27,6 +27,16 @@ const parseBRNum = (v) => {
   return Number(s.replace(/\./g, '').replace(',', '.')) || 0
 }
 
+const modeCardStyle = (active) => ({
+  flex: 1,
+  padding: '12px',
+  borderRadius: '10px',
+  border: `1.5px solid ${active ? '#818cf8' : '#2d3748'}`,
+  background: active ? 'rgba(99,102,241,0.12)' : 'var(--bg-card-deep)',
+  cursor: 'pointer',
+  transition: 'all 0.15s',
+})
+
 export default function ProductModal({ onClose, onSubmit, month, year, initial = null }) {
   const isEditing = !!initial
   const [name, setName] = useState(initial?.name || '')
@@ -116,14 +126,30 @@ export default function ProductModal({ onClose, onSubmit, month, year, initial =
 
           <div>
             <label className="label">Alvo principal</label>
-            <select
-              className="input"
-              value={useValue ? '1' : '0'}
-              onChange={(e) => { setUseValue(e.target.value === '1'); setGoal('') }}
-            >
-              <option value="1">Valor (R$)</option>
-              <option value="0">Quantidade</option>
-            </select>
+            <div className="flex gap-3">
+              <div
+                style={modeCardStyle(useValue)}
+                onClick={() => { setUseValue(true); setGoal('') }}
+              >
+                <div className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+                  Valor (R$)
+                </div>
+                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  Meta e progresso em reais
+                </div>
+              </div>
+              <div
+                style={modeCardStyle(!useValue)}
+                onClick={() => { setUseValue(false); setGoal('') }}
+              >
+                <div className="font-semibold text-sm mb-1" style={{ color: 'var(--text-primary)' }}>
+                  Quantidade
+                </div>
+                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  Meta e progresso em unidades
+                </div>
+              </div>
+            </div>
           </div>
 
           {!isEditing && (
