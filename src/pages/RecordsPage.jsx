@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { deleteRecord, updateRecord } from '../api/localApi.js'
 import { exportCsv } from '../lib/csv.js'
+import { dateBR } from '../lib/format.js'
 import Filters from '../components/Filters.jsx'
 import RecordList from '../components/RecordList.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
@@ -61,7 +62,7 @@ export default function RecordsPage() {
       {deleteTarget && (
         <ConfirmDialog
           title="Excluir registro"
-          description={`Excluir registro de ${deleteTarget.product} em ${deleteTarget.date}?`}
+          description={`Excluir registro de ${deleteTarget.product} em ${dateBR(deleteTarget.date)}?`}
           confirmLabel="Excluir"
           onConfirm={handleDeleteConfirm}
           onCancel={() => setDeleteTarget(null)}

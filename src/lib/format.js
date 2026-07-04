@@ -44,6 +44,13 @@ export const floorPct = (n) => Math.floor(Number(n.toFixed(6)))
 
 export const todayISO = () => new Date().toISOString().slice(0, 10)
 
+// "2026-06-30" -> "30/06/2026". Manipulacao de string (sem Date) pra evitar
+// o bug classico de fuso horario ao interpretar "YYYY-MM-DD" como UTC.
+export const dateBR = (iso) => {
+  const [y, m, d] = String(iso).split('-')
+  return `${d}/${m}/${y}`
+}
+
 // Valida numero no formato pt-BR: ponto APENAS como milhar (3 digitos apos),
 // virgula como decimal. Ex valido: "100", "8,4", "7.000", "1.500,50"
 // Ex INVALIDO: "8.4" (dot sem 3 digitos), "8.44"
