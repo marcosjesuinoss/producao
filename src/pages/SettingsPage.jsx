@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const [pin, setPinValue] = useState('')
   const [msg, setMsg] = useState('')
   const [showClearDialog, setShowClearDialog] = useState(false)
+  const [showRemovePinDialog, setShowRemovePinDialog] = useState(false)
   const [importPayload, setImportPayload] = useState(null)
   const fileInputRef = useRef(null)
 
@@ -227,7 +228,7 @@ export default function SettingsPage() {
             </button>
           </div>
         ) : (
-          <button className="btn" onClick={() => { removePin(); flash('PIN removido.') }}>
+          <button className="btn" onClick={() => setShowRemovePinDialog(true)}>
             Remover PIN
           </button>
         )}
@@ -289,6 +290,17 @@ export default function SettingsPage() {
           countdown={5}
           onConfirm={handleImportConfirm}
           onCancel={() => setImportPayload(null)}
+        />
+      )}
+
+      {showRemovePinDialog && (
+        <ConfirmDialog
+          title="Remover PIN"
+          description="O app deixará de pedir PIN ao abrir — qualquer pessoa com acesso ao aparelho poderá ver seus dados de produção."
+          confirmLabel="Remover"
+          confirmIcon={Lock}
+          onConfirm={() => { removePin(); setShowRemovePinDialog(false); flash('PIN removido.') }}
+          onCancel={() => setShowRemovePinDialog(false)}
         />
       )}
     </section>

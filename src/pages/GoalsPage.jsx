@@ -54,6 +54,20 @@ export default function GoalsPage() {
   const { allProducts, custom, isValue } = useProducts()
   const productById = useMemo(() => new Map(custom.map((p) => [p.name, p.id])), [custom])
 
+  const allGrupos = useLiveQuery(() => db.classes.toArray(), [], [])
+  const groupNamesByProductId = useMemo(() => {
+    const map = new Map()
+    for (const g of allGrupos) {
+      for (const child of g.children ?? []) {
+        if (child.type !== 'product') continue
+        const arr = map.get(child.refId) ?? []
+        arr.push(g.name)
+        map.set(child.refId, arr)
+      }
+    }
+    return map
+  }, [allGrupos])
+
   const goals = useLiveQuery(
     () => db.goals.filter((g) => g.year === Number(year) && g.month === Number(month)).toArray(),
     [year, month], []
@@ -165,6 +179,7 @@ export default function GoalsPage() {
               onSaved={showSaved}
               onDeleteGoal={g ? () => deleteGoal(g.id) : null}
               onDeleteProduct={productId && product !== 'Abertura de Conta' ? () => deleteProduct(productId) : null}
+              groupNames={productId ? (groupNamesByProductId.get(productId) ?? []) : []}
             />
           )
         })}
@@ -174,7 +189,7 @@ export default function GoalsPage() {
   )
 }
 
-function GoalCard({ product, goal, isValueProduct, realized, pct, productId, month, year, onSave, onSaved, onDeleteGoal, onDeleteProduct }) {
+function GoalCard({ product, goal, isValueProduct, realized, pct, productId, month, year, onSave, onSaved, onDeleteGoal, onDeleteProduct, groupNames = [] }) {
   const [inputVal, setInputVal] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -303,7 +318,11 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
       {confirmAction === 'product' && (
         <ConfirmDialog
           title="Excluir produto"
-          description={`Excluir produto "${product}"?`}
+          description={
+            groupNames.length > 0
+              ? `Excluir produto "${product}"? Ele faz parte do grupo ${groupNames.map((n) => `"${n}"`).join(', ')} — o total desse grupo vai deixar de contar os registros dele.`
+              : `Excluir produto "${product}"?`
+          }
           confirmLabel="Excluir"
           onConfirm={() => { onDeleteProduct(); setConfirmAction(null) }}
           onCancel={() => setConfirmAction(null)}

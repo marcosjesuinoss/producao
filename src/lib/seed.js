@@ -1,9 +1,14 @@
 import { db, uid } from '../db/db.js'
 import { STANDARD_PRODUCTS } from './format.js'
 
-// Popula os produtos padrão apenas na primeira instalação (DB vazio).
-// Depois que o usuário tem produtos, nunca mais interfere.
+const PRODUTOS_SEEDED_KEY = 'produtosSeeded'
+
+// Popula os produtos padrao uma unica vez por dispositivo. Usa flag no
+// localStorage (mesma logica de seedGrupos) pra nao reviver produtos
+// apagados de proposito caso o usuario limpe todos eles.
 export async function seedStandardProducts() {
+  if (localStorage.getItem(PRODUTOS_SEEDED_KEY)) return
+
   await db.transaction('rw', db.products, async () => {
     const count = await db.products.count()
     if (count > 0) return
@@ -12,6 +17,8 @@ export async function seedStandardProducts() {
     }))
     await db.products.bulkAdd(toAdd)
   })
+
+  localStorage.setItem(PRODUTOS_SEEDED_KEY, '1')
 }
 
 /*
