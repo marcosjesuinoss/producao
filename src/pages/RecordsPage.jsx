@@ -6,6 +6,7 @@ import { deleteRecord, updateRecord } from '../api/localApi.js'
 import { exportCsv } from '../lib/csv.js'
 import Filters from '../components/Filters.jsx'
 import RecordList from '../components/RecordList.jsx'
+import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
 
@@ -13,6 +14,7 @@ export default function RecordsPage() {
   const { open } = useRecordModal()
   const { year, month } = useMonth()
   const [filters, setFilters] = useState({})
+  const [deleteTarget, setDeleteTarget] = useState(null) // registro pendente de exclusao
 
   const all = useLiveQuery(
     () => db.records.where({ year: Number(year), month: Number(month) }).reverse().sortBy('date'),
@@ -29,8 +31,11 @@ export default function RecordsPage() {
     })
   }, [all, filters])
 
-  const handleDelete = async (r) => {
-    if (confirm(`Excluir registro de ${r.product} em ${r.date}?`)) await deleteRecord(r.id)
+  const handleDelete = (r) => setDeleteTarget(r)
+
+  const handleDeleteConfirm = async () => {
+    await deleteRecord(deleteTarget.id)
+    setDeleteTarget(null)
   }
 
   const handleIgnore = async (r, ignored) => {
@@ -52,6 +57,16 @@ export default function RecordsPage() {
 
       <Filters value={filters} onChange={setFilters} accounts={accounts} />
       <RecordList records={records} onEdit={(r) => open(r)} onDelete={handleDelete} onIgnore={handleIgnore} />
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title="Excluir registro"
+          description={`Excluir registro de ${deleteTarget.product} em ${deleteTarget.date}?`}
+          confirmLabel="Excluir"
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
     </section>
   )
 }

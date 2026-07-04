@@ -6,10 +6,12 @@ import { db } from '../db/db.js'
 import { deriveMemberships } from '../utils/grupoCalculations.js'
 import { deleteGrupo } from '../api/localApi.js'
 import GrupoModal from '../components/GrupoModal.jsx'
+import ConfirmDialog from '../components/ConfirmDialog.jsx'
 
 export default function GruposPage() {
   const navigate = useNavigate()
   const [modalState, setModalState] = useState(null) // null | { editing: null | grupoObj }
+  const [deleteTarget, setDeleteTarget] = useState(null) // grupo pendente de exclusao
 
   const allGrupos   = useLiveQuery(() => db.classes.toArray(), [], [])
   const allProducts = useLiveQuery(() => db.products.toArray(), [], [])
@@ -43,9 +45,11 @@ export default function GruposPage() {
     [allProducts]
   )
 
-  const handleDelete = (grp) => {
-    if (!window.confirm(`Excluir "${grp.name}"? Os itens dentro dele ficarão sem grupo.`)) return
-    deleteGrupo(grp.id)
+  const handleDelete = (grp) => setDeleteTarget(grp)
+
+  const handleDeleteConfirm = () => {
+    deleteGrupo(deleteTarget.id)
+    setDeleteTarget(null)
   }
 
   if (!allGrupos || !allProducts) return null
@@ -109,6 +113,16 @@ export default function GruposPage() {
           allProducts={allProducts}
           memberships={memberships}
           onClose={() => setModalState(null)}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title="Excluir grupo"
+          description={`Excluir "${deleteTarget.name}"? Os itens dentro dele ficarão sem grupo.`}
+          confirmLabel="Excluir"
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTarget(null)}
         />
       )}
     </section>

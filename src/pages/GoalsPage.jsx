@@ -10,6 +10,7 @@ import { useMonth } from '../context/MonthContext.jsx'
 import { getProgressColor } from '../utils/progressColor.js'
 import ProgressBar from '../components/ui/ProgressBar.jsx'
 import ProductModal from '../components/ProductModal.jsx'
+import ConfirmDialog from '../components/ConfirmDialog.jsx'
 
 const applyMask = (v) => {
   let raw = String(v ?? '').replace(/\./g, '').replace(/[^0-9,]/g, '')
@@ -177,6 +178,7 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
   const [inputVal, setInputVal] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [confirmAction, setConfirmAction] = useState(null) // null | 'product' | 'goal'
 
   useEffect(() => {
     const raw = isValueProduct ? (goal?.targetValue ?? '') : (goal?.targetQuantity ?? '')
@@ -261,7 +263,7 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
                     onClick={() => {
                       if (!onDeleteProduct) return
                       setMenuOpen(false)
-                      if (window.confirm(`Excluir produto "${product}"?`)) onDeleteProduct()
+                      setConfirmAction('product')
                     }}
                   >
                     <Trash2 size={14} />
@@ -275,7 +277,7 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
                     onClick={() => {
                       if (!onDeleteGoal) return
                       setMenuOpen(false)
-                      if (window.confirm(`Excluir meta de "${product}" neste período?`)) onDeleteGoal()
+                      setConfirmAction('goal')
                     }}
                   >
                     <Trash2 size={14} />
@@ -295,6 +297,26 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
           year={year}
           onClose={() => setEditOpen(false)}
           onSubmit={({ name, useValue }) => updateProduct(productId, { name, useValue })}
+        />
+      )}
+
+      {confirmAction === 'product' && (
+        <ConfirmDialog
+          title="Excluir produto"
+          description={`Excluir produto "${product}"?`}
+          confirmLabel="Excluir"
+          onConfirm={() => { onDeleteProduct(); setConfirmAction(null) }}
+          onCancel={() => setConfirmAction(null)}
+        />
+      )}
+
+      {confirmAction === 'goal' && (
+        <ConfirmDialog
+          title="Excluir meta"
+          description={`Excluir meta de "${product}" neste período?`}
+          confirmLabel="Excluir"
+          onConfirm={() => { onDeleteGoal(); setConfirmAction(null) }}
+          onCancel={() => setConfirmAction(null)}
         />
       )}
     </div>
