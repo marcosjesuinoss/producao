@@ -3,11 +3,13 @@ import { PRODUCTS, BR_NUM_RE, todayISO } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
 
 const ABERTURA = 'Abertura de Conta'
+const LAST_MANAGER_KEY = 'lastManagerName'
 
 const empty = {
   date: todayISO(),
   product: PRODUCTS[0],
   account: '',
+  manager: '',
   quantity: '',
   value: '',
   notes: '',
@@ -64,7 +66,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
   useEffect(() => {
     setForm(initial
       ? { ...empty, ...initial, value: numToDisplay(initial.value), quantity: numToDisplay(initial.quantity) }
-      : empty)
+      : { ...empty, manager: localStorage.getItem(LAST_MANAGER_KEY) || '' })
     setErrors({})
   }, [initial])
 
@@ -92,8 +94,9 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
     const errs = validate(form, isValue)
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
+    if (form.manager?.trim()) localStorage.setItem(LAST_MANAGER_KEY, form.manager.trim())
     onSubmit(form)
-    if (!initial) setForm(empty)
+    if (!initial) setForm({ ...empty, manager: form.manager })
   }
 
   const isAbertura = form.product === ABERTURA
@@ -127,6 +130,12 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
         <input id="r-account" className={inputCls('account')} placeholder="AG / CONTA"
           value={form.account} onChange={(e) => set('account', e.target.value)} />
         {errors.account && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.account}</p>}
+      </div>
+
+      <div>
+        <label className="label" htmlFor="r-manager">Lançado por — opcional</label>
+        <input id="r-manager" className="input" placeholder="Seu nome"
+          value={form.manager} onChange={(e) => set('manager', e.target.value)} />
       </div>
 
       {/* Crédito Pessoal: valor obrigatório vem antes, quantidade some */}

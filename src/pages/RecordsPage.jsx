@@ -22,12 +22,14 @@ export default function RecordsPage() {
     [year, month], []
   )
   const accounts = useMemo(() => [...new Set(all.map((r) => r.account).filter(Boolean))], [all])
+  const managers = useMemo(() => [...new Set(all.map((r) => r.manager).filter(Boolean))], [all])
 
   const records = useMemo(() => {
     return all.filter((r) => {
       if (filters.date && r.date !== filters.date) return false
       if (filters.product && r.product !== filters.product) return false
       if (filters.account && r.account !== filters.account) return false
+      if (filters.manager && r.manager !== filters.manager) return false
       return true
     })
   }, [all, filters])
@@ -56,7 +58,7 @@ export default function RecordsPage() {
         </button>
       </div>
 
-      <Filters value={filters} onChange={setFilters} accounts={accounts} />
+      <Filters value={filters} onChange={setFilters} accounts={accounts} managers={managers} />
       <RecordList records={records} onEdit={(r) => open(r)} onDelete={handleDelete} onIgnore={handleIgnore} />
 
       {deleteTarget && (
