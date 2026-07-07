@@ -51,18 +51,29 @@ export default function RecordsPage() {
 
   const handleSendProducao = async (period) => {
     setShowSendPicker(false)
+
+    let payload, filename
     try {
-      const { payload, filename } = await exportProducao(period)
+      ;({ payload, filename } = await exportProducao(period))
+    } catch {
+      flash('Erro ao gerar arquivo de produção.')
+      return
+    }
+
+    try {
       const file = new File([JSON.stringify(payload, null, 2)], filename, { type: 'application/json' })
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: 'Produção enviada' })
-      } else {
-        downloadJSON(payload, filename)
-        flash('Arquivo baixado — anexe no WhatsApp manualmente.')
+        return
       }
     } catch (e) {
-      if (e.name !== 'AbortError') flash('Erro ao gerar arquivo de produção.')
+      if (e.name === 'AbortError') return // usuario cancelou o compartilhamento
+      // qualquer outro erro ao compartilhar (ex.: perdeu o gesto do usuario
+      // durante a leitura assincrona acima) cai pro download abaixo
     }
+
+    downloadJSON(payload, filename)
+    flash('Arquivo baixado — anexe no WhatsApp manualmente.')
   }
 
   return (
