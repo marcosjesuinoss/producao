@@ -1,5 +1,5 @@
 import { db } from '../db/db.js'
-import { FULL_MONTHS } from './format.js'
+import { FULL_MONTHS, dateBR } from './format.js'
 
 // Tabelas de dados do usuario. Preferencias de dispositivo (tema, PIN)
 // ficam no localStorage e nao entram no backup de proposito.
@@ -21,9 +21,11 @@ export function downloadJSON(payload, filename) {
   URL.revokeObjectURL(url)
 }
 
-// period: { type: 'tudo' } | { type: 'ano', year } | { type: 'semestre', year, semester: 1|2 } | { type: 'mes', year, month }
+// period: { type: 'tudo' } | { type: 'ano', year } | { type: 'semestre', year, semester: 1|2 }
+//        | { type: 'mes', year, month } | { type: 'dia', date: 'YYYY-MM-DD' }
 export function filterByPeriod(rows, period) {
   if (period.type === 'tudo') return rows
+  if (period.type === 'dia') return rows.filter((r) => r.date === period.date)
   return rows.filter((r) => {
     if (r.year !== period.year) return false
     if (period.type === 'ano') return true
@@ -35,6 +37,7 @@ export function filterByPeriod(rows, period) {
 }
 
 export function describePeriod(period) {
+  if (period.type === 'dia') return `o dia ${dateBR(period.date)}`
   if (period.type === 'ano') return `o ano de ${period.year}`
   if (period.type === 'semestre') return `o ${period.semester}º semestre de ${period.year}`
   if (period.type === 'mes') return `o mês de ${FULL_MONTHS[period.month - 1]} de ${period.year}`
@@ -42,6 +45,7 @@ export function describePeriod(period) {
 }
 
 export function periodSlug(period) {
+  if (period.type === 'dia') return period.date
   if (period.type === 'ano') return `ano-${period.year}`
   if (period.type === 'semestre') return `${period.year}-sem${period.semester}`
   if (period.type === 'mes') return `${period.year}-${String(period.month).padStart(2, '0')}`

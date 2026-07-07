@@ -109,6 +109,7 @@ export default function RecordsPage() {
       {showSendPicker && (
         <PeriodPicker
           title="Enviar produção"
+          dayOption
           onConfirm={handleSendProducao}
           onCancel={() => setShowSendPicker(false)}
         />

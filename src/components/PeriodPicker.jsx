@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import { todayISO } from '../lib/format.js'
 
 const optionCardStyle = (active) => ({
   padding: '12px',
@@ -22,14 +23,17 @@ const now = new Date()
 const CURRENT_YEAR = now.getFullYear()
 const CURRENT_MONTH = now.getMonth() + 1
 
-// Devolve o objeto { type, year, month/semester } via onConfirm.
-export default function PeriodPicker({ title = 'Escolha o período', onConfirm, onCancel }) {
-  const [type, setType] = useState('mes')
+// Devolve o objeto { type, year, month/semester/date } via onConfirm.
+// dayOption: quando true, adiciona a opcao "Dia" (usado em "Enviar producao").
+export default function PeriodPicker({ title = 'Escolha o período', dayOption = false, onConfirm, onCancel }) {
+  const [type, setType] = useState(dayOption ? 'dia' : 'mes')
   const [year, setYear] = useState(CURRENT_YEAR)
   const [month, setMonth] = useState(CURRENT_MONTH)
   const [semester, setSemester] = useState(CURRENT_MONTH <= 6 ? 1 : 2)
+  const [day, setDay] = useState(todayISO())
 
   const handleConfirm = () => {
+    if (type === 'dia') return onConfirm({ type: 'dia', date: day })
     if (type === 'tudo') return onConfirm({ type: 'tudo' })
     if (type === 'ano') return onConfirm({ type: 'ano', year })
     if (type === 'semestre') return onConfirm({ type: 'semestre', year, semester })
@@ -68,6 +72,7 @@ export default function PeriodPicker({ title = 'Escolha o período', onConfirm, 
         <div className="overflow-y-auto px-5 pb-2 space-y-4">
           <div className="grid grid-cols-2 gap-2">
             {[
+              ...(dayOption ? [['dia', 'Dia']] : []),
               ['mes', 'Mês'],
               ['semestre', 'Semestre'],
               ['ano', 'Ano'],
@@ -78,6 +83,19 @@ export default function PeriodPicker({ title = 'Escolha o período', onConfirm, 
               </div>
             ))}
           </div>
+
+          {type === 'dia' && (
+            <div>
+              <label className="label" htmlFor="pp-day">Dia</label>
+              <input
+                id="pp-day"
+                type="date"
+                className="input !w-fit"
+                value={day}
+                onChange={(e) => setDay(e.target.value)}
+              />
+            </div>
+          )}
 
           {type === 'mes' && (
             <div>
