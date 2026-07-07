@@ -82,7 +82,7 @@ export default function RecordsPage() {
             onClick={() => exportCsv(records, 'producao-filtrada.csv')}
           >
             <Download size={16} />
-            CSV ({records.length})
+            Baixar ({records.length})
           </button>
         </div>
       </div>
