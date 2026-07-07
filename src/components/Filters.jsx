@@ -1,14 +1,14 @@
 import { X } from 'lucide-react'
 import { useProducts } from '../hooks/useProducts.js'
 
-export default function Filters({ value, onChange, accounts = [], managers = [] }) {
+export default function Filters({ value, onChange, accounts = [] }) {
   const { allProducts } = useProducts()
   const set = (k, v) => onChange({ ...value, [k]: v })
-  const hasFilters = value.date || value.product || value.account || value.manager
+  const hasFilters = value.date || value.product || value.account
 
   return (
     <div className="card space-y-3">
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label className="label" htmlFor="f-date">Data</label>
           <input
@@ -31,13 +31,6 @@ export default function Filters({ value, onChange, accounts = [], managers = [] 
           <select id="f-account" className="input" value={value.account || ''} onChange={(e) => set('account', e.target.value)}>
             <option value="">Todas</option>
             {accounts.map((a) => <option key={a} value={a}>{a}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="label" htmlFor="f-manager">Lançado por</label>
-          <select id="f-manager" className="input" value={value.manager || ''} onChange={(e) => set('manager', e.target.value)}>
-            <option value="">Todos</option>
-            {managers.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
       </div>
