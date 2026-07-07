@@ -69,10 +69,13 @@ export async function exportBackup(period = { type: 'tudo' }) {
   downloadJSON(payload, `backup-producao-${periodSlug(period)}.json`)
 }
 
-// Exporta so os registros (producao) de um periodo — usado em "Enviar producao".
-export async function exportProducao(period) {
-  const allRecords = await db.records.toArray()
-  const payload = {
+// Monta o payload de "producao" a partir de registros ja carregados (sincrono
+// de proposito): o chamador busca os registros ANTES do usuario confirmar o
+// periodo, pra poder chamar navigator.share() sem nenhum "await" no meio —
+// no Android, qualquer espera entre o clique e o share() pode invalidar o
+// gesto do usuario exigido pela API.
+export function buildProducaoPayload(allRecords, period) {
+  return {
     app: 'controle-producao',
     version: 2,
     kind: 'producao',
@@ -80,8 +83,6 @@ export async function exportProducao(period) {
     exportedAt: new Date().toISOString(),
     data: { records: filterByPeriod(allRecords, period) },
   }
-  const filename = `producao-${periodSlug(period)}.json`
-  return { payload, filename }
 }
 
 export async function readImportFile(file) {

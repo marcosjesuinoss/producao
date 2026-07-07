@@ -5,7 +5,7 @@ import { db } from '../db/db.js'
 import { deleteRecord, updateRecord } from '../api/localApi.js'
 import { exportCsv } from '../lib/csv.js'
 import { dateBR } from '../lib/format.js'
-import { exportProducao, downloadJSON } from '../lib/backup.js'
+import { buildProducaoPayload, periodSlug, downloadJSON } from '../lib/backup.js'
 import Filters from '../components/Filters.jsx'
 import RecordList from '../components/RecordList.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
@@ -19,6 +19,7 @@ export default function RecordsPage() {
   const [filters, setFilters] = useState({})
   const [deleteTarget, setDeleteTarget] = useState(null) // registro pendente de exclusao
   const [showSendPicker, setShowSendPicker] = useState(false)
+  const [sendRecords, setSendRecords] = useState(null)
   const [msg, setMsg] = useState('')
 
   const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000) }
@@ -49,15 +50,23 @@ export default function RecordsPage() {
     await updateRecord(r.id, { ignored })
   }
 
-  const handleSendProducao = async (period) => {
-    setShowSendPicker(false)
+  // Pre-carrega os registros ANTES de mostrar o seletor de periodo, pra que
+  // confirmar o periodo leve direto ao navigator.share() sem nenhum "await"
+  // no meio (o Android invalida o gesto do usuario se demorar).
+  const handleOpenSendPicker = async () => {
+    setSendRecords(await db.records.toArray())
+    setShowSendPicker(true)
+  }
 
-    let payload, filename
-    try {
-      ;({ payload, filename } = await exportProducao(period))
-    } catch {
-      flash('Erro ao gerar arquivo de produção.')
-      return
+  // Sincrona de proposito ate a chamada do share() — ver handleOpenSendPicker.
+  const handleSendProducao = (period) => {
+    setShowSendPicker(false)
+    const payload = buildProducaoPayload(sendRecords, period)
+    const filename = `producao-${periodSlug(period)}.json`
+
+    const fallbackToDownload = () => {
+      downloadJSON(payload, filename)
+      flash('Arquivo baixado — anexe no WhatsApp manualmente.')
     }
 
     try {
@@ -67,17 +76,16 @@ export default function RecordsPage() {
       // continuam os mesmos, so o tipo declarado muda.
       const file = new File([JSON.stringify(payload, null, 2)], filename, { type: 'text/plain' })
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'Produção enviada' })
+        navigator.share({ files: [file], title: 'Produção enviada' }).catch((e) => {
+          if (e.name !== 'AbortError') fallbackToDownload() // AbortError = usuario cancelou
+        })
         return
       }
-    } catch (e) {
-      if (e.name === 'AbortError') return // usuario cancelou o compartilhamento
-      // qualquer outro erro ao compartilhar (ex.: perdeu o gesto do usuario
-      // durante a leitura assincrona acima) cai pro download abaixo
+    } catch {
+      // canShare lancou — cai pro download abaixo
     }
 
-    downloadJSON(payload, filename)
-    flash('Arquivo baixado — anexe no WhatsApp manualmente.')
+    fallbackToDownload()
   }
 
   return (
@@ -87,7 +95,7 @@ export default function RecordsPage() {
         <div className="flex items-center gap-2">
           <button
             className="btn flex items-center gap-1.5"
-            onClick={() => setShowSendPicker(true)}
+            onClick={handleOpenSendPicker}
           >
             <Send size={16} />
             Enviar produção
