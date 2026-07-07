@@ -70,11 +70,13 @@ export default function RecordsPage() {
     }
 
     try {
-      // "text/plain" em vez de "application/json": no Android/Chrome, o
-      // Web Share API so aceita compartilhar arquivos de alguns tipos
-      // "seguros" (json fica de fora) — o conteudo e o nome (.json)
-      // continuam os mesmos, so o tipo declarado muda.
-      const file = new File([JSON.stringify(payload, null, 2)], filename, { type: 'text/plain' })
+      // O Web Share API do Android so aceita compartilhar arquivo cuja
+      // EXTENSAO e tipo batam com uma lista especifica de combinacoes
+      // seguras — ".json" nao esta nela, mesmo com type "text/plain".
+      // ".txt" + "text/plain" esta. O conteudo (JSON valido) nao muda,
+      // so o nome usado nessa tentativa de compartilhamento.
+      const shareFilename = filename.replace(/\.json$/, '.txt')
+      const file = new File([JSON.stringify(payload, null, 2)], shareFilename, { type: 'text/plain' })
       if (navigator.canShare?.({ files: [file] })) {
         navigator.share({ files: [file], title: 'Produção enviada' }).catch((e) => {
           if (e.name !== 'AbortError') fallbackToDownload() // AbortError = usuario cancelou

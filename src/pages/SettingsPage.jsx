@@ -309,7 +309,7 @@ export default function SettingsPage() {
           <input
             ref={producaoInputRef}
             type="file"
-            accept="application/json"
+            accept="application/json,.json,.txt"
             style={{ display: 'none' }}
             onChange={handleProducaoFileChange}
           />
