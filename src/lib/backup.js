@@ -9,7 +9,7 @@ const TABLES = ['records', 'goals', 'products', 'classes', 'yearSnapshots']
 // Produtos/grupos/snapshots nao tem periodo, entao sempre vao inteiros.
 const DATED_TABLES = new Set(['records', 'goals'])
 
-function downloadJSON(payload, filename) {
+export function downloadJSON(payload, filename) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

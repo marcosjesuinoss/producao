@@ -20,7 +20,9 @@ export default function SettingsPage() {
   const [showRemovePinDialog, setShowRemovePinDialog] = useState(false)
   const [showExportPicker, setShowExportPicker] = useState(false)
   const [importPayload, setImportPayload] = useState(null)
+  const [producaoPayload, setProducaoPayload] = useState(null)
   const fileInputRef = useRef(null)
+  const producaoInputRef = useRef(null)
 
   const handleUpdate = () => {
     if (needRefresh) updateServiceWorker(true)
@@ -79,6 +81,34 @@ export default function SettingsPage() {
       flash('Erro ao restaurar backup.')
     } finally {
       setImportPayload(null)
+    }
+  }
+
+  const handleProducaoFileChange = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      const payload = await readImportFile(file)
+      if (payload.kind !== 'producao') {
+        flash('Esse arquivo é um backup — use "Importar backup".')
+        return
+      }
+      setProducaoPayload(payload)
+    } catch {
+      flash('Arquivo inválido.')
+    }
+  }
+
+  const handleProducaoConfirm = async () => {
+    try {
+      const result = await importMerge(producaoPayload)
+      const { imported = 0, skipped = 0 } = result.records ?? {}
+      flash(skipped > 0 ? `${imported} registros importados, ${skipped} já existiam.` : `${imported} registros importados.`)
+    } catch {
+      flash('Erro ao importar produção.')
+    } finally {
+      setProducaoPayload(null)
     }
   }
 
@@ -272,6 +302,17 @@ export default function SettingsPage() {
             style={{ display: 'none' }}
             onChange={handleFileChange}
           />
+          <button className="btn flex items-center gap-1.5" onClick={() => producaoInputRef.current?.click()}>
+            <Upload size={14} />
+            Carregar produção enviada
+          </button>
+          <input
+            ref={producaoInputRef}
+            type="file"
+            accept="application/json"
+            style={{ display: 'none' }}
+            onChange={handleProducaoFileChange}
+          />
           <button
             className="btn btn-danger flex items-center gap-1.5"
             onClick={() => setShowClearDialog(true)}
@@ -317,6 +358,17 @@ export default function SettingsPage() {
           />
         )
       })()}
+
+      {producaoPayload && (
+        <ConfirmDialog
+          title="Carregar produção enviada"
+          description={`Importando ${describePeriod(producaoPayload.period)} — ${producaoPayload.data.records?.length ?? 0} registros. Isso será somado à sua produção atual e não pode ser desfeito depois.`}
+          confirmLabel="Continuar"
+          confirmIcon={Upload}
+          onConfirm={handleProducaoConfirm}
+          onCancel={() => setProducaoPayload(null)}
+        />
+      )}
 
       {showExportPicker && (
         <PeriodPicker

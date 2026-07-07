@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react'
-import { Download } from 'lucide-react'
+import { Download, Send } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { deleteRecord, updateRecord } from '../api/localApi.js'
 import { exportCsv } from '../lib/csv.js'
 import { dateBR } from '../lib/format.js'
+import { exportProducao, downloadJSON } from '../lib/backup.js'
 import Filters from '../components/Filters.jsx'
 import RecordList from '../components/RecordList.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import PeriodPicker from '../components/PeriodPicker.jsx'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
 
@@ -16,6 +18,10 @@ export default function RecordsPage() {
   const { year, month } = useMonth()
   const [filters, setFilters] = useState({})
   const [deleteTarget, setDeleteTarget] = useState(null) // registro pendente de exclusao
+  const [showSendPicker, setShowSendPicker] = useState(false)
+  const [msg, setMsg] = useState('')
+
+  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000) }
 
   const all = useLiveQuery(
     () => db.records.where({ year: Number(year), month: Number(month) }).reverse().sortBy('date'),
@@ -45,18 +51,47 @@ export default function RecordsPage() {
     await updateRecord(r.id, { ignored })
   }
 
+  const handleSendProducao = async (period) => {
+    setShowSendPicker(false)
+    try {
+      const { payload, filename } = await exportProducao(period)
+      const file = new File([JSON.stringify(payload, null, 2)], filename, { type: 'application/json' })
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'Produção enviada' })
+      } else {
+        downloadJSON(payload, filename)
+        flash('Arquivo baixado — anexe no WhatsApp manualmente.')
+      }
+    } catch (e) {
+      if (e.name !== 'AbortError') flash('Erro ao gerar arquivo de produção.')
+    }
+  }
+
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Registros</h2>
-        <button
-          className="btn flex items-center gap-1.5"
-          onClick={() => exportCsv(records, 'producao-filtrada.csv')}
-        >
-          <Download size={16} />
-          CSV ({records.length})
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="btn flex items-center gap-1.5"
+            onClick={() => setShowSendPicker(true)}
+          >
+            <Send size={16} />
+            Enviar produção
+          </button>
+          <button
+            className="btn flex items-center gap-1.5"
+            onClick={() => exportCsv(records, 'producao-filtrada.csv')}
+          >
+            <Download size={16} />
+            CSV ({records.length})
+          </button>
+        </div>
       </div>
+
+      {msg && (
+        <p className="text-sm" style={{ color: 'var(--accent-green)' }} role="status">{msg}</p>
+      )}
 
       <Filters value={filters} onChange={setFilters} accounts={accounts} managers={managers} />
       <RecordList records={records} onEdit={(r) => open(r)} onDelete={handleDelete} onIgnore={handleIgnore} />
@@ -68,6 +103,14 @@ export default function RecordsPage() {
           confirmLabel="Excluir"
           onConfirm={handleDeleteConfirm}
           onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {showSendPicker && (
+        <PeriodPicker
+          title="Enviar produção"
+          onConfirm={handleSendProducao}
+          onCancel={() => setShowSendPicker(false)}
         />
       )}
     </section>
