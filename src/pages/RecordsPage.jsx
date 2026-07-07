@@ -61,7 +61,11 @@ export default function RecordsPage() {
     }
 
     try {
-      const file = new File([JSON.stringify(payload, null, 2)], filename, { type: 'application/json' })
+      // "text/plain" em vez de "application/json": no Android/Chrome, o
+      // Web Share API so aceita compartilhar arquivos de alguns tipos
+      // "seguros" (json fica de fora) — o conteudo e o nome (.json)
+      // continuam os mesmos, so o tipo declarado muda.
+      const file = new File([JSON.stringify(payload, null, 2)], filename, { type: 'text/plain' })
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], title: 'Produção enviada' })
         return
