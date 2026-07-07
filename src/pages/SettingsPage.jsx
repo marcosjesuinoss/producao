@@ -5,8 +5,9 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { seedIfEmpty, resetAll } from '../lib/seed.js'
-import { exportBackup, readBackupFile, importBackup } from '../lib/backup.js'
+import { exportBackup, readImportFile, importBackup, importMerge, describePeriod } from '../lib/backup.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import PeriodPicker from '../components/PeriodPicker.jsx'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -17,6 +18,7 @@ export default function SettingsPage() {
   const [msg, setMsg] = useState('')
   const [showClearDialog, setShowClearDialog] = useState(false)
   const [showRemovePinDialog, setShowRemovePinDialog] = useState(false)
+  const [showExportPicker, setShowExportPicker] = useState(false)
   const [importPayload, setImportPayload] = useState(null)
   const fileInputRef = useRef(null)
 
@@ -35,9 +37,10 @@ export default function SettingsPage() {
     flash('Tudo apagado.')
   }
 
-  const handleExport = async () => {
+  const handleExportConfirm = async (period) => {
+    setShowExportPicker(false)
     try {
-      await exportBackup()
+      await exportBackup(period)
       flash('Backup exportado.')
     } catch {
       flash('Erro ao exportar backup.')
@@ -49,16 +52,29 @@ export default function SettingsPage() {
     e.target.value = ''
     if (!file) return
     try {
-      setImportPayload(await readBackupFile(file))
+      const payload = await readImportFile(file)
+      if (payload.kind !== 'backup') {
+        flash('Esse arquivo não é um backup — use "Carregar produção enviada".')
+        return
+      }
+      setImportPayload(payload)
     } catch {
       flash('Arquivo de backup inválido.')
     }
   }
 
   const handleImportConfirm = async () => {
+    const isFull = importPayload.period.type === 'tudo'
     try {
-      await importBackup(importPayload)
-      flash('Backup restaurado.')
+      if (isFull) {
+        await importBackup(importPayload)
+        flash('Backup restaurado.')
+      } else {
+        const result = await importMerge(importPayload)
+        const imported = Object.values(result).reduce((s, r) => s + r.imported, 0)
+        const skipped = Object.values(result).reduce((s, r) => s + r.skipped, 0)
+        flash(skipped > 0 ? `${imported} itens importados, ${skipped} já existiam.` : `${imported} itens importados.`)
+      }
     } catch {
       flash('Erro ao restaurar backup.')
     } finally {
@@ -241,7 +257,7 @@ export default function SettingsPage() {
           O backup salva registros, metas, produtos e grupos num arquivo local — guarde-o em local seguro (e-mail, nuvem) para não perder os dados caso o app seja desinstalado ou o navegador limpe o armazenamento.
         </p>
         <div className="flex flex-wrap gap-2">
-          <button className="btn flex items-center gap-1.5" onClick={handleExport}>
+          <button className="btn flex items-center gap-1.5" onClick={() => setShowExportPicker(true)}>
             <Download size={14} />
             Exportar backup
           </button>
@@ -281,15 +297,32 @@ export default function SettingsPage() {
         />
       )}
 
-      {importPayload && (
-        <ConfirmDialog
-          title="Restaurar backup"
-          description={`Os dados atuais serão substituídos por ${importPayload.data.records?.length ?? 0} registros e ${importPayload.data.goals?.length ?? 0} metas deste arquivo.`}
-          confirmLabel="Confirmar restauração"
-          confirmIcon={Upload}
-          countdown={5}
-          onConfirm={handleImportConfirm}
-          onCancel={() => setImportPayload(null)}
+      {importPayload && (() => {
+        const isFull = importPayload.period.type === 'tudo'
+        const recordCount = importPayload.data.records?.length ?? 0
+        const goalCount = importPayload.data.goals?.length ?? 0
+        const resumo = `Importando ${describePeriod(importPayload.period)} — ${recordCount} registros e ${goalCount} metas.`
+        const aviso = isFull
+          ? ' Os dados atuais serão substituídos — essa ação não pode ser desfeita.'
+          : ' Isso será somado à sua produção atual e não pode ser desfeito depois.'
+        return (
+          <ConfirmDialog
+            title="Importar backup"
+            description={resumo + aviso}
+            confirmLabel={isFull ? 'Confirmar restauração' : 'Continuar'}
+            confirmIcon={Upload}
+            countdown={isFull ? 5 : 0}
+            onConfirm={handleImportConfirm}
+            onCancel={() => setImportPayload(null)}
+          />
+        )
+      })()}
+
+      {showExportPicker && (
+        <PeriodPicker
+          title="Exportar backup"
+          onConfirm={handleExportConfirm}
+          onCancel={() => setShowExportPicker(false)}
         />
       )}
 
