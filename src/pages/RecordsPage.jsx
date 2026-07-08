@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { deleteRecord, updateRecord } from '../api/localApi.js'
 import { exportCsv } from '../lib/csv.js'
-import { dateBR } from '../lib/format.js'
+import { dateBR, FULL_MONTHS } from '../lib/format.js'
 import { buildProducaoPayload, periodSlug, downloadJSON } from '../lib/backup.js'
 import Filters from '../components/Filters.jsx'
 import RecordList from '../components/RecordList.jsx'
@@ -15,6 +15,18 @@ import { useToast } from '../hooks/useToast.js'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
 
+// Descreve em texto o que os filtros ativos vao incluir no download.
+const describeDownloadScope = (filters, month, year) => {
+  const monthLabel = `${FULL_MONTHS[Number(month) - 1]} de ${year}`
+  const parts = []
+  if (filters.product) parts.push(`de ${filters.product}`)
+  if (filters.account) parts.push(`da conta ${filters.account}`)
+  const escopo = parts.length > 0 ? `a produção ${parts.join(' ')}` : null
+
+  if (filters.date) return `${escopo ?? 'a produção'} do dia ${dateBR(filters.date)}`
+  return `${escopo ?? 'toda a produção'} de ${monthLabel}`
+}
+
 export default function RecordsPage() {
   const { open } = useRecordModal()
   const { year, month } = useMonth()
@@ -22,6 +34,7 @@ export default function RecordsPage() {
   const [deleteTarget, setDeleteTarget] = useState(null) // registro pendente de exclusao
   const [showSendPicker, setShowSendPicker] = useState(false)
   const [sendRecords, setSendRecords] = useState(null)
+  const [showDownloadWarning, setShowDownloadWarning] = useState(false)
   const { toast, showToast } = useToast()
 
   const all = useLiveQuery(
@@ -104,10 +117,10 @@ export default function RecordsPage() {
           </button>
           <button
             className="btn flex items-center gap-1.5"
-            onClick={() => exportCsv(records, 'producao-filtrada.csv')}
+            onClick={() => setShowDownloadWarning(true)}
           >
             <Download size={16} />
-            Baixar ({records.length})
+            Baixar
           </button>
         </div>
       </div>
@@ -133,6 +146,17 @@ export default function RecordsPage() {
           dayOption
           onConfirm={handleSendProducao}
           onCancel={() => setShowSendPicker(false)}
+        />
+      )}
+
+      {showDownloadWarning && (
+        <ConfirmDialog
+          title="Baixar CSV"
+          description={`Você está baixando ${describeDownloadScope(filters, month, year)}.`}
+          confirmLabel="Baixar"
+          confirmIcon={Download}
+          onConfirm={() => { setShowDownloadWarning(false); exportCsv(records, 'producao-filtrada.csv') }}
+          onCancel={() => setShowDownloadWarning(false)}
         />
       )}
     </section>
