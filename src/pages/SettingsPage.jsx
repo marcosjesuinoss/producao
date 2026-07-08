@@ -343,7 +343,7 @@ export default function SettingsPage() {
       {showImportWarning && (
         <ConfirmDialog
           title="Importar backup"
-          description={'Isso vai SUBSTITUIR todos os dados atuais pelos do arquivo escolhido. Se o objetivo é somar uma produção enviada por alguém, use "Carregar produção enviada" em vez disso.'}
+          description={'Se o arquivo for um backup "Tudo", isso vai SUBSTITUIR todos os dados atuais; se for de um período específico (mês/semestre/ano), soma ao que já existe. Se o objetivo é sempre somar uma produção enviada por alguém, use "Carregar produção enviada" em vez disso.'}
           confirmLabel="Escolher arquivo"
           confirmIcon={Upload}
           onConfirm={() => { setShowImportWarning(false); fileInputRef.current?.click() }}
