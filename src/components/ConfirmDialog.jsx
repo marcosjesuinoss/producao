@@ -2,15 +2,21 @@ import { useEffect, useState } from 'react'
 import { AlertTriangle, Trash2 } from 'lucide-react'
 
 // countdown = segundos que o botao de confirmar fica bloqueado (0 = libera na hora).
+// tone = 'danger' (vermelho, padrao — acoes destrutivas) | 'warning' (amarelo — so um aviso).
 export default function ConfirmDialog({
   title,
   description,
   confirmLabel,
   confirmIcon: ConfirmIcon = Trash2,
   countdown = 0,
+  tone = 'danger',
   onConfirm,
   onCancel,
 }) {
+  const isWarning = tone === 'warning'
+  const toneColor = isWarning ? 'var(--accent-yellow)' : 'var(--accent-red)'
+  const toneBg = isWarning ? 'rgba(234,179,8,0.12)' : 'rgba(239,68,68,0.12)'
+
   const [seconds, setSeconds] = useState(countdown)
   const [barFilled, setBarFilled] = useState(false)
 
@@ -55,8 +61,8 @@ export default function ConfirmDialog({
       >
         {/* Ícone + título */}
         <div className="flex items-center gap-3">
-          <div style={{ background: 'rgba(239,68,68,0.12)', borderRadius: '10px', padding: '8px', flexShrink: 0 }}>
-            <AlertTriangle size={22} style={{ color: 'var(--accent-red)' }} />
+          <div style={{ background: toneBg, borderRadius: '10px', padding: '8px', flexShrink: 0 }}>
+            <AlertTriangle size={22} style={{ color: toneColor }} />
           </div>
           <div>
             <p className="font-bold text-base" style={{ color: 'var(--text-primary)' }}>{title}</p>
@@ -102,10 +108,16 @@ export default function ConfirmDialog({
             Cancelar
           </button>
           <button
-            className="btn btn-danger flex-1 flex items-center justify-center gap-1.5"
+            className={isWarning ? 'btn flex-1 flex items-center justify-center gap-1.5' : 'btn btn-danger flex-1 flex items-center justify-center gap-1.5'}
             disabled={!ready}
             onClick={onConfirm}
-            style={{ opacity: ready ? 1 : 0.35, cursor: ready ? 'pointer' : 'not-allowed' }}
+            style={{
+              opacity: ready ? 1 : 0.35,
+              cursor: ready ? 'pointer' : 'not-allowed',
+              ...(isWarning
+                ? { background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', color: 'var(--accent-yellow)' }
+                : {}),
+            }}
           >
             <ConfirmIcon size={14} />
             {ready ? confirmLabel : `Aguarde (${seconds})`}

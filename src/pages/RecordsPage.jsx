@@ -155,6 +155,7 @@ export default function RecordsPage() {
           description={`Você está baixando ${describeDownloadScope(filters, month, year)}.`}
           confirmLabel="Baixar"
           confirmIcon={Download}
+          tone="warning"
           onConfirm={() => { setShowDownloadWarning(false); exportCsv(records, 'producao-filtrada.csv') }}
           onCancel={() => setShowDownloadWarning(false)}
         />
