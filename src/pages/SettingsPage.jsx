@@ -8,6 +8,8 @@ import { seedIfEmpty, resetAll } from '../lib/seed.js'
 import { exportBackup, readImportFile, importBackup, importMerge, describePeriod } from '../lib/backup.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import PeriodPicker from '../components/PeriodPicker.jsx'
+import Toast from '../components/Toast.jsx'
+import { useToast } from '../hooks/useToast.js'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -15,7 +17,7 @@ export default function SettingsPage() {
   const { hasPin, setPin, removePin } = useAuth()
   const { theme, setTheme } = useTheme()
   const [pin, setPinValue] = useState('')
-  const [msg, setMsg] = useState('')
+  const { toast, showToast } = useToast()
   const [showClearDialog, setShowClearDialog] = useState(false)
   const [showRemovePinDialog, setShowRemovePinDialog] = useState(false)
   const [showExportPicker, setShowExportPicker] = useState(false)
@@ -31,23 +33,21 @@ export default function SettingsPage() {
     else window.location.reload()
   }
 
-  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 2500) }
-
   const isDark = theme === 'dark'
 
   const handleClearConfirm = async () => {
     await resetAll()
     setShowClearDialog(false)
-    flash('Tudo apagado.')
+    showToast('Tudo apagado.')
   }
 
   const handleExportConfirm = async (period) => {
     setShowExportPicker(false)
     try {
       await exportBackup(period)
-      flash('Backup exportado.')
+      showToast('Backup exportado.')
     } catch {
-      flash('Erro ao exportar backup.')
+      showToast('Erro ao exportar backup.', 'error')
     }
   }
 
@@ -58,12 +58,12 @@ export default function SettingsPage() {
     try {
       const payload = await readImportFile(file)
       if (payload.kind !== 'backup') {
-        flash('Esse arquivo não é um backup — use "Carregar produção enviada".')
+        showToast('Esse arquivo não é um backup — use "Carregar produção enviada".', 'error')
         return
       }
       setImportPayload(payload)
     } catch {
-      flash('Arquivo de backup inválido.')
+      showToast('Arquivo de backup inválido.', 'error')
     }
   }
 
@@ -72,15 +72,15 @@ export default function SettingsPage() {
     try {
       if (isFull) {
         await importBackup(importPayload)
-        flash('Backup restaurado.')
+        showToast('Backup restaurado.')
       } else {
         const result = await importMerge(importPayload)
         const imported = Object.values(result).reduce((s, r) => s + r.imported, 0)
         const skipped = Object.values(result).reduce((s, r) => s + r.skipped, 0)
-        flash(skipped > 0 ? `${imported} itens importados, ${skipped} já existiam.` : `${imported} itens importados.`)
+        showToast(skipped > 0 ? `${imported} itens importados, ${skipped} já existiam.` : `${imported} itens importados.`)
       }
     } catch {
-      flash('Erro ao restaurar backup.')
+      showToast('Erro ao restaurar backup.', 'error')
     } finally {
       setImportPayload(null)
     }
@@ -93,12 +93,12 @@ export default function SettingsPage() {
     try {
       const payload = await readImportFile(file)
       if (payload.kind !== 'producao') {
-        flash('Esse arquivo é um backup — use "Importar backup".')
+        showToast('Esse arquivo é um backup — use "Importar backup".', 'error')
         return
       }
       setProducaoPayload(payload)
     } catch {
-      flash('Arquivo inválido.')
+      showToast('Arquivo inválido.', 'error')
     }
   }
 
@@ -106,9 +106,9 @@ export default function SettingsPage() {
     try {
       const result = await importMerge(producaoPayload)
       const { imported = 0, skipped = 0 } = result.records ?? {}
-      flash(skipped > 0 ? `${imported} registros importados, ${skipped} já existiam.` : `${imported} registros importados.`)
+      showToast(skipped > 0 ? `${imported} registros importados, ${skipped} já existiam.` : `${imported} registros importados.`)
     } catch {
-      flash('Erro ao importar produção.')
+      showToast('Erro ao importar produção.', 'error')
     } finally {
       setProducaoPayload(null)
     }
@@ -269,7 +269,7 @@ export default function SettingsPage() {
             <button
               className="btn btn-brand flex items-center gap-1.5"
               disabled={pin.length < 4}
-              onClick={async () => { await setPin(pin); setPinValue(''); flash('PIN definido.') }}
+              onClick={async () => { await setPin(pin); setPinValue(''); showToast('PIN definido.') }}
             >
               <Lock size={14} />
               Definir
@@ -332,9 +332,7 @@ export default function SettingsPage() {
         />
       </div>
 
-      {msg && (
-        <p className="text-sm" style={{ color: 'var(--accent-green)' }} role="status">{msg}</p>
-      )}
+      <Toast toast={toast} />
 
       {showClearDialog && (
         <ConfirmDialog
@@ -415,7 +413,7 @@ export default function SettingsPage() {
           description="O app deixará de pedir PIN ao abrir — qualquer pessoa com acesso ao aparelho poderá ver seus dados de produção."
           confirmLabel="Remover"
           confirmIcon={Lock}
-          onConfirm={() => { removePin(); setShowRemovePinDialog(false); flash('PIN removido.') }}
+          onConfirm={() => { removePin(); setShowRemovePinDialog(false); showToast('PIN removido.') }}
           onCancel={() => setShowRemovePinDialog(false)}
         />
       )}

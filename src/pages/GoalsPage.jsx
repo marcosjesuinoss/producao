@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -6,11 +6,13 @@ import { db } from '../db/db.js'
 import { upsertGoal, createProduct, updateProduct, deleteProduct, deleteGoal } from '../api/localApi.js'
 import { num, brl, BR_NUM_RE, floorPct } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
+import { useToast } from '../hooks/useToast.js'
 import { useMonth } from '../context/MonthContext.jsx'
 import { getProgressColor } from '../utils/progressColor.js'
 import ProgressBar from '../components/ui/ProgressBar.jsx'
 import ProductModal from '../components/ProductModal.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import Toast from '../components/Toast.jsx'
 
 const applyMask = (v) => {
   let raw = String(v ?? '').replace(/\./g, '').replace(/[^0-9,]/g, '')
@@ -42,14 +44,7 @@ export default function GoalsPage() {
   const { year, month } = useMonth()
   const [manager] = useState('')
   const [productModalOpen, setProductModalOpen] = useState(false)
-  const [savedToast, setSavedToast] = useState(false)
-  const toastTimer = useRef(null)
-
-  const showSaved = () => {
-    if (toastTimer.current) clearTimeout(toastTimer.current)
-    setSavedToast(true)
-    toastTimer.current = setTimeout(() => setSavedToast(false), 2000)
-  }
+  const { toast, showToast } = useToast()
 
   const { allProducts, custom, isValue } = useProducts()
   const productById = useMemo(() => new Map(custom.map((p) => [p.name, p.id])), [custom])
@@ -106,21 +101,7 @@ export default function GoalsPage() {
 
   return (
     <>
-      {savedToast && (
-        <div
-          className="fixed bottom-6 left-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-lg"
-          style={{
-            transform: 'translateX(-50%)',
-            background: 'var(--c-good)',
-            color: '#fff',
-            fontSize: '14px',
-            fontWeight: 600,
-            pointerEvents: 'none',
-          }}
-        >
-          ✓ Salvo
-        </div>
-      )}
+      <Toast toast={toast} />
     <section className="space-y-4">
 
       {/* Page header */}
@@ -176,7 +157,7 @@ export default function GoalsPage() {
               month={month}
               year={year}
               onSave={save}
-              onSaved={showSaved}
+              onSaved={() => showToast('Salvo')}
               onDeleteGoal={g ? () => deleteGoal(g.id) : null}
               onDeleteProduct={productId && product !== 'Abertura de Conta' ? () => deleteProduct(productId) : null}
               groupNames={productId ? (groupNamesByProductId.get(productId) ?? []) : []}

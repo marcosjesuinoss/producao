@@ -10,6 +10,8 @@ import Filters from '../components/Filters.jsx'
 import RecordList from '../components/RecordList.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import PeriodPicker from '../components/PeriodPicker.jsx'
+import Toast from '../components/Toast.jsx'
+import { useToast } from '../hooks/useToast.js'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
 
@@ -20,9 +22,7 @@ export default function RecordsPage() {
   const [deleteTarget, setDeleteTarget] = useState(null) // registro pendente de exclusao
   const [showSendPicker, setShowSendPicker] = useState(false)
   const [sendRecords, setSendRecords] = useState(null)
-  const [msg, setMsg] = useState('')
-
-  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(''), 3000) }
+  const { toast, showToast } = useToast()
 
   const all = useLiveQuery(
     () => db.records.where({ year: Number(year), month: Number(month) }).reverse().sortBy('date'),
@@ -66,7 +66,7 @@ export default function RecordsPage() {
 
     const fallbackToDownload = () => {
       downloadJSON(payload, filename)
-      flash('Arquivo baixado — anexe no WhatsApp manualmente.')
+      showToast('Arquivo baixado — anexe no WhatsApp manualmente.')
     }
 
     try {
@@ -112,9 +112,7 @@ export default function RecordsPage() {
         </div>
       </div>
 
-      {msg && (
-        <p className="text-sm" style={{ color: 'var(--accent-green)' }} role="status">{msg}</p>
-      )}
+      <Toast toast={toast} />
 
       <Filters value={filters} onChange={setFilters} accounts={accounts} />
       <RecordList records={records} onEdit={(r) => open(r)} onDelete={handleDelete} onIgnore={handleIgnore} />
