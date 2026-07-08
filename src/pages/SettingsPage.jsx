@@ -19,6 +19,8 @@ export default function SettingsPage() {
   const [showClearDialog, setShowClearDialog] = useState(false)
   const [showRemovePinDialog, setShowRemovePinDialog] = useState(false)
   const [showExportPicker, setShowExportPicker] = useState(false)
+  const [showImportWarning, setShowImportWarning] = useState(false)
+  const [showProducaoWarning, setShowProducaoWarning] = useState(false)
   const [importPayload, setImportPayload] = useState(null)
   const [producaoPayload, setProducaoPayload] = useState(null)
   const fileInputRef = useRef(null)
@@ -286,33 +288,19 @@ export default function SettingsPage() {
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
           O backup salva registros, metas, produtos e grupos num arquivo local — guarde-o em local seguro (e-mail, nuvem) para não perder os dados caso o app seja desinstalado ou o navegador limpe o armazenamento.
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <button className="btn flex items-center gap-1.5" onClick={() => setShowExportPicker(true)}>
             <Download size={14} />
             Exportar backup
           </button>
-          <button className="btn flex items-center gap-1.5" onClick={() => fileInputRef.current?.click()}>
+          <button className="btn flex items-center gap-1.5" onClick={() => setShowImportWarning(true)}>
             <Upload size={14} />
             Importar backup
           </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json"
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-          />
-          <button className="btn flex items-center gap-1.5" onClick={() => producaoInputRef.current?.click()}>
+          <button className="btn flex items-center gap-1.5" onClick={() => setShowProducaoWarning(true)}>
             <Upload size={14} />
             Carregar produção enviada
           </button>
-          <input
-            ref={producaoInputRef}
-            type="file"
-            accept="application/json,.json,.txt"
-            style={{ display: 'none' }}
-            onChange={handleProducaoFileChange}
-          />
           <button
             className="btn btn-danger flex items-center gap-1.5"
             onClick={() => setShowClearDialog(true)}
@@ -321,6 +309,20 @@ export default function SettingsPage() {
             Limpar tudo
           </button>
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/json"
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+        />
+        <input
+          ref={producaoInputRef}
+          type="file"
+          accept="application/json,.json,.txt"
+          style={{ display: 'none' }}
+          onChange={handleProducaoFileChange}
+        />
       </div>
 
       {msg && (
@@ -335,6 +337,28 @@ export default function SettingsPage() {
           countdown={5}
           onConfirm={handleClearConfirm}
           onCancel={() => setShowClearDialog(false)}
+        />
+      )}
+
+      {showImportWarning && (
+        <ConfirmDialog
+          title="Importar backup"
+          description={'Isso vai SUBSTITUIR todos os dados atuais pelos do arquivo escolhido. Se o objetivo é somar uma produção enviada por alguém, use "Carregar produção enviada" em vez disso.'}
+          confirmLabel="Escolher arquivo"
+          confirmIcon={Upload}
+          onConfirm={() => { setShowImportWarning(false); fileInputRef.current?.click() }}
+          onCancel={() => setShowImportWarning(false)}
+        />
+      )}
+
+      {showProducaoWarning && (
+        <ConfirmDialog
+          title="Carregar produção enviada"
+          description={'Isso vai SOMAR os registros do arquivo à sua produção atual, sem apagar nada. Se o objetivo é substituir todos os dados por um backup, use "Importar backup" em vez disso.'}
+          confirmLabel="Escolher arquivo"
+          confirmIcon={Upload}
+          onConfirm={() => { setShowProducaoWarning(false); producaoInputRef.current?.click() }}
+          onCancel={() => setShowProducaoWarning(false)}
         />
       )}
 
