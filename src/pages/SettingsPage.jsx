@@ -297,12 +297,19 @@ export default function SettingsPage() {
             <Upload size={14} />
             Importar backup
           </button>
-          <button className="btn flex items-center gap-1.5" onClick={() => setShowProducaoWarning(true)}>
+        </div>
+        <div className="flex gap-2">
+          <button
+            className="btn flex items-center gap-1.5"
+            style={{ flex: 1, minWidth: 0 }}
+            onClick={() => setShowProducaoWarning(true)}
+          >
             <Upload size={14} />
             Carregar produção enviada
           </button>
           <button
             className="btn btn-danger flex items-center gap-1.5"
+            style={{ flexShrink: 0 }}
             onClick={() => setShowClearDialog(true)}
           >
             <Trash2 size={14} />
