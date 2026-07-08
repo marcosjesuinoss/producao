@@ -12,6 +12,7 @@ export default function ConfirmDialog({
   onCancel,
 }) {
   const [seconds, setSeconds] = useState(countdown)
+  const [barFilled, setBarFilled] = useState(false)
 
   useEffect(() => {
     if (seconds <= 0) return
@@ -19,8 +20,25 @@ export default function ConfirmDialog({
     return () => clearTimeout(id)
   }, [seconds])
 
+  // Uma unica transicao continua cobrindo o tempo total, disparada ao montar
+  // — fica sincronizada com o relogio real, em vez de reiniciar uma animacao
+  // curta a cada segundo (o que sempre deixava a barra atrasada em relacao
+  // ao numero). setTimeout em vez de requestAnimationFrame: rAF so dispara
+  // se o navegador estiver de fato pintando quadros (pode nunca rodar numa
+  // aba em segundo plano), e o numero (via setTimeout) nao tem essa mesma
+  // dependencia — as duas coisas precisam do mesmo tipo de timer pra ficar
+  // em sincronia de verdade.
+  useEffect(() => {
+    if (countdown <= 0) return
+    const id = setTimeout(() => setBarFilled(true), 10)
+    return () => clearTimeout(id)
+  }, [countdown])
+
   const ready = seconds === 0
-  const progress = countdown > 0 ? ((countdown - seconds) / countdown) * 100 : 100
+  // Se por algum motivo a transicao nao tiver disparado a tempo, garante que
+  // a barra apareça cheia assim que o botao for liberado (nunca "presa" em
+  // 0% com o botao ja ativo).
+  const barReady = barFilled || ready
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -68,10 +86,10 @@ export default function ConfirmDialog({
               <div
                 style={{
                   height: '100%',
-                  width: `${progress}%`,
+                  width: barReady ? '100%' : '0%',
                   background: ready ? 'var(--accent-red)' : 'var(--accent-yellow)',
                   borderRadius: '0 99px 99px 0',
-                  transition: 'width 0.9s linear',
+                  transition: `width ${countdown}s linear`,
                 }}
               />
             </div>
