@@ -4,12 +4,14 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db.js'
 import { deleteRecord, updateRecord } from '../api/localApi.js'
 import { exportCsv } from '../lib/csv.js'
+import { exportPdf } from '../lib/pdf.js'
 import { dateBR, FULL_MONTHS } from '../lib/format.js'
 import { buildProducaoPayload, periodSlug, downloadJSON } from '../lib/backup.js'
 import Filters from '../components/Filters.jsx'
 import RecordList from '../components/RecordList.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import PeriodPicker from '../components/PeriodPicker.jsx'
+import DownloadDialog from '../components/DownloadDialog.jsx'
 import Toast from '../components/Toast.jsx'
 import { useToast } from '../hooks/useToast.js'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
@@ -150,13 +152,11 @@ export default function RecordsPage() {
       )}
 
       {showDownloadWarning && (
-        <ConfirmDialog
-          title="Baixar CSV"
+        <DownloadDialog
+          title="Baixar produção"
           description={`Você está baixando ${describeDownloadScope(filters, month, year)}.`}
-          confirmLabel="Baixar"
-          confirmIcon={Download}
-          tone="warning"
-          onConfirm={() => { setShowDownloadWarning(false); exportCsv(records, 'producao-filtrada.csv') }}
+          onDownloadCsv={() => { setShowDownloadWarning(false); exportCsv(records, 'producao-filtrada.csv') }}
+          onDownloadPdf={() => { setShowDownloadWarning(false); exportPdf(records, describeDownloadScope(filters, month, year), 'producao-filtrada.pdf') }}
           onCancel={() => setShowDownloadWarning(false)}
         />
       )}
