@@ -29,6 +29,18 @@ const describeDownloadScope = (filters, month, year) => {
   return `${escopo ?? 'toda a produção'} de ${monthLabel}`
 }
 
+// Titulo curto pro cabecalho do relatorio PDF (sem "a produção de...").
+const describeReportTitle = (filters, month, year) => {
+  const monthLabel = `${FULL_MONTHS[Number(month) - 1]} de ${year}`
+  const parts = []
+  if (filters.product) parts.push(filters.product)
+  if (filters.account) parts.push(`conta ${filters.account}`)
+  const escopo = parts.length > 0 ? parts.join(' · ') : 'Toda a produção'
+
+  if (filters.date) return `${escopo} — ${dateBR(filters.date)}`
+  return `${escopo} de ${monthLabel}`
+}
+
 export default function RecordsPage() {
   const { open } = useRecordModal()
   const { year, month } = useMonth()
@@ -156,7 +168,7 @@ export default function RecordsPage() {
           title="Baixar produção"
           description={`Você está baixando ${describeDownloadScope(filters, month, year)}.`}
           onDownloadCsv={() => { setShowDownloadWarning(false); exportCsv(records, 'producao-filtrada.csv') }}
-          onDownloadPdf={() => { setShowDownloadWarning(false); exportPdf(records, describeDownloadScope(filters, month, year), 'producao-filtrada.pdf') }}
+          onDownloadPdf={() => { setShowDownloadWarning(false); exportPdf(records, describeReportTitle(filters, month, year), 'producao-filtrada.pdf') }}
           onCancel={() => setShowDownloadWarning(false)}
         />
       )}
