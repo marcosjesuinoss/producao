@@ -112,19 +112,53 @@ export async function importBackup(payload) {
 // Importacao aditiva: soma ao que ja existe, pulando ids ja presentes
 // (evita duplicar se o mesmo arquivo for importado mais de uma vez).
 // Usada para qualquer periodo parcial (mes/semestre/ano) e para producao.
-export async function importMerge(payload) {
+// excludeIds: ids do proprio arquivo que o usuario decidiu NAO importar
+// (ex.: apos revisar possiveis duplicatas de conteudo em findContentDuplicates).
+export async function importMerge(payload, excludeIds = null) {
   const tables = TABLES.filter((t) => Array.isArray(payload.data[t]) && payload.data[t].length > 0)
   const result = {}
   await db.transaction('rw', tables.map((t) => db[t]), async () => {
     for (const table of tables) {
-      const rows = payload.data[table]
+      const rows = excludeIds ? payload.data[table].filter((r) => !excludeIds.has(r.id)) : payload.data[table]
       const existingIds = new Set(
         (await db[table].bulkGet(rows.map((r) => r.id))).filter(Boolean).map((r) => r.id)
       )
       const toAdd = rows.filter((r) => !existingIds.has(r.id))
       if (toAdd.length) await db[table].bulkAdd(toAdd)
-      result[table] = { imported: toAdd.length, skipped: rows.length - toAdd.length }
+      result[table] = { imported: toAdd.length, skipped: payload.data[table].length - toAdd.length }
     }
   })
   return result
+}
+
+// Campos que definem "o mesmo lancamento" por conteudo, fora do id — usado
+// pra flagar possiveis duplicatas (ex.: o mesmo dado foi lancado nos dois
+// aparelhos, cada um com seu proprio id). O merge por id ja cuida sozinho,
+// silenciosamente, de reimportar o mesmo arquivo — aqui so interessam
+// registros com id NOVO que "parecem" repetidos.
+const DUP_MATCH_FIELDS = ['date', 'product', 'account', 'quantity', 'value']
+const dupKey = (r) => DUP_MATCH_FIELDS.map((f) => r[f] ?? '').join('|')
+
+export async function findContentDuplicates(records) {
+  if (!records.length) return []
+  const existingIds = new Set(
+    (await db.records.bulkGet(records.map((r) => r.id))).filter(Boolean).map((r) => r.id)
+  )
+  const newRecords = records.filter((r) => !existingIds.has(r.id))
+  if (!newRecords.length) return []
+
+  const dates = [...new Set(newRecords.map((r) => r.date))]
+  const existingByDate = await db.records.where('date').anyOf(dates).toArray()
+  const existingByKey = new Map()
+  for (const e of existingByDate) {
+    const k = dupKey(e)
+    if (!existingByKey.has(k)) existingByKey.set(k, e)
+  }
+
+  const matches = []
+  for (const r of newRecords) {
+    const existing = existingByKey.get(dupKey(r))
+    if (existing) matches.push({ incoming: r, existing })
+  }
+  return matches
 }

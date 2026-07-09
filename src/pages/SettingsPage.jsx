@@ -5,9 +5,10 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { seedIfEmpty, resetAll } from '../lib/seed.js'
-import { exportBackup, readImportFile, importBackup, importMerge, describePeriod } from '../lib/backup.js'
+import { exportBackup, readImportFile, importBackup, importMerge, describePeriod, findContentDuplicates } from '../lib/backup.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import PeriodPicker from '../components/PeriodPicker.jsx'
+import DuplicateReview from '../components/DuplicateReview.jsx'
 import Toast from '../components/Toast.jsx'
 import { useToast } from '../hooks/useToast.js'
 
@@ -25,6 +26,7 @@ export default function SettingsPage() {
   const [showProducaoWarning, setShowProducaoWarning] = useState(false)
   const [importPayload, setImportPayload] = useState(null)
   const [producaoPayload, setProducaoPayload] = useState(null)
+  const [duplicateReview, setDuplicateReview] = useState(null) // { payload, matches, label, errorMsg }
   const fileInputRef = useRef(null)
   const producaoInputRef = useRef(null)
 
@@ -67,23 +69,46 @@ export default function SettingsPage() {
     }
   }
 
-  const handleImportConfirm = async () => {
-    const isFull = importPayload.period.type === 'tudo'
+  // Verifica duplicatas de CONTEUDO (mesma data/conta/produto/valor, id novo)
+  // antes de mesclar; se achar alguma, abre a tela de revisao em vez de
+  // importar direto. Usado tanto por backup parcial quanto por producao.
+  const mergeWithDuplicateCheck = async (payload, label, errorMsg) => {
     try {
-      if (isFull) {
-        await importBackup(importPayload)
-        showToast('Backup restaurado.')
-      } else {
-        const result = await importMerge(importPayload)
-        const imported = Object.values(result).reduce((s, r) => s + r.imported, 0)
-        const skipped = Object.values(result).reduce((s, r) => s + r.skipped, 0)
-        showToast(skipped > 0 ? `${imported} itens importados, ${skipped} já existiam.` : `${imported} itens importados.`)
+      const matches = await findContentDuplicates(payload.data.records ?? [])
+      if (matches.length) {
+        setDuplicateReview({ payload, matches, label, errorMsg })
+        return
       }
+      await runMerge(payload, null, label, errorMsg)
     } catch {
-      showToast('Erro ao restaurar backup.', 'error')
-    } finally {
-      setImportPayload(null)
+      showToast(errorMsg, 'error')
     }
+  }
+
+  const runMerge = async (payload, skipIds, label, errorMsg) => {
+    try {
+      const result = await importMerge(payload, skipIds)
+      const imported = Object.values(result).reduce((s, r) => s + r.imported, 0)
+      const skipped = Object.values(result).reduce((s, r) => s + r.skipped, 0)
+      showToast(skipped > 0 ? `${imported} ${label} importados, ${skipped} já existiam.` : `${imported} ${label} importados.`)
+    } catch {
+      showToast(errorMsg, 'error')
+    }
+  }
+
+  const handleImportConfirm = async () => {
+    const payload = importPayload
+    setImportPayload(null)
+    if (payload.period.type === 'tudo') {
+      try {
+        await importBackup(payload)
+        showToast('Backup restaurado.')
+      } catch {
+        showToast('Erro ao restaurar backup.', 'error')
+      }
+      return
+    }
+    await mergeWithDuplicateCheck(payload, 'itens', 'Erro ao restaurar backup.')
   }
 
   const handleProducaoFileChange = async (e) => {
@@ -103,15 +128,9 @@ export default function SettingsPage() {
   }
 
   const handleProducaoConfirm = async () => {
-    try {
-      const result = await importMerge(producaoPayload)
-      const { imported = 0, skipped = 0 } = result.records ?? {}
-      showToast(skipped > 0 ? `${imported} registros importados, ${skipped} já existiam.` : `${imported} registros importados.`)
-    } catch {
-      showToast('Erro ao importar produção.', 'error')
-    } finally {
-      setProducaoPayload(null)
-    }
+    const payload = producaoPayload
+    setProducaoPayload(null)
+    await mergeWithDuplicateCheck(payload, 'registros', 'Erro ao importar produção.')
   }
 
   return (
@@ -396,6 +415,18 @@ export default function SettingsPage() {
           confirmIcon={Upload}
           onConfirm={handleProducaoConfirm}
           onCancel={() => setProducaoPayload(null)}
+        />
+      )}
+
+      {duplicateReview && (
+        <DuplicateReview
+          matches={duplicateReview.matches}
+          onCancel={() => setDuplicateReview(null)}
+          onConfirm={(skipIds) => {
+            const { payload, label, errorMsg } = duplicateReview
+            setDuplicateReview(null)
+            runMerge(payload, skipIds, label, errorMsg)
+          }}
         />
       )}
 
