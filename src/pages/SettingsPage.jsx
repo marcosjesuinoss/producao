@@ -38,9 +38,13 @@ export default function SettingsPage() {
   const isDark = theme === 'dark'
 
   const handleClearConfirm = async () => {
-    await resetAll()
-    setShowClearDialog(false)
-    showToast('Tudo apagado.')
+    try {
+      await resetAll()
+      setShowClearDialog(false)
+      showToast('Tudo apagado.')
+    } catch (err) {
+      showToast(`Erro ao apagar: ${err?.message || err}`, 'error')
+    }
   }
 
   const handleExportConfirm = async (period) => {
@@ -288,7 +292,15 @@ export default function SettingsPage() {
             <button
               className="btn btn-brand flex items-center gap-1.5"
               disabled={pin.length < 4}
-              onClick={async () => { await setPin(pin); setPinValue(''); showToast('PIN definido.') }}
+              onClick={async () => {
+                try {
+                  await setPin(pin)
+                  setPinValue('')
+                  showToast('PIN definido.')
+                } catch (err) {
+                  showToast(`Erro ao definir PIN: ${err?.message || err}`, 'error')
+                }
+              }}
             >
               <Lock size={14} />
               Definir

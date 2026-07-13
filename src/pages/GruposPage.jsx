@@ -7,11 +7,14 @@ import { deriveMemberships } from '../utils/grupoCalculations.js'
 import { deleteGrupo } from '../api/localApi.js'
 import GrupoModal from '../components/GrupoModal.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
+import Toast from '../components/Toast.jsx'
+import { useToast } from '../hooks/useToast.js'
 
 export default function GruposPage() {
   const navigate = useNavigate()
   const [modalState, setModalState] = useState(null) // null | { editing: null | grupoObj }
   const [deleteTarget, setDeleteTarget] = useState(null) // grupo pendente de exclusao
+  const { toast, showToast } = useToast()
 
   const allGrupos   = useLiveQuery(() => db.classes.toArray(), [], [])
   const allProducts = useLiveQuery(() => db.products.toArray(), [], [])
@@ -47,9 +50,13 @@ export default function GruposPage() {
 
   const handleDelete = (grp) => setDeleteTarget(grp)
 
-  const handleDeleteConfirm = () => {
-    deleteGrupo(deleteTarget.id)
-    setDeleteTarget(null)
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteGrupo(deleteTarget.id)
+      setDeleteTarget(null)
+    } catch (err) {
+      showToast(`Erro ao excluir: ${err?.message || err}`, 'error')
+    }
   }
 
   if (!allGrupos || !allProducts) return null
@@ -125,6 +132,8 @@ export default function GruposPage() {
           onCancel={() => setDeleteTarget(null)}
         />
       )}
+
+      <Toast toast={toast} />
     </section>
   )
 }

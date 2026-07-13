@@ -69,12 +69,20 @@ export default function RecordsPage() {
   const handleDelete = (r) => setDeleteTarget(r)
 
   const handleDeleteConfirm = async () => {
-    await deleteRecord(deleteTarget.id)
-    setDeleteTarget(null)
+    try {
+      await deleteRecord(deleteTarget.id)
+      setDeleteTarget(null)
+    } catch (err) {
+      showToast(`Erro ao excluir: ${err?.message || err}`, 'error')
+    }
   }
 
   const handleIgnore = async (r, ignored) => {
-    await updateRecord(r.id, { ignored })
+    try {
+      await updateRecord(r.id, { ignored })
+    } catch (err) {
+      showToast(`Erro ao atualizar: ${err?.message || err}`, 'error')
+    }
   }
 
   // Pre-carrega os registros ANTES de mostrar o seletor de periodo, pra que

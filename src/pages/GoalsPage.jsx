@@ -157,7 +157,7 @@ export default function GoalsPage() {
               month={month}
               year={year}
               onSave={save}
-              onSaved={() => showToast('Salvo')}
+              showToast={showToast}
               onDeleteGoal={g ? () => deleteGoal(g.id) : null}
               onDeleteProduct={productId && product !== 'Abertura de Conta' ? () => deleteProduct(productId) : null}
               groupNames={productId ? (groupNamesByProductId.get(productId) ?? []) : []}
@@ -170,7 +170,7 @@ export default function GoalsPage() {
   )
 }
 
-function GoalCard({ product, goal, isValueProduct, realized, pct, productId, month, year, onSave, onSaved, onDeleteGoal, onDeleteProduct, groupNames = [] }) {
+function GoalCard({ product, goal, isValueProduct, realized, pct, productId, month, year, onSave, showToast, onDeleteGoal, onDeleteProduct, groupNames = [] }) {
   const [inputVal, setInputVal] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -193,14 +193,18 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
   })()
   const color = pct != null ? getProgressColor(rawPctGoal) : 'var(--text-faint)'
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const n = parseBRNum(inputVal)
-    if (isValueProduct) {
-      onSave(product, 0, n || null)
-    } else {
-      onSave(product, n || 0, null)
+    try {
+      if (isValueProduct) {
+        await onSave(product, 0, n || null)
+      } else {
+        await onSave(product, n || 0, null)
+      }
+      showToast('Salvo')
+    } catch (err) {
+      showToast(`Erro ao salvar: ${err?.message || err}`, 'error')
     }
-    onSaved?.()
   }
 
   return (
@@ -305,7 +309,14 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
               : `Excluir produto "${product}"?`
           }
           confirmLabel="Excluir"
-          onConfirm={() => { onDeleteProduct(); setConfirmAction(null) }}
+          onConfirm={async () => {
+            try {
+              await onDeleteProduct()
+              setConfirmAction(null)
+            } catch (err) {
+              showToast(`Erro ao excluir: ${err?.message || err}`, 'error')
+            }
+          }}
           onCancel={() => setConfirmAction(null)}
         />
       )}
@@ -315,7 +326,14 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
           title="Excluir meta"
           description={`Excluir meta de "${product}" neste período?`}
           confirmLabel="Excluir"
-          onConfirm={() => { onDeleteGoal(); setConfirmAction(null) }}
+          onConfirm={async () => {
+            try {
+              await onDeleteGoal()
+              setConfirmAction(null)
+            } catch (err) {
+              showToast(`Erro ao excluir: ${err?.message || err}`, 'error')
+            }
+          }}
           onCancel={() => setConfirmAction(null)}
         />
       )}

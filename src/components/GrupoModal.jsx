@@ -67,6 +67,7 @@ export default function GrupoModal({
   const [name, setName] = useState(editing?.name ?? '')
   const [mode, setMode] = useState(editing?.aggregationMode ?? 'sum')
   const [nameError, setNameError] = useState('')
+  const [saveError, setSaveError] = useState('')
   const [saving, setSaving] = useState(false)
 
   // Pre-selected keys from the existing grupo being edited
@@ -247,6 +248,7 @@ export default function GrupoModal({
   const handleSave = async () => {
     const children = [...selected].map(splitKey)
     setSaving(true)
+    setSaveError('')
     try {
       if (isEditing) {
         await updateGrupo(editing.id, { name: name.trim(), aggregationMode: mode, children })
@@ -254,6 +256,8 @@ export default function GrupoModal({
         await createGrupo({ name: name.trim(), aggregationMode: mode, children })
       }
       onClose()
+    } catch (err) {
+      setSaveError(err?.message || String(err))
     } finally {
       setSaving(false)
     }
@@ -427,6 +431,9 @@ export default function GrupoModal({
 
         {/* Footer */}
         <div className="px-5 pb-6 pt-3 shrink-0 border-t" style={{ borderColor: 'var(--c-border)' }}>
+          {saveError && (
+            <p className="text-xs mb-2" style={{ color: 'var(--accent-red)' }}>{saveError}</p>
+          )}
           {step === 1 ? (
             <div className="flex gap-2">
               <button className="btn flex-1" onClick={onClose}>Cancelar</button>
