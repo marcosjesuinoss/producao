@@ -21,7 +21,7 @@ function SortMenu({ sortMode, onSortChange }) {
     <div className="relative">
       <button
         type="button"
-        className="input flex items-center justify-between gap-1"
+        className="input filter-ctl flex items-center justify-between gap-1"
         onClick={() => setOpen((o) => !o)}
         aria-label="Ordenar registros"
         aria-haspopup="menu"
@@ -93,14 +93,14 @@ export default function Filters({ value, onChange, accounts = [], sortMode = 'da
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label" htmlFor="f-product">Produto</label>
-          <select id="f-product" className="input" value={value.product || ''} onChange={(e) => set('product', e.target.value)}>
+          <select id="f-product" className="input filter-ctl" value={value.product || ''} onChange={(e) => set('product', e.target.value)}>
             <option value="">Todos</option>
             {allProducts.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
         <div>
           <label className="label" htmlFor="f-account">Conta</label>
-          <select id="f-account" className="input" value={value.account || ''} onChange={(e) => set('account', e.target.value)}>
+          <select id="f-account" className="input filter-ctl" value={value.account || ''} onChange={(e) => set('account', e.target.value)}>
             <option value="">Todas</option>
             {accounts.map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
