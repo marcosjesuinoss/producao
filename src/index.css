@@ -132,6 +132,16 @@ body {
 }
 .input:focus { border-color: var(--c-brand); box-shadow: 0 0 0 2px var(--c-brand-soft); }
 
+/* iOS/Safari dao ao input[type=date] uma largura intrinseca propria que
+   ignora o width:100% -> forca a ocupar toda a celula, igual aos demais. */
+input[type="date"].input {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+input[type="date"].input::-webkit-date-and-time-value { text-align: left; }
+
 /* ─── LABEL ───────────────────────────────────────── */
 .label { @apply block text-sm font-medium mb-1; color: var(--c-muted); }
 
