@@ -8,21 +8,28 @@ const SORT_LABELS = {
   'value-asc': 'Valor: menor → maior',
 }
 
+const SORT_SHORT_LABELS = {
+  date: 'Data',
+  'value-desc': 'Valor ↓',
+  'value-asc': 'Valor ↑',
+}
+
 function SortMenu({ sortMode, onSortChange }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="relative shrink-0">
+    <div className="relative">
       <button
         type="button"
-        className="btn px-2.5 py-2"
+        className="input flex items-center justify-between gap-1"
         onClick={() => setOpen((o) => !o)}
         aria-label="Ordenar registros"
         aria-haspopup="menu"
         aria-expanded={open}
         style={sortMode !== 'date' ? { color: 'var(--c-brand)' } : {}}
       >
-        <ArrowUpDown size={16} />
+        <span className="truncate">{SORT_SHORT_LABELS[sortMode]}</span>
+        <ArrowUpDown size={14} className="shrink-0" />
       </button>
       {open && (
         <>
@@ -64,18 +71,23 @@ export default function Filters({ value, onChange, accounts = [], sortMode = 'da
     <div className="card space-y-3">
       <h3 className="font-semibold text-sm" style={{ color: 'var(--text-secondary)' }}>Filtros</h3>
 
-      <div className="flex items-end gap-2">
-        <div className="flex-1 min-w-0">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
           <label className="label" htmlFor="f-date">Data</label>
           <input
             id="f-date"
             type="date"
-            className="input w-full"
+            className="input"
             value={value.date || ''}
             onChange={(e) => set('date', e.target.value)}
           />
         </div>
-        {onSortChange && <SortMenu sortMode={sortMode} onSortChange={onSortChange} />}
+        {onSortChange && (
+          <div>
+            <label className="label">Ordenar</label>
+            <SortMenu sortMode={sortMode} onSortChange={onSortChange} />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
