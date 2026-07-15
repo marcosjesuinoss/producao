@@ -77,7 +77,7 @@ export default function Filters({ value, onChange, accounts = [], sortMode = 'da
           <input
             id="f-date"
             type="date"
-            className="input"
+            className="input filter-ctl"
             value={value.date || ''}
             onChange={(e) => set('date', e.target.value)}
           />
