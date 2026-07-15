@@ -45,6 +45,7 @@ export default function RecordsPage() {
   const { open } = useRecordModal()
   const { year, month } = useMonth()
   const [filters, setFilters] = useState({})
+  const [sortMode, setSortMode] = useState('date') // 'date' | 'value-desc' | 'value-asc'
   const [deleteTarget, setDeleteTarget] = useState(null) // registro pendente de exclusao
   const [showSendPicker, setShowSendPicker] = useState(false)
   const [sendRecords, setSendRecords] = useState(null)
@@ -58,13 +59,20 @@ export default function RecordsPage() {
   const accounts = useMemo(() => [...new Set(all.map((r) => r.account).filter(Boolean))], [all])
 
   const records = useMemo(() => {
-    return all.filter((r) => {
+    const filtered = all.filter((r) => {
       if (filters.date && r.date !== filters.date) return false
       if (filters.product && r.product !== filters.product) return false
       if (filters.account && r.account !== filters.account) return false
       return true
     })
-  }, [all, filters])
+    if (sortMode === 'date') return filtered
+    // "valor" usa o valor em R$ quando o produto tem; produtos por quantidade
+    // (sem valor) usam a quantidade no lugar, pra sempre ter um numero pra comparar.
+    const amount = (r) => (r.value != null && r.value > 0 ? r.value : r.quantity || 0)
+    const sorted = [...filtered].sort((a, b) => amount(b) - amount(a))
+    if (sortMode === 'value-asc') sorted.reverse()
+    return sorted
+  }, [all, filters, sortMode])
 
   const handleDelete = (r) => setDeleteTarget(r)
 
@@ -149,8 +157,13 @@ export default function RecordsPage() {
 
       <Toast toast={toast} />
 
-      <Filters value={filters} onChange={setFilters} accounts={accounts} />
-      <RecordList records={records} onEdit={(r) => open(r)} onDelete={handleDelete} onIgnore={handleIgnore} />
+      <Filters value={filters} onChange={setFilters} accounts={accounts} sortMode={sortMode} onSortChange={setSortMode} />
+
+      <p className="text-xs px-1" style={{ color: 'var(--text-muted)' }}>
+        Quantidade de registros: <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{records.length}</span>
+      </p>
+
+      <RecordList records={records} onEdit={(r) => open(r)} onDelete={handleDelete} onIgnore={handleIgnore} groupByDate={sortMode === 'date'} />
 
       {deleteTarget && (
         <ConfirmDialog

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { MoreHorizontal, Pencil, Trash2, Eye, EyeOff, RotateCcw, X } from 'lucide-react'
 import { brl, num } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
@@ -131,7 +131,7 @@ function IgnoreConfirmDialog({ record, onConfirm, onCancel }) {
   )
 }
 
-export default function RecordList({ records, onEdit, onDelete, onIgnore }) {
+export default function RecordList({ records, onEdit, onDelete, onIgnore, groupByDate = false }) {
   const { isValue } = useProducts()
   const [openId, setOpenId] = useState(null)
   const [detailRecord, setDetailRecord] = useState(null)
@@ -149,9 +149,18 @@ export default function RecordList({ records, onEdit, onDelete, onIgnore }) {
     <>
       <div className="card p-0">
         <ul className="divide-y" style={{ borderColor: 'var(--c-border)' }}>
-          {records.map((r) => (
+          {records.map((r, idx) => {
+            const showDateHeader = groupByDate && (idx === 0 || records[idx - 1].date !== r.date)
+            return (
+            <Fragment key={r.id}>
+            {showDateHeader && (
+              <li className="px-3 pt-2.5 pb-1" style={{ background: 'var(--bg-card-deep)' }} aria-hidden>
+                <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>
+                  {fullDate(r.date)}
+                </span>
+              </li>
+            )}
             <li
-              key={r.id}
               className="relative flex items-center gap-3 p-3"
               style={{ borderColor: 'var(--c-border)' }}
             >
@@ -281,7 +290,9 @@ export default function RecordList({ records, onEdit, onDelete, onIgnore }) {
                 </>
               )}
             </li>
-          ))}
+            </Fragment>
+            )
+          })}
         </ul>
       </div>
 

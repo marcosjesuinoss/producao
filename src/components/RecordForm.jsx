@@ -124,7 +124,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
 
       <div>
         <label className="label" htmlFor="r-account">Conta produção *</label>
-        <input id="r-account" className={inputCls('account')} placeholder="AG / CONTA"
+        <input id="r-account" className={inputCls('account')} placeholder="AG / CONTA" inputMode="numeric"
           value={form.account} onChange={(e) => set('account', e.target.value)} />
         {errors.account && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.account}</p>}
       </div>
