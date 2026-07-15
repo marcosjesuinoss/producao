@@ -11,6 +11,7 @@ import { getProgressColor, getRemainingLabel } from '../utils/progressColor.js'
 import ProgressBar from '../components/ui/ProgressBar.jsx'
 import { computeGrupoProgress, deriveMemberships } from '../utils/grupoCalculations.js'
 import { useDisplayOrder } from '../hooks/useDisplayOrder.js'
+import ViewRecordsButton from '../components/ViewRecordsButton.jsx'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -80,6 +81,7 @@ function RemainingLine({ value, target, fmt = brl, fontSize = '11px' }) {
 // ---------------------------------------------------------------------------
 
 function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
+  const { year, month } = useMonth()
   const fmt = useValue ? brl : num
   const rawPctLeaf = target > 0 ? (realized / target) * 100 : realized > 0 ? 100 : 0
   const pct = target > 0 ? floorPct(rawPctLeaf) : realized > 0 ? 100 : null
@@ -99,6 +101,7 @@ function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
           {name}
         </span>
         <GroupsBadge count={parentCount} />
+        <ViewRecordsButton product={name} year={year} startMonth={month} endMonth={month} />
       </div>
       <div className="flex items-baseline justify-between gap-2">
         <div>
@@ -314,6 +317,7 @@ function GrupoNode({
 // ---------------------------------------------------------------------------
 
 function ProductCard({ b, reordering, onMove, isFirst, isLast }) {
+  const { year, month } = useMonth()
   const rawPctCard = b.metricTarget > 0 ? (b.realized / b.metricTarget) * 100 : b.realized > 0 ? 100 : 0
   const pct = b.metricTarget > 0 ? floorPct(rawPctCard) : b.realized > 0 ? 100 : null
   const color = pct != null ? getProgressColor(rawPctCard) : 'var(--text-faint)'
@@ -322,7 +326,10 @@ function ProductCard({ b, reordering, onMove, isFirst, isLast }) {
   return (
     <div className="card space-y-1">
       <div className="flex items-center justify-between gap-2">
-        <div className="font-semibold text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{b.product}</div>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{b.product}</span>
+          <ViewRecordsButton product={b.product} year={year} startMonth={month} endMonth={month} />
+        </div>
         {reordering && onMove && (
           <OrderControls
             isFirst={isFirst}

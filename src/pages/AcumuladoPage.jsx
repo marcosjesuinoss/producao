@@ -8,6 +8,7 @@ import { brl, num, MONTHS, floorPct } from '../lib/format.js'
 import { getProgressColor, getRemainingLabel } from '../utils/progressColor.js'
 import ProgressBar from '../components/ui/ProgressBar.jsx'
 import { computeGrupoProgress, deriveMemberships } from '../utils/grupoCalculations.js'
+import ViewRecordsButton from '../components/ViewRecordsButton.jsx'
 
 // ---------------------------------------------------------------------------
 // Period helpers
@@ -88,7 +89,7 @@ function RemainingLine({ value, target, fmt = brl, fontSize = '11px' }) {
 // ProductLeaf — filho de GrupoNode
 // ---------------------------------------------------------------------------
 
-function ProductLeaf({ name, realized, target, useValue, depth }) {
+function ProductLeaf({ name, realized, target, useValue, depth, year, startMonth, endMonth }) {
   const fmt    = useValue ? brl : num
   const rawPct = target > 0 ? (realized / target) * 100 : realized > 0 ? 100 : 0
   const pct    = target > 0 ? floorPct(rawPct) : realized > 0 ? 100 : null
@@ -99,10 +100,13 @@ function ProductLeaf({ name, realized, target, useValue, depth }) {
 
   return (
     <div style={nodeStyle} className="space-y-1">
-      <span className="truncate block"
-        style={{ fontWeight: depth === 1 ? 500 : 400, fontSize: depth === 1 ? '13px' : '12px', color: 'var(--text-secondary)' }}>
-        {name}
-      </span>
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="truncate"
+          style={{ fontWeight: depth === 1 ? 500 : 400, fontSize: depth === 1 ? '13px' : '12px', color: 'var(--text-secondary)' }}>
+          {name}
+        </span>
+        <ViewRecordsButton product={name} year={year} startMonth={startMonth} endMonth={endMonth} />
+      </div>
       <div className="flex items-baseline justify-between gap-2">
         <div>
           <span className="font-bold tabular-nums"
@@ -123,7 +127,7 @@ function ProductLeaf({ name, realized, target, useValue, depth }) {
 // GrupoNode — renderização recursiva
 // ---------------------------------------------------------------------------
 
-function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0 }) {
+function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0, year, startMonth, endMonth }) {
   const [open, setOpen] = useState(true)
 
   const grupo = allGrupos.find((g) => g.id === grupoId)
@@ -221,7 +225,8 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0 
               return (
                 <GrupoNode key={child.refId} grupoId={child.refId}
                   allGrupos={allGrupos} productDataMap={productDataMap}
-                  productById={productById} depth={depth + 1} />
+                  productById={productById} depth={depth + 1}
+                  year={year} startMonth={startMonth} endMonth={endMonth} />
               )
             }
             const prod = productById.get(child.refId)
@@ -230,7 +235,8 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0 
               <ProductLeaf key={child.refId}
                 name={prod?.name ?? '(removido)'}
                 realized={data.realized} target={data.target}
-                useValue={prod?.useValue ?? true} depth={depth + 1} />
+                useValue={prod?.useValue ?? true} depth={depth + 1}
+                year={year} startMonth={startMonth} endMonth={endMonth} />
             )
           })}
         </div>
@@ -246,7 +252,7 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0 
 // ProductCard — produto sem grupo
 // ---------------------------------------------------------------------------
 
-function ProductCard({ b }) {
+function ProductCard({ b, year, startMonth, endMonth }) {
   const rawPct = b.metricTarget > 0 ? (b.realized / b.metricTarget) * 100 : b.realized > 0 ? 100 : 0
   const pct    = b.metricTarget > 0 ? floorPct(rawPct) : b.realized > 0 ? 100 : null
   const color  = pct != null ? getProgressColor(rawPct) : 'var(--text-faint)'
@@ -254,8 +260,11 @@ function ProductCard({ b }) {
 
   return (
     <div className="card space-y-1">
-      <div className="font-semibold text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
-        {b.product}
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
+          {b.product}
+        </span>
+        <ViewRecordsButton product={b.product} year={year} startMonth={startMonth} endMonth={endMonth} />
       </div>
       <div className="flex items-baseline justify-between gap-2">
         <div>
@@ -466,10 +475,13 @@ export default function AcumuladoPage() {
               productDataMap={productDataMap}
               productById={productById}
               depth={0}
+              year={selected.year}
+              startMonth={startMonth}
+              endMonth={endMonth}
             />
           ))}
           {standaloneBreakdown.map((b) => (
-            <ProductCard key={b.product} b={b} />
+            <ProductCard key={b.product} b={b} year={selected.year} startMonth={startMonth} endMonth={endMonth} />
           ))}
         </div>
       )}
