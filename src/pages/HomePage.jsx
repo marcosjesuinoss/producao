@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight, ChevronUp, ChevronDown, Check } from 'lucide-react'
-import { useLiveQuery } from 'dexie-react-hooks'
+import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
 import { productBreakdown } from '../lib/summaries.js'
 import { brl, num, floorPct } from '../lib/format.js'

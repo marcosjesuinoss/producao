@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
-import { useLiveQuery } from 'dexie-react-hooks'
+import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
 import { upsertGoal, createProduct, updateProduct, deleteProduct, deleteGoal } from '../api/localApi.js'
 import { num, brl, BR_NUM_RE, floorPct } from '../lib/format.js'

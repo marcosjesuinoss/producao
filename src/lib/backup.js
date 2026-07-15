@@ -1,5 +1,6 @@
 import { db } from '../db/db.js'
 import { FULL_MONTHS, dateBR } from './format.js'
+import { notifyDataChanged } from './dataBus.js'
 
 // Tabelas de dados do usuario. Preferencias de dispositivo (tema, PIN)
 // ficam no localStorage e nao entram no backup de proposito.
@@ -107,6 +108,7 @@ export async function importBackup(payload) {
       if (rows.length) await db[table].bulkAdd(rows)
     }
   })
+  notifyDataChanged()
 }
 
 // Importacao aditiva: soma ao que ja existe, pulando ids ja presentes
@@ -128,6 +130,7 @@ export async function importMerge(payload, excludeIds = null) {
       result[table] = { imported: toAdd.length, skipped: payload.data[table].length - toAdd.length }
     }
   })
+  notifyDataChanged()
   return result
 }
 

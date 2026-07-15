@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useLiveQuery } from 'dexie-react-hooks'
+import { useLiveQuery } from '../hooks/useLiveData.js'
 import { ArrowLeft, FolderTree, Pencil, Trash2 } from 'lucide-react'
 import { db } from '../db/db.js'
 import { deriveMemberships } from '../utils/grupoCalculations.js'

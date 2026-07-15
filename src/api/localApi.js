@@ -1,5 +1,6 @@
 import { db, uid } from '../db/db.js'
 import { monthlySummary, annualSummary, generalSummary } from '../lib/summaries.js'
+import { notifyDataChanged } from '../lib/dataBus.js'
 
 /*
   "Endpoints" locais (Promise-based) equivalentes a uma REST API,
@@ -76,6 +77,7 @@ export async function createRecord(payload) {
     synced: false
   }
   await db.records.add(rec)
+  notifyDataChanged()
   return rec
 }
 
@@ -93,11 +95,13 @@ export async function updateRecord(id, patch) {
   if ('qualified' in patch) next.qualified = !!patch.qualified
   if ('ignored'   in patch) next.ignored   = !!patch.ignored
   await db.records.put(next)
+  notifyDataChanged()
   return next
 }
 
 export async function deleteRecord(id) {
   await db.records.delete(id)
+  notifyDataChanged()
   return { ok: true, id }
 }
 
@@ -129,11 +133,13 @@ export async function upsertGoal(payload) {
     updatedAt: Date.now()
   }
   await db.goals.put(base)
+  notifyDataChanged()
   return base
 }
 
 export async function deleteGoal(id) {
   await db.goals.delete(id)
+  notifyDataChanged()
   return { ok: true, id }
 }
 
@@ -145,6 +151,7 @@ export async function createProduct({ name, useValue }) {
   if (dup > 0) throw new Error('Produto já existe')
   const prod = { id: uid(), name: trimmed, useValue: !!useValue, createdAt: Date.now() }
   await db.products.add(prod)
+  notifyDataChanged()
   return prod
 }
 
@@ -167,11 +174,13 @@ export async function updateProduct(id, { name, useValue }) {
     }
   })
 
+  notifyDataChanged()
   return { id, name: trimmed, useValue: !!useValue }
 }
 
 export async function deleteProduct(id) {
   await db.products.delete(id)
+  notifyDataChanged()
   return { ok: true, id }
 }
 
@@ -194,6 +203,7 @@ export async function createGrupo({ name, aggregationMode, children }) {
     createdAt: Date.now(),
   }
   await db.classes.add(grp)
+  notifyDataChanged()
   return grp
 }
 
@@ -201,11 +211,13 @@ export async function updateGrupo(id, { name, aggregationMode, children }) {
   const trimmed = (name || '').trim()
   if (!trimmed) throw new Error('Informe o nome do grupo')
   await db.classes.update(id, { name: trimmed, aggregationMode, children })
+  notifyDataChanged()
   return { id, name: trimmed, aggregationMode, children }
 }
 
 export async function deleteGrupo(id) {
   await db.classes.delete(id)
+  notifyDataChanged()
   return { ok: true, id }
 }
 
@@ -216,10 +228,12 @@ export async function saveYearSnapshot(year) {
   const existing = await db.yearSnapshots.where('year').equals(y).first()
   if (existing) {
     await db.yearSnapshots.update(existing.id, { grupos, updatedAt: Date.now() })
+    notifyDataChanged()
     return { id: existing.id, year: y, grupos }
   }
   const snap = { id: uid(), year: y, grupos, createdAt: Date.now() }
   await db.yearSnapshots.add(snap)
+  notifyDataChanged()
   return snap
 }
 

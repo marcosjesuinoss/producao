@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Download, Send } from 'lucide-react'
-import { useLiveQuery } from 'dexie-react-hooks'
+import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
 import { deleteRecord, updateRecord } from '../api/localApi.js'
 import { exportCsv } from '../lib/csv.js'

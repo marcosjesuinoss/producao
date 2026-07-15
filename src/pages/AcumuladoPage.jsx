@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useLiveQuery } from 'dexie-react-hooks'
+import { useLiveQuery } from '../hooks/useLiveData.js'
 import { AlertTriangle, Check, ChevronRight, Lock } from 'lucide-react'
 import { db } from '../db/db.js'
 import { accumulatedBreakdown } from '../lib/summaries.js'

@@ -1,5 +1,6 @@
 import { db, uid } from '../db/db.js'
 import { STANDARD_PRODUCTS } from './format.js'
+import { notifyDataChanged } from './dataBus.js'
 
 const PRODUTOS_SEEDED_KEY = 'produtosSeeded'
 
@@ -153,4 +154,5 @@ export async function seedGrupos() {
 export async function resetAll() {
   await db.records.clear()
   await db.goals.clear()
+  notifyDataChanged()
 }

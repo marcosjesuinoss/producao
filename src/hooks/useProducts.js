@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useLiveQuery } from 'dexie-react-hooks'
+import { useLiveQuery } from './useLiveData.js'
 import { db } from '../db/db.js'
 
 export function useProducts() {
