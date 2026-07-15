@@ -133,12 +133,17 @@ body {
 .input:focus { border-color: var(--c-brand); box-shadow: 0 0 0 2px var(--c-brand-soft); }
 
 /* iOS/Safari dao ao input[type=date] uma largura intrinseca propria que
-   ignora o width:100% -> forca a ocupar toda a celula, igual aos demais. */
+   ignora o width:100% -> forca a ocupar toda a celula, igual aos demais.
+   min-height: com appearance:none, um campo de data VAZIO perde a altura
+   (nao tem texto pra dar altura a linha) e fica mais fino que os outros;
+   a altura minima (linha + padding + borda) replica a dos demais campos
+   independente de ter ou nao uma data selecionada. */
 input[type="date"].input {
   -webkit-appearance: none;
   appearance: none;
   min-width: 0;
   box-sizing: border-box;
+  min-height: calc(1.2em + 1rem + 2px);
 }
 input[type="date"].input::-webkit-date-and-time-value { text-align: left; }
 
