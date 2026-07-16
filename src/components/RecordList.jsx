@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react'
 import { MoreHorizontal, Pencil, Trash2, Eye, EyeOff, RotateCcw, X } from 'lucide-react'
-import { brl, num } from '../lib/format.js'
+import { brl, num, MONTHS } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
 
 const ABERTURA = 'Abertura de Conta'
@@ -8,6 +8,13 @@ const ABERTURA = 'Abertura de Conta'
 const shortDate = (iso) => {
   const [, m, d] = iso.split('-')
   return `${d}/${m}`
+}
+
+// "14 Jul 2026" — dia + mes abreviado (3 letras) + ano, pt-BR.
+const pillDate = (iso) => {
+  if (!iso) return '—'
+  const [y, m, d] = iso.split('-')
+  return `${Number(d)} ${MONTHS[Number(m) - 1]} ${y}`
 }
 
 const fullDate = (iso) => {
@@ -154,10 +161,30 @@ export default function RecordList({ records, onEdit, onDelete, onIgnore, groupB
             return (
             <Fragment key={r.id}>
             {showDateHeader && (
-              <li className="px-3 pt-2.5 pb-1" style={{ background: 'var(--bg-card-deep)' }} aria-hidden>
-                <span className="text-[10px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-faint)' }}>
-                  {fullDate(r.date)}
+              <li
+                aria-hidden
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '14px 14px 8px',
+                  marginTop: idx === 0 ? 0 : '4px',
+                }}
+              >
+                <span
+                  style={{
+                    background: 'rgba(99,102,241,0.15)',
+                    color: '#818cf8',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    padding: '4px 10px',
+                    borderRadius: '99px',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {pillDate(r.date)}
                 </span>
+                <span style={{ flex: 1, height: '1px', background: '#2d3748' }} />
               </li>
             )}
             <li
