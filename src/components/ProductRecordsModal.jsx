@@ -4,6 +4,7 @@ import { db } from '../db/db.js'
 import { dateBR, brl, num } from '../lib/format.js'
 import { exportProductRecordsPdf } from '../lib/pdf.js'
 import { useProducts } from '../hooks/useProducts.js'
+import ConfirmDialog from './ConfirmDialog.jsx'
 
 // Popup de detalhamento: lista os registros individuais de UM produto dentro
 // do periodo (Resumo = mes atual; Acumulado = semestre/ano selecionado).
@@ -11,6 +12,7 @@ import { useProducts } from '../hooks/useProducts.js'
 export default function ProductRecordsModal({ product, year, startMonth, endMonth, onClose }) {
   const { isValue } = useProducts()
   const [records, setRecords] = useState(null) // null = carregando
+  const [showPdfWarning, setShowPdfWarning] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -28,6 +30,7 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
   const total = (records ?? []).reduce((s, r) => s + (isVal ? (r.value || 0) : (r.quantity || 0)), 0)
 
   const handleDownloadPdf = () => {
+    setShowPdfWarning(false)
     if (!records?.length) return
     exportProductRecordsPdf({ product, records, isValue: isVal, total, month: endMonth, year })
   }
@@ -62,7 +65,7 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
             <div className="flex items-center gap-2 shrink-0 mt-0.5">
               {records?.length > 0 && (
                 <button
-                  onClick={handleDownloadPdf}
+                  onClick={() => setShowPdfWarning(true)}
                   className="w-9 h-9 rounded-full flex items-center justify-center"
                   style={{ background: 'var(--bg-card-deep)', color: 'var(--text-muted)' }}
                   aria-label="Baixar PDF"
@@ -139,6 +142,18 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
           )}
         </div>
       </div>
+
+      {showPdfWarning && (
+        <ConfirmDialog
+          title="Baixar PDF"
+          description={`Você está baixando o detalhamento de ${product} em PDF.`}
+          confirmLabel="Baixar"
+          confirmIcon={Download}
+          tone="warning"
+          onConfirm={handleDownloadPdf}
+          onCancel={() => setShowPdfWarning(false)}
+        />
+      )}
     </div>
   )
 }
