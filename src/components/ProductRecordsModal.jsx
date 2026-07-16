@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
+import { Download, X } from 'lucide-react'
 import { db } from '../db/db.js'
 import { dateBR, brl, num } from '../lib/format.js'
+import { exportProductRecordsPdf } from '../lib/pdf.js'
 import { useProducts } from '../hooks/useProducts.js'
 
 // Popup de detalhamento: lista os registros individuais de UM produto dentro
@@ -25,6 +26,11 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
 
   const isVal = isValue(product)
   const total = (records ?? []).reduce((s, r) => s + (isVal ? (r.value || 0) : (r.quantity || 0)), 0)
+
+  const handleDownloadPdf = () => {
+    if (!records?.length) return
+    exportProductRecordsPdf({ product, records, isValue: isVal, total, month: endMonth, year })
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
@@ -53,14 +59,26 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
                 {product}
               </h2>
             </div>
-            <button
-              onClick={onClose}
-              className="shrink-0 mt-0.5 w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ background: 'var(--bg-card-deep)', color: 'var(--text-muted)' }}
-              aria-label="Fechar"
-            >
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-2 shrink-0 mt-0.5">
+              {records?.length > 0 && (
+                <button
+                  onClick={handleDownloadPdf}
+                  className="w-9 h-9 rounded-full flex items-center justify-center"
+                  style={{ background: 'var(--bg-card-deep)', color: 'var(--text-muted)' }}
+                  aria-label="Baixar PDF"
+                >
+                  <Download size={18} />
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="w-9 h-9 rounded-full flex items-center justify-center"
+                style={{ background: 'var(--bg-card-deep)', color: 'var(--text-muted)' }}
+                aria-label="Fechar"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
           <div
             className="mt-3 h-0.5 rounded-full"
@@ -78,9 +96,13 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
               <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
                 {records.length} registro{records.length === 1 ? '' : 's'} · total {isVal ? brl(total) : num(total)}
               </p>
-              <ul className="divide-y" style={{ borderColor: 'var(--c-border)' }}>
-                {records.map((r) => (
-                  <li key={r.id} className="py-3 flex items-center gap-3">
+              <ul>
+                {records.map((r, i) => (
+                  <li
+                    key={r.id}
+                    className="py-3 flex items-center gap-3"
+                    style={{ borderBottom: i < records.length - 1 ? '1px solid var(--c-border)' : 'none' }}
+                  >
                     <div className="min-w-0 flex-1">
                       <div className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
                         {dateBR(r.date)}
