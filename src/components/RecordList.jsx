@@ -155,7 +155,10 @@ export default function RecordList({ records, onEdit, onDelete, onIgnore, groupB
   return (
     <>
       <div className="card p-0">
-        <ul className="divide-y" style={{ borderColor: 'var(--c-border)' }}>
+        {/* Sem divide-y de proposito: a borda entre itens e controlada
+            manualmente pra que NENHUMA borda toque o separador de data
+            (evita a linha branca que sobrava acima da pilula). */}
+        <ul>
           {records.map((r, idx) => {
             const showDateHeader = groupByDate && (idx === 0 || records[idx - 1].date !== r.date)
             return (
@@ -167,10 +170,11 @@ export default function RecordList({ records, onEdit, onDelete, onIgnore, groupB
                   display: 'flex',
                   alignItems: 'center',
                   gap: '10px',
-                  padding: '14px 14px 8px',
+                  padding: '16px 14px 8px',
                   marginTop: idx === 0 ? 0 : '4px',
                 }}
               >
+                <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(6,182,212,0.5))' }} />
                 <span
                   style={{
                     background: 'rgba(99,102,241,0.15)',
@@ -184,12 +188,17 @@ export default function RecordList({ records, onEdit, onDelete, onIgnore, groupB
                 >
                   {pillDate(r.date)}
                 </span>
-                <span style={{ flex: 1, height: '1px', background: '#2d3748' }} />
+                <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(6,182,212,0.5), transparent)' }} />
               </li>
             )}
             <li
               className="relative flex items-center gap-3 p-3"
-              style={{ borderColor: 'var(--c-border)' }}
+              style={{
+                // borda superior so entre itens do MESMO grupo; o primeiro
+                // item (idx 0) e todo item logo apos um separador nao levam
+                // borda — a transicao ali e marcada so pela pilula.
+                borderTop: (idx === 0 || showDateHeader) ? 'none' : '1px solid var(--c-border)',
+              }}
             >
               <div className="min-w-0 flex-1">
                 <div className="font-medium flex items-baseline gap-2 min-w-0">
