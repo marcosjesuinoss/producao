@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { PRODUCTS, BR_NUM_RE, todayISO } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
 
 const ABERTURA = 'Abertura de Conta'
+
+// Conta producao: aceita so digitos e "/". O "." e um atalho pro "/" (o
+// teclado numerico do celular tem "." mas nao "/") — a troca acontece ANTES
+// do filtro, senao o ponto seria descartado como caractere invalido.
+const cleanAccount = (v) => String(v ?? '').replace(/\./g, '/').replace(/[^0-9/]/g, '')
 
 const empty = {
   date: todayISO(),
@@ -60,6 +65,8 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
   const { allProducts, isValue } = useProducts()
   const [form, setForm] = useState(empty)
   const [errors, setErrors] = useState({})
+  const accountRef = useRef(null)
+  const accountCursor = useRef(null) // posicao pendente de restaurar apos o render
 
   useEffect(() => {
     setForm(initial
@@ -72,6 +79,27 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
     setForm((f) => ({ ...f, [k]: v }))
     setErrors((e) => { const n = { ...e }; delete n[k]; return n })
   }
+
+  const onAccountChange = (e) => {
+    const raw = e.target.value
+    // Onde o cursor deve parar: limpa so o trecho ANTES dele e usa o tamanho
+    // resultante. Assim "." -> "/" mantem a posicao, e um caractere rejeitado
+    // no meio do texto nao empurra o cursor pro fim.
+    accountCursor.current = cleanAccount(raw.slice(0, e.target.selectionStart)).length
+    set('account', cleanAccount(raw))
+  }
+
+  // Restaura o cursor depois que o React reescreve o value do input (o que,
+  // por padrao, jogaria o cursor pro fim). Sem array de dependencias de
+  // proposito: precisa rodar tambem quando o texto limpo nao muda (ex.:
+  // caractere invalido digitado no meio), caso em que o React so desfaz a
+  // edicao no DOM sem alterar o state.
+  useLayoutEffect(() => {
+    if (accountCursor.current == null || !accountRef.current) return
+    const pos = accountCursor.current
+    accountCursor.current = null
+    accountRef.current.setSelectionRange(pos, pos)
+  })
 
   // Intercepta tecla "." e insere "," no lugar (ponto = milhar, não decimal)
   const onDotKey = (field) => (e) => {
@@ -124,8 +152,8 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
 
       <div>
         <label className="label" htmlFor="r-account">Conta produção *</label>
-        <input id="r-account" className={inputCls('account')} placeholder="AG / CONTA" inputMode="numeric"
-          value={form.account} onChange={(e) => set('account', e.target.value)} />
+        <input id="r-account" ref={accountRef} className={inputCls('account')} placeholder="AG / CONTA" inputMode="numeric"
+          value={form.account} onChange={onAccountChange} />
         {errors.account && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.account}</p>}
       </div>
 
