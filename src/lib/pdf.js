@@ -79,21 +79,26 @@ const COLOR = {
 }
 
 // Alturas do card "hero" (em px de CSS, viram pt via px()).
-const HERO = { pad: 24, titleBase: 18, subGap: 18, totalGap: 40, labelGap: 14 }
+const HERO = { pad: 32, titleBase: 24, subGap: 22, totalGap: 48, labelGap: 18 }
 const heroHeightPx =
   HERO.pad + HERO.titleBase + HERO.subGap + HERO.totalGap + HERO.labelGap + HERO.pad
 
-// Altura de uma linha da lista: a observacao so ocupa espaco quando existe.
-const rowHeightPx = (r) => 22 + 12 + (r.notes?.trim() ? 11 : 0) + 12
+// Linha da lista (offsets a partir do topo da linha): 28 = padding topo +
+// altura da conta; +16 ate a data; +14 ate a observacao (so quando existe);
+// +20 de padding embaixo. A observacao so ocupa espaco quando existe.
+const ROW = { accTop: 28, accToDate: 16, dateToNote: 14, padBottom: 20, padX: 20 }
+const rowHeightPx = (r) =>
+  ROW.accTop + ROW.accToDate + (r.notes?.trim() ? ROW.dateToNote : 0) + ROW.padBottom
 
 export function exportProductRecordsPdf({ product, records, isValue, total, month, year }) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
-  const margin = px(32)
+  const margin = px(44)
   const cardX = margin
   const cardW = pageW - margin * 2
   const pad = px(HERO.pad)
+  const rowPadX = px(ROW.padX)
   const radius = px(16)
 
   const totalStr = isValue ? brl(total) : num(total)
@@ -115,10 +120,10 @@ export function exportProductRecordsPdf({ product, records, isValue, total, mont
   }
 
   // --- Distribui os registros entre paginas (a 1a divide espaco com o hero)
-  const heroY = margin + px(20)
+  const heroY = margin + px(30)
   const heroH = px(heroHeightPx)
   const listPad = px(8)
-  const firstListY = heroY + heroH + px(16)
+  const firstListY = heroY + heroH + px(24)
   const pages = []
   let current = { startY: firstListY, rows: [] }
   let used = listPad * 2
@@ -141,9 +146,9 @@ export function exportProductRecordsPdf({ product, records, isValue, total, mont
     if (pageIdx === 0) {
       // Eyebrow
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(px(9))
+      doc.setFontSize(px(10))
       doc.setTextColor(COLOR.eyebrow)
-      doc.text('CONTROLE DE PRODUÇÃO · RELATÓRIO', margin, margin + px(9), { charSpace: px(0.9) })
+      doc.text('CONTROLE DE PRODUÇÃO · RELATÓRIO', margin, margin + px(10), { charSpace: px(1) })
 
       // Hero card
       paintCard(cardX, heroY, cardW, heroH)
@@ -151,27 +156,27 @@ export function exportProductRecordsPdf({ product, records, isValue, total, mont
 
       y += px(HERO.titleBase)
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(px(22))
+      doc.setFontSize(px(28))
       doc.setTextColor(COLOR.title)
       doc.text(product, cardX + pad, y)
 
       y += px(HERO.subGap)
       doc.setFont('helvetica', 'normal')
-      doc.setFontSize(px(11))
+      doc.setFontSize(px(13))
       doc.setTextColor(COLOR.subtitle)
       doc.text(subtitle, cardX + pad, y)
 
       y += px(HERO.totalGap)
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(px(32))
+      doc.setFontSize(px(40))
       doc.setTextColor(COLOR.total)
       doc.text(totalStr, cardX + pad, y)
 
       y += px(HERO.labelGap)
       doc.setFont('helvetica', 'normal')
-      doc.setFontSize(px(9))
+      doc.setFontSize(px(11))
       doc.setTextColor(COLOR.totalLabel)
-      doc.text(isValue ? 'VALOR TOTAL PRODUZIDO' : 'TOTAL PRODUZIDO', cardX + pad, y, { charSpace: px(0.45) })
+      doc.text(isValue ? 'VALOR TOTAL PRODUZIDO' : 'TOTAL PRODUZIDO', cardX + pad, y, { charSpace: px(0.55) })
     }
 
     // Card da lista de registros
@@ -183,35 +188,35 @@ export function exportProductRecordsPdf({ product, records, isValue, total, mont
       const h = px(rowHeightPx(r))
       const note = r.notes?.trim()
 
-      const accBase = rowTop + px(22)
+      const accBase = rowTop + px(ROW.accTop)
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(px(11))
+      doc.setFontSize(px(14))
       doc.setTextColor(COLOR.account)
-      doc.text(r.account ? `Conta ${r.account}` : 'Sem conta', cardX + pad, accBase)
+      doc.text(r.account ? `Conta ${r.account}` : 'Sem conta', cardX + rowPadX, accBase)
 
-      const dateBase = accBase + px(12)
+      const dateBase = accBase + px(ROW.accToDate)
       doc.setFont('helvetica', 'normal')
-      doc.setFontSize(px(10))
+      doc.setFontSize(px(12))
       doc.setTextColor(COLOR.date)
-      doc.text(dateBR(r.date), cardX + pad, dateBase)
+      doc.text(dateBR(r.date), cardX + rowPadX, dateBase)
 
       if (note) {
-        doc.setFontSize(px(9))
+        doc.setFontSize(px(11))
         doc.setTextColor(COLOR.note)
-        doc.text(note, cardX + pad, dateBase + px(11))
+        doc.text(note, cardX + rowPadX, dateBase + px(ROW.dateToNote))
       }
 
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(px(11))
+      doc.setFontSize(px(15))
       doc.setTextColor(COLOR.value)
       const valStr = isValue ? (r.value != null ? brl(r.value) : '—') : num(r.quantity)
-      doc.text(valStr, cardX + cardW - pad, accBase, { align: 'right' })
+      doc.text(valStr, cardX + cardW - rowPadX, accBase, { align: 'right' })
 
       rowTop += h
       if (i < page.rows.length - 1) {
         doc.setDrawColor(COLOR.rowBorder)
         doc.setLineWidth(px(1))
-        doc.line(cardX + pad, rowTop, cardX + cardW - pad, rowTop)
+        doc.line(cardX + rowPadX, rowTop, cardX + cardW - rowPadX, rowTop)
       }
     })
   })
