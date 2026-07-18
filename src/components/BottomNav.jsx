@@ -13,10 +13,9 @@ export default function BottomNav() {
     <nav
       aria-label="Navegação principal"
       style={{
-        position: 'fixed',
-        bottom: 0,
-        left: 0,
-        right: 0,
+        // Ultimo item da coluna flex do shell (ver App.jsx) — fica no rodape
+        // por construcao, sem position:fixed.
+        flexShrink: 0,
         zIndex: 20,
         background: 'var(--c-surface)',
         borderTop: '1px solid var(--c-border)',

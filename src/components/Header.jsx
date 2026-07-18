@@ -25,7 +25,7 @@ export default function Header({ online }) {
   const { year, month, prev, next } = useMonth()
 
   return (
-    <header className="surface border-b sticky top-0 z-10" style={{ background: 'var(--c-surface)' }}>
+    <header className="surface border-b" style={{ background: 'var(--c-surface)' }}>
       {/* SVG gradient definition for icon */}
       <svg width="0" height="0" style={{ position: 'absolute', pointerEvents: 'none' }}>
         <defs>

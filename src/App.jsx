@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { seedStandardProducts, seedGrupos } from './lib/seed.js'
 
-function ScrollToTop() {
+// So <main> rola (ver o shell em App) — reseta a rolagem DELE, nao da
+// janela, a cada troca de rota.
+function ScrollToTop({ containerRef }) {
   const { pathname } = useLocation()
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [pathname])
+  useEffect(() => {
+    containerRef.current?.scrollTo({ top: 0, behavior: 'instant' })
+  }, [pathname, containerRef])
   return null
 }
 import Header from './components/Header.jsx'
@@ -24,6 +28,7 @@ import UpdateToast from './components/UpdateToast.jsx'
 export default function App() {
   const { hasPin, unlocked } = useAuth()
   const [online, setOnline] = useState(navigator.onLine)
+  const mainRef = useRef(null)
 
   useEffect(() => {
     seedStandardProducts().then(seedGrupos)
@@ -46,10 +51,22 @@ export default function App() {
   return (
     <MonthProvider>
     <RecordModalProvider>
-      <div className="min-h-screen">
-        <ScrollToTop />
+      {/*
+        App shell: coluna flex de altura fixa (100dvh). Header e BottomNav
+        ficam fora da area de rolagem — so <main> rola. O menu inferior deixa
+        de depender de position:fixed (que "solta" do rodape se algum
+        ancestral ganhar um novo containing block, ex.: transform/filter) e
+        passa a ser so o ultimo item da coluna, sempre no rodape por
+        construcao, tanto faz o que acontece no meio.
+      */}
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+        <ScrollToTop containerRef={mainRef} />
         <Header online={online} />
-        <main className="max-w-5xl mx-auto p-4 pb-28">
+        <main
+          ref={mainRef}
+          className="max-w-5xl mx-auto p-4 w-full"
+          style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
+        >
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/registros" element={<RecordsPage />} />
@@ -60,8 +77,8 @@ export default function App() {
             <Route path="*" element={<HomePage />} />
           </Routes>
         </main>
+        <BottomNav />
       </div>
-      <BottomNav />
       <UpdateToast />
     </RecordModalProvider>
     </MonthProvider>

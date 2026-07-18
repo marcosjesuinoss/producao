@@ -70,6 +70,7 @@
 html {
   font-size: calc(100% * var(--font-scale));
   overscroll-behavior: none;
+  height: 100%;
 }
 
 body {
@@ -78,7 +79,15 @@ body {
   color: var(--c-fg);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  height: 100%;
+  /* O app shell (App.jsx) e uma coluna de altura fixa (100dvh) onde so o
+     <main> rola -- a pagina/body em si nunca deveriam precisar rolar.
+     overflow:hidden aqui e defensivo: garante isso mesmo se algo genuino
+     (nao esperado) vazar da coluna, em vez de criar um scroll duplo. */
+  overflow: hidden;
 }
+
+#root { height: 100%; }
 
 /* ─── HELPERS ─────────────────────────────────────── */
 .surface { background: var(--c-surface); border-color: var(--c-border); }
