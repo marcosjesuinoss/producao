@@ -5,7 +5,7 @@ import ProductRecordsModal from './ProductRecordsModal.jsx'
 // Botao discreto ao lado do nome do produto (Resumo/Acumulado) que abre o
 // detalhamento dos registros daquele produto no periodo. So pra produtos —
 // nao usado em grupos.
-export default function ViewRecordsButton({ product, year, startMonth, endMonth }) {
+export default function ViewRecordsButton({ product, year, startMonth, endMonth, periodLabel }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -25,6 +25,7 @@ export default function ViewRecordsButton({ product, year, startMonth, endMonth 
           year={year}
           startMonth={startMonth}
           endMonth={endMonth}
+          periodLabel={periodLabel}
           onClose={() => setOpen(false)}
         />
       )}

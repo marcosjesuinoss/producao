@@ -4,7 +4,7 @@ import { ChevronRight, ChevronUp, ChevronDown, Check } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
 import { productBreakdown } from '../lib/summaries.js'
-import { brl, num, floorPct } from '../lib/format.js'
+import { brl, num, floorPct, FULL_MONTHS } from '../lib/format.js'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
 import { getProgressColor, getRemainingLabel } from '../utils/progressColor.js'
@@ -16,6 +16,10 @@ import ViewRecordsButton from '../components/ViewRecordsButton.jsx'
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+// Rotulo de periodo pro PDF do detalhamento — o Resumo e sempre 1 mes so
+// (diferente do Acumulado, que mostra semestre/ano — ver AcumuladoPage.jsx).
+const monthPeriodLabel = (year, month) => `Mês de ${FULL_MONTHS[Number(month) - 1]} de ${year}`
 
 function GroupsBadge({ count }) {
   if (count <= 1) return null
@@ -101,7 +105,7 @@ function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
           {name}
         </span>
         <GroupsBadge count={parentCount} />
-        <ViewRecordsButton product={name} year={year} startMonth={month} endMonth={month} />
+        <ViewRecordsButton product={name} year={year} startMonth={month} endMonth={month} periodLabel={monthPeriodLabel(year, month)} />
       </div>
       <div className="flex items-baseline justify-between gap-2">
         <div>
@@ -328,7 +332,7 @@ function ProductCard({ b, reordering, onMove, isFirst, isLast }) {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{b.product}</span>
-          <ViewRecordsButton product={b.product} year={year} startMonth={month} endMonth={month} />
+          <ViewRecordsButton product={b.product} year={year} startMonth={month} endMonth={month} periodLabel={monthPeriodLabel(year, month)} />
         </div>
         {reordering && onMove && (
           <OrderControls

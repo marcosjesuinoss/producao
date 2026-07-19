@@ -89,7 +89,7 @@ function RemainingLine({ value, target, fmt = brl, fontSize = '11px' }) {
 // ProductLeaf — filho de GrupoNode
 // ---------------------------------------------------------------------------
 
-function ProductLeaf({ name, realized, target, useValue, depth, year, startMonth, endMonth }) {
+function ProductLeaf({ name, realized, target, useValue, depth, year, startMonth, endMonth, periodLabel }) {
   const fmt    = useValue ? brl : num
   const rawPct = target > 0 ? (realized / target) * 100 : realized > 0 ? 100 : 0
   const pct    = target > 0 ? floorPct(rawPct) : realized > 0 ? 100 : null
@@ -105,7 +105,7 @@ function ProductLeaf({ name, realized, target, useValue, depth, year, startMonth
           style={{ fontWeight: depth === 1 ? 500 : 400, fontSize: depth === 1 ? '13px' : '12px', color: 'var(--text-secondary)' }}>
           {name}
         </span>
-        <ViewRecordsButton product={name} year={year} startMonth={startMonth} endMonth={endMonth} />
+        <ViewRecordsButton product={name} year={year} startMonth={startMonth} endMonth={endMonth} periodLabel={periodLabel} />
       </div>
       <div className="flex items-baseline justify-between gap-2">
         <div>
@@ -127,7 +127,7 @@ function ProductLeaf({ name, realized, target, useValue, depth, year, startMonth
 // GrupoNode — renderização recursiva
 // ---------------------------------------------------------------------------
 
-function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0, year, startMonth, endMonth }) {
+function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0, year, startMonth, endMonth, periodLabel }) {
   const [open, setOpen] = useState(true)
 
   const grupo = allGrupos.find((g) => g.id === grupoId)
@@ -226,7 +226,7 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0,
                 <GrupoNode key={child.refId} grupoId={child.refId}
                   allGrupos={allGrupos} productDataMap={productDataMap}
                   productById={productById} depth={depth + 1}
-                  year={year} startMonth={startMonth} endMonth={endMonth} />
+                  year={year} startMonth={startMonth} endMonth={endMonth} periodLabel={periodLabel} />
               )
             }
             const prod = productById.get(child.refId)
@@ -236,7 +236,7 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0,
                 name={prod?.name ?? '(removido)'}
                 realized={data.realized} target={data.target}
                 useValue={prod?.useValue ?? true} depth={depth + 1}
-                year={year} startMonth={startMonth} endMonth={endMonth} />
+                year={year} startMonth={startMonth} endMonth={endMonth} periodLabel={periodLabel} />
             )
           })}
         </div>
@@ -252,7 +252,7 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0,
 // ProductCard — produto sem grupo
 // ---------------------------------------------------------------------------
 
-function ProductCard({ b, year, startMonth, endMonth }) {
+function ProductCard({ b, year, startMonth, endMonth, periodLabel }) {
   const rawPct = b.metricTarget > 0 ? (b.realized / b.metricTarget) * 100 : b.realized > 0 ? 100 : 0
   const pct    = b.metricTarget > 0 ? floorPct(rawPct) : b.realized > 0 ? 100 : null
   const color  = pct != null ? getProgressColor(rawPct) : 'var(--text-faint)'
@@ -264,7 +264,7 @@ function ProductCard({ b, year, startMonth, endMonth }) {
         <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
           {b.product}
         </span>
-        <ViewRecordsButton product={b.product} year={year} startMonth={startMonth} endMonth={endMonth} />
+        <ViewRecordsButton product={b.product} year={year} startMonth={startMonth} endMonth={endMonth} periodLabel={periodLabel} />
       </div>
       <div className="flex items-baseline justify-between gap-2">
         <div>
@@ -306,6 +306,14 @@ export default function AcumuladoPage() {
     () => resolvePeriod(selected.type, selected.year),
     [selected]
   )
+
+  // Rotulo de periodo pro PDF do detalhamento — prefixado "Acumulado" pra
+  // deixar claro que veio desta tela (nao do Resumo, que mostra so 1 mes).
+  const periodLabel = useMemo(() => {
+    if (selected.type === 'sem1') return `Acumulado 1º Semestre de ${selected.year}`
+    if (selected.type === 'sem2') return `Acumulado 2º Semestre de ${selected.year}`
+    return `Acumulado Ano de ${selected.year}`
+  }, [selected])
 
   const currentYear = new Date().getFullYear()
   const isPastYear  = selected.year < currentYear
@@ -478,10 +486,11 @@ export default function AcumuladoPage() {
               year={selected.year}
               startMonth={startMonth}
               endMonth={endMonth}
+              periodLabel={periodLabel}
             />
           ))}
           {standaloneBreakdown.map((b) => (
-            <ProductCard key={b.product} b={b} year={selected.year} startMonth={startMonth} endMonth={endMonth} />
+            <ProductCard key={b.product} b={b} year={selected.year} startMonth={startMonth} endMonth={endMonth} periodLabel={periodLabel} />
           ))}
         </div>
       )}

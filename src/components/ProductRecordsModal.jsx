@@ -9,7 +9,7 @@ import ConfirmDialog from './ConfirmDialog.jsx'
 // Popup de detalhamento: lista os registros individuais de UM produto dentro
 // do periodo (Resumo = mes atual; Acumulado = semestre/ano selecionado).
 // Cabecalho no mesmo estilo do popup de "Novo registro" (RecordModal.jsx).
-export default function ProductRecordsModal({ product, year, startMonth, endMonth, onClose }) {
+export default function ProductRecordsModal({ product, year, startMonth, endMonth, periodLabel, onClose }) {
   const { isValue } = useProducts()
   const [records, setRecords] = useState(null) // null = carregando
   const [showPdfWarning, setShowPdfWarning] = useState(false)
@@ -32,7 +32,7 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
   const handleDownloadPdf = () => {
     setShowPdfWarning(false)
     if (!records?.length) return
-    exportProductRecordsPdf({ product, records, isValue: isVal, total, startMonth, endMonth, year })
+    exportProductRecordsPdf({ product, records, isValue: isVal, total, startMonth, endMonth, year, periodLabel })
   }
 
   return (

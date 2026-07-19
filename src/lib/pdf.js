@@ -103,11 +103,11 @@ const truncateToWidth = (doc, text, maxW) => {
   return s + ELLIPSIS
 }
 
-// Descreve o periodo em texto (ex.: "Mês de Junho de 2026", "1º Semestre de
-// 2026", "Ano de 2026", ou "Janeiro a Julho de 2026" pra um recorte parcial
-// que nao bate com nenhum desses — ex.: ano/semestre "em andamento" no
-// Acumulado, onde endMonth ainda nao chegou no fim do periodo).
-const describePeriod = (startMonth, endMonth, year) => {
+// Fallback caso o chamador nao informe periodLabel explicitamente: deriva um
+// texto so a partir dos meses, sem saber se veio do Resumo ou do Acumulado
+// (por isso e so um fallback — ver o parametro periodLabel em
+// exportProductRecordsPdf, que cada tela monta sabendo sua propria origem).
+const fallbackPeriodLabel = (startMonth, endMonth, year) => {
   if (startMonth === endMonth) return `Mês de ${FULL_MONTHS[startMonth - 1]} de ${year}`
   if (startMonth === 1 && endMonth === 6) return `1º Semestre de ${year}`
   if (startMonth === 7 && endMonth === 12) return `2º Semestre de ${year}`
@@ -115,7 +115,7 @@ const describePeriod = (startMonth, endMonth, year) => {
   return `${FULL_MONTHS[startMonth - 1]} a ${FULL_MONTHS[endMonth - 1]} de ${year}`
 }
 
-export function exportProductRecordsPdf({ product, records, isValue, total, startMonth, endMonth, year }) {
+export function exportProductRecordsPdf({ product, records, isValue, total, startMonth, endMonth, year, periodLabel }) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
@@ -139,7 +139,7 @@ export function exportProductRecordsPdf({ product, records, isValue, total, star
 
   const totalStr = isValue ? brl(total) : num(total)
   const countStr = `${records.length} registro${records.length === 1 ? '' : 's'}`
-  const periodStr = describePeriod(Number(startMonth), Number(endMonth), year)
+  const periodStr = periodLabel || fallbackPeriodLabel(Number(startMonth), Number(endMonth), year)
   const subtitle = `${countStr} · ${periodStr} · Gerado em ${new Date().toLocaleDateString('pt-BR')}`
 
   const paintPageBg = () => {
