@@ -3,7 +3,7 @@ import autoTable from 'jspdf-autotable'
 import { dateBR, brl, num, FULL_MONTHS } from './format.js'
 
 /*
-  Exportacao PDF — mesmo conjunto de registros do CSV, mas formatado como
+  Exportacao PDF - mesmo conjunto de registros do CSV, mas formatado como
   relatorio (titulo, escopo, tabela e linha de totais) pra imprimir ou
   enviar a gerencia.
 */
@@ -28,9 +28,9 @@ export function exportPdf(records, scopeDescription, filename = 'producao.pdf') 
     body: records.map((r) => [
       dateBR(r.date),
       r.product,
-      r.account || '—',
-      r.quantity ? num(r.quantity) : '—',
-      r.value ? brl(r.value) : '—',
+      r.account || '-',
+      r.quantity ? num(r.quantity) : '-',
+      r.value ? brl(r.value) : '-',
       r.notes || '',
     ]),
     foot: [[`${records.length} registro${records.length === 1 ? '' : 's'}`, '', '', num(totalQuantity), brl(totalValue), '']],
@@ -58,7 +58,7 @@ const slugify = (s) =>
 
   O documento e em PONTOS, mas o design foi especificado em px de CSS:
   px() converte (1px = 0.75pt) pra reproduzir as proporcoes na escala
-  certa de impressao — sem isso tudo sairia ~33% maior.
+  certa de impressao - sem isso tudo sairia ~33% maior.
 */
 const px = (n) => n * 0.75
 
@@ -71,11 +71,13 @@ const COLOR = {
   subtitle: '#64748b',
   total: '#0891b2',
   totalLabel: '#94a3b8',
+  colHeader: '#94a3b8',
   account: '#1e293b',
   date: '#94a3b8',
-  note: '#cbd5e0',
+  note: '#94a3b8',
   value: '#0f172a',
   rowBorder: '#f1f5f9',
+  headerBorder: '#e2e8f0',
 }
 
 // Alturas do card "hero" (em px de CSS, viram pt via px()).
@@ -83,12 +85,23 @@ const HERO = { pad: 32, titleBase: 24, subGap: 22, totalGap: 48, labelGap: 18 }
 const heroHeightPx =
   HERO.pad + HERO.titleBase + HERO.subGap + HERO.totalGap + HERO.labelGap + HERO.pad
 
-// Linha da lista (offsets a partir do topo da linha): 28 = padding topo +
-// altura da conta; +16 ate a data; +14 ate a observacao (so quando existe);
-// +20 de padding embaixo. A observacao so ocupa espaco quando existe.
-const ROW = { accTop: 28, accToDate: 16, dateToNote: 14, padBottom: 20, padX: 20 }
-const rowHeightPx = (r) =>
-  ROW.accTop + ROW.accToDate + (r.notes?.trim() ? ROW.dateToNote : 0) + ROW.padBottom
+// Lista em colunas (Data | Conta | Observações | Valor), uma linha por
+// registro. Larguras das 3 primeiras colunas fixas (em px); a de
+// Observações ocupa o espaço restante - calculada em runtime (depende da
+// largura da pagina).
+const ROW = { padX: 20, rowH: 40, headerH: 34, colData: 78, colConta: 78, colValor: 110 }
+
+// Encurta o texto ate caber em maxW (pt), ou devolve como esta. Usa "..."
+// (3 pontos ASCII) em vez do glifo unico "…": a fonte Helvetica padrao do
+// jsPDF MEDE a largura do "…" mas nao consegue desenha-lo - ele some do PDF
+// silenciosamente (bug real encontrado e confirmado gerando um PDF de teste).
+const ELLIPSIS = '...'
+const truncateToWidth = (doc, text, maxW) => {
+  if (!text || doc.getTextWidth(text) <= maxW) return text ?? ''
+  let s = text
+  while (s.length > 1 && doc.getTextWidth(s + ELLIPSIS) > maxW) s = s.slice(0, -1)
+  return s + ELLIPSIS
+}
 
 export function exportProductRecordsPdf({ product, records, isValue, total, month, year }) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
@@ -100,6 +113,17 @@ export function exportProductRecordsPdf({ product, records, isValue, total, mont
   const pad = px(HERO.pad)
   const rowPadX = px(ROW.padX)
   const radius = px(16)
+  const rowH = px(ROW.rowH)
+  const headerH = px(ROW.headerH)
+
+  // Posicoes das colunas (a partir da borda esquerda do conteudo do card).
+  const contentX = cardX + rowPadX
+  const contentW = cardW - rowPadX * 2
+  const colDataX = contentX
+  const colContaX = contentX + px(ROW.colData)
+  const colObsX = contentX + px(ROW.colData) + px(ROW.colConta)
+  const colValorRightX = contentX + contentW
+  const colObsW = contentW - px(ROW.colData) - px(ROW.colConta) - px(ROW.colValor) - px(10)
 
   const totalStr = isValue ? brl(total) : num(total)
   const countStr = `${records.length} registro${records.length === 1 ? '' : 's'}`
@@ -119,23 +143,23 @@ export function exportProductRecordsPdf({ product, records, isValue, total, mont
     doc.roundedRect(x, y, w, h, radius, radius, 'F')
   }
 
-  // --- Distribui os registros entre paginas (a 1a divide espaco com o hero)
+  // --- Distribui os registros entre paginas (a 1a divide espaco com o hero).
+  // Cada pagina com lista tem seu proprio cabecalho de coluna repetido.
   const heroY = margin + px(30)
   const heroH = px(heroHeightPx)
   const listPad = px(8)
   const firstListY = heroY + heroH + px(24)
   const pages = []
   let current = { startY: firstListY, rows: [] }
-  let used = listPad * 2
+  let used = listPad * 2 + headerH
   for (const r of records) {
-    const h = px(rowHeightPx(r))
-    if (current.startY + used + h > pageH - margin && current.rows.length) {
+    if (current.startY + used + rowH > pageH - margin && current.rows.length) {
       pages.push(current)
       current = { startY: margin, rows: [] }
-      used = listPad * 2
+      used = listPad * 2 + headerH
     }
     current.rows.push(r)
-    used += h
+    used += rowH
   }
   pages.push(current)
 
@@ -180,39 +204,51 @@ export function exportProductRecordsPdf({ product, records, isValue, total, mont
     }
 
     // Card da lista de registros
-    const listH = listPad * 2 + page.rows.reduce((s, r) => s + px(rowHeightPx(r)), 0)
+    const listH = listPad * 2 + headerH + page.rows.length * rowH
     paintCard(cardX, page.startY, cardW, listH)
 
-    let rowTop = page.startY + listPad
+    // Cabecalho de coluna (repete em toda pagina que tem lista)
+    const headerBase = page.startY + listPad + px(21)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(px(9))
+    doc.setTextColor(COLOR.colHeader)
+    doc.text('DATA', colDataX, headerBase, { charSpace: px(0.3) })
+    doc.text('CONTA', colContaX, headerBase, { charSpace: px(0.3) })
+    doc.text('OBSERVAÇÕES', colObsX, headerBase, { charSpace: px(0.3) })
+    doc.text(isValue ? 'VALOR' : 'QUANTIDADE', colValorRightX, headerBase, { align: 'right', charSpace: px(0.3) })
+
+    const headerLineY = page.startY + listPad + headerH
+    doc.setDrawColor(COLOR.headerBorder)
+    doc.setLineWidth(px(1))
+    doc.line(cardX + rowPadX, headerLineY, cardX + cardW - rowPadX, headerLineY)
+
+    let rowTop = headerLineY
     page.rows.forEach((r, i) => {
-      const h = px(rowHeightPx(r))
-      const note = r.notes?.trim()
+      const base = rowTop + px(26)
 
-      const accBase = rowTop + px(ROW.accTop)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(px(14))
-      doc.setTextColor(COLOR.account)
-      doc.text(r.account ? `Conta ${r.account}` : 'Sem conta', cardX + rowPadX, accBase)
-
-      const dateBase = accBase + px(ROW.accToDate)
       doc.setFont('helvetica', 'normal')
-      doc.setFontSize(px(12))
+      doc.setFontSize(px(11))
       doc.setTextColor(COLOR.date)
-      doc.text(dateBR(r.date), cardX + rowPadX, dateBase)
-
-      if (note) {
-        doc.setFontSize(px(11))
-        doc.setTextColor(COLOR.note)
-        doc.text(note, cardX + rowPadX, dateBase + px(ROW.dateToNote))
-      }
+      doc.text(dateBR(r.date), colDataX, base)
 
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(px(15))
-      doc.setTextColor(COLOR.value)
-      const valStr = isValue ? (r.value != null ? brl(r.value) : '—') : num(r.quantity)
-      doc.text(valStr, cardX + cardW - rowPadX, accBase, { align: 'right' })
+      doc.setFontSize(px(12))
+      doc.setTextColor(COLOR.account)
+      doc.text(r.account || '-', colContaX, base)
 
-      rowTop += h
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(px(10))
+      doc.setTextColor(COLOR.note)
+      const note = truncateToWidth(doc, r.notes?.trim() || '-', colObsW)
+      doc.text(note, colObsX, base)
+
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(px(13))
+      doc.setTextColor(COLOR.value)
+      const valStr = isValue ? (r.value != null ? brl(r.value) : '-') : num(r.quantity)
+      doc.text(valStr, colValorRightX, base, { align: 'right' })
+
+      rowTop += rowH
       if (i < page.rows.length - 1) {
         doc.setDrawColor(COLOR.rowBorder)
         doc.setLineWidth(px(1))
