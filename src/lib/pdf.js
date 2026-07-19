@@ -103,7 +103,19 @@ const truncateToWidth = (doc, text, maxW) => {
   return s + ELLIPSIS
 }
 
-export function exportProductRecordsPdf({ product, records, isValue, total, month, year }) {
+// Descreve o periodo em texto (ex.: "Mês de Junho de 2026", "1º Semestre de
+// 2026", "Ano de 2026", ou "Janeiro a Julho de 2026" pra um recorte parcial
+// que nao bate com nenhum desses — ex.: ano/semestre "em andamento" no
+// Acumulado, onde endMonth ainda nao chegou no fim do periodo).
+const describePeriod = (startMonth, endMonth, year) => {
+  if (startMonth === endMonth) return `Mês de ${FULL_MONTHS[startMonth - 1]} de ${year}`
+  if (startMonth === 1 && endMonth === 6) return `1º Semestre de ${year}`
+  if (startMonth === 7 && endMonth === 12) return `2º Semestre de ${year}`
+  if (startMonth === 1 && endMonth === 12) return `Ano de ${year}`
+  return `${FULL_MONTHS[startMonth - 1]} a ${FULL_MONTHS[endMonth - 1]} de ${year}`
+}
+
+export function exportProductRecordsPdf({ product, records, isValue, total, startMonth, endMonth, year }) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
   const pageW = doc.internal.pageSize.getWidth()
   const pageH = doc.internal.pageSize.getHeight()
@@ -127,7 +139,8 @@ export function exportProductRecordsPdf({ product, records, isValue, total, mont
 
   const totalStr = isValue ? brl(total) : num(total)
   const countStr = `${records.length} registro${records.length === 1 ? '' : 's'}`
-  const subtitle = `${countStr} · ${FULL_MONTHS[Number(month) - 1]} ${year} · Gerado em ${new Date().toLocaleDateString('pt-BR')}`
+  const periodStr = describePeriod(Number(startMonth), Number(endMonth), year)
+  const subtitle = `${countStr} · ${periodStr} · Gerado em ${new Date().toLocaleDateString('pt-BR')}`
 
   const paintPageBg = () => {
     doc.setFillColor(COLOR.pageBg)
@@ -257,6 +270,8 @@ export function exportProductRecordsPdf({ product, records, isValue, total, mont
     })
   })
 
-  const mm = String(month).padStart(2, '0')
-  doc.save(`${slugify(product)}_${mm}_${year}.pdf`)
+  const startMM = String(startMonth).padStart(2, '0')
+  const endMM = String(endMonth).padStart(2, '0')
+  const periodSuffix = startMonth === endMonth ? `${startMM}_${year}` : `${startMM}-${endMM}_${year}`
+  doc.save(`${slugify(product)}_${periodSuffix}.pdf`)
 }

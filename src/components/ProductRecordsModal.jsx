@@ -32,7 +32,7 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
   const handleDownloadPdf = () => {
     setShowPdfWarning(false)
     if (!records?.length) return
-    exportProductRecordsPdf({ product, records, isValue: isVal, total, month: endMonth, year })
+    exportProductRecordsPdf({ product, records, isValue: isVal, total, startMonth, endMonth, year })
   }
 
   return (
