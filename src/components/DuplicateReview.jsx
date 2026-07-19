@@ -39,7 +39,7 @@ export default function DuplicateReview({ matches, onConfirm, onCancel }) {
 
       <div
         className="relative w-full sm:max-w-md flex flex-col"
-        style={{ background: 'var(--c-surface)', borderRadius: '24px', maxHeight: '85dvh', boxShadow: '0 24px 48px rgba(0,0,0,0.4)' }}
+        style={{ background: 'var(--c-surface)', borderRadius: '24px', maxHeight: 'min(85dvh, calc(100dvh - 2rem))', boxShadow: '0 24px 48px rgba(0,0,0,0.4)' }}
       >
 
         <div className="px-5 pt-2 pb-1 shrink-0 flex items-start gap-3">

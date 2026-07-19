@@ -276,7 +276,7 @@ export default function GrupoModal({
 
       <div
         className="modal-sheet relative w-full sm:max-w-lg flex flex-col"
-        style={{ background: 'var(--c-surface)', borderRadius: '24px', maxHeight: '85dvh', boxShadow: '0 24px 48px rgba(0,0,0,0.4)' }}
+        style={{ background: 'var(--c-surface)', borderRadius: '24px', maxHeight: 'min(85dvh, calc(100dvh - 2rem))', boxShadow: '0 24px 48px rgba(0,0,0,0.4)' }}
       >
 
         {/* Header */}
