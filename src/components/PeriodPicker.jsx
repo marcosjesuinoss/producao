@@ -41,7 +41,7 @@ export default function PeriodPicker({ title = 'Escolha o período', dayOption =
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0"
         style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
@@ -51,11 +51,8 @@ export default function PeriodPicker({ title = 'Escolha o período', dayOption =
 
       <div
         className="relative w-full sm:max-w-md flex flex-col"
-        style={{ background: 'var(--c-surface)', borderRadius: '24px 24px 0 0', maxHeight: '92dvh' }}
+        style={{ background: 'var(--c-surface)', borderRadius: '24px', maxHeight: '85dvh', boxShadow: '0 24px 48px rgba(0,0,0,0.4)' }}
       >
-        <div className="flex justify-center pt-2.5 pb-1 sm:hidden shrink-0">
-          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--input-border)' }} />
-        </div>
 
         <div className="px-5 pt-2 pb-3 shrink-0 flex items-start justify-between gap-3">
           <h2 className="text-xl font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>{title}</h2>

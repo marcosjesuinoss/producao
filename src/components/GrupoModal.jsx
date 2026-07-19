@@ -266,7 +266,7 @@ export default function GrupoModal({
   const canSave = selected.size > 0 && conflictingSelected.length === 0 && !saving
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="modal-backdrop absolute inset-0"
         style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
@@ -276,12 +276,8 @@ export default function GrupoModal({
 
       <div
         className="modal-sheet relative w-full sm:max-w-lg flex flex-col"
-        style={{ background: 'var(--c-surface)', borderRadius: '24px 24px 0 0', maxHeight: '92dvh' }}
+        style={{ background: 'var(--c-surface)', borderRadius: '24px', maxHeight: '85dvh', boxShadow: '0 24px 48px rgba(0,0,0,0.4)' }}
       >
-        {/* Drag handle (mobile) */}
-        <div className="flex justify-center pt-2.5 pb-1 sm:hidden shrink-0">
-          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--input-border)' }} />
-        </div>
 
         {/* Header */}
         <div className="px-5 pt-2 pb-3 shrink-0">
