@@ -1,9 +1,10 @@
+import { createPortal } from 'react-dom'
 import { AlertTriangle, FileSpreadsheet, FileText } from 'lucide-react'
 
 // Dialogo de aviso (tom amarelo) que deixa o usuario escolher o formato do
 // arquivo antes de baixar — CSV (planilha) ou PDF (relatorio formatado).
 export default function DownloadDialog({ title, description, onDownloadCsv, onDownloadPdf, onCancel }) {
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0"
@@ -39,6 +40,7 @@ export default function DownloadDialog({ title, description, onDownloadCsv, onDo
 
         <button className="btn w-full" onClick={onCancel}>Cancelar</button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

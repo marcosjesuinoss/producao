@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import RecordForm from './RecordForm.jsx'
 
@@ -17,7 +18,7 @@ export default function RecordModal({ initial, onSubmit, onClose }) {
 
   const isEditing = !!initial?.id
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="modal-backdrop absolute inset-0"
@@ -63,6 +64,7 @@ export default function RecordModal({ initial, onSubmit, onClose }) {
           <RecordForm initial={initial} onSubmit={onSubmit} onCancel={onClose} noCard />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

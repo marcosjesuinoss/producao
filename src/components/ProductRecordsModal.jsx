@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Download, X } from 'lucide-react'
 import { db } from '../db/db.js'
 import { dateBR, brl, num } from '../lib/format.js'
@@ -35,7 +36,7 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
     exportProductRecordsPdf({ product, records, isValue: isVal, total, startMonth, endMonth, year, periodLabel })
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="modal-backdrop absolute inset-0"
@@ -151,6 +152,7 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
           onCancel={() => setShowPdfWarning(false)}
         />
       )}
-    </div>
+    </div>,
+    document.body
   )
 }

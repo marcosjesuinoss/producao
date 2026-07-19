@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AlertTriangle } from 'lucide-react'
 import { dateBR, brl, num } from '../lib/format.js'
 
@@ -28,7 +29,7 @@ export default function DuplicateReview({ matches, onConfirm, onCancel }) {
     onConfirm(skipIds)
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0"
@@ -99,6 +100,7 @@ export default function DuplicateReview({ matches, onConfirm, onCancel }) {
           <button className="btn btn-brand flex-1" onClick={handleConfirm}>Continuar</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

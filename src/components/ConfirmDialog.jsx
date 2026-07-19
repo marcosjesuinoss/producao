@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AlertTriangle, Trash2 } from 'lucide-react'
 
 // countdown = segundos que o botao de confirmar fica bloqueado (0 = libera na hora).
@@ -46,7 +47,7 @@ export default function ConfirmDialog({
   // 0% com o botao ja ativo).
   const barReady = barFilled || ready
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0"
@@ -124,6 +125,7 @@ export default function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

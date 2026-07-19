@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { MONTHS, BR_NUM_RE } from '../lib/format.js'
 
@@ -69,7 +70,7 @@ export default function ProductModal({ onClose, onSubmit, month, year, initial =
     }
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="modal-backdrop absolute inset-0"
@@ -180,6 +181,7 @@ export default function ProductModal({ onClose, onSubmit, month, year, initial =
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

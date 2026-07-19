@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { FolderTree, X } from 'lucide-react'
 import {
   getAllAncestors,
@@ -265,7 +266,7 @@ export default function GrupoModal({
 
   const canSave = selected.size > 0 && conflictingSelected.length === 0 && !saving
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="modal-backdrop absolute inset-0"
@@ -450,6 +451,7 @@ export default function GrupoModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

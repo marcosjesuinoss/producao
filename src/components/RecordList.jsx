@@ -1,4 +1,5 @@
 import { Fragment, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { MoreHorizontal, Pencil, Trash2, Eye, EyeOff, RotateCcw, X } from 'lucide-react'
 import { brl, num, MONTHS } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
@@ -48,7 +49,7 @@ function RecordDetailsModal({ record, isValueProd, onClose }) {
       : null,
   ].filter(Boolean)
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0"
@@ -101,12 +102,13 @@ function RecordDetailsModal({ record, isValueProd, onClose }) {
           <button className="btn w-full" onClick={onClose}>Fechar</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
 function IgnoreConfirmDialog({ record, onConfirm, onCancel }) {
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0"
@@ -129,7 +131,8 @@ function IgnoreConfirmDialog({ record, onConfirm, onCancel }) {
           <button className="btn btn-brand flex-1" onClick={onConfirm}>Sim</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
