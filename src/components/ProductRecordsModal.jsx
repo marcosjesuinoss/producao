@@ -107,7 +107,7 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
                     <div className="min-w-0 flex-1">
                       <div className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
                         {dateBR(r.date)}
-                        {r.account ? ` · conta: ${r.account}` : ''}
+                        {r.account ? ` · Ag/Conta: ${r.account}` : ''}
                         {!isVal && r.value != null && r.value > 0 ? ` · ${brl(r.value)}` : ''}
                       </div>
                       {r.notes?.trim() && (

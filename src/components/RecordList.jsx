@@ -216,7 +216,7 @@ export default function RecordList({ records, onEdit, onDelete, onIgnore, groupB
                 )}
                 <div className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
                   {shortDate(r.date)}
-                  {r.account ? ` · conta: ${r.account}` : ''}
+                  {r.account ? ` · Ag/Conta: ${r.account}` : ''}
                   {!isValue(r.product) && r.value != null ? ` · ${brl(r.value)}` : ''}
                 </div>
                 {r.notes?.trim() && (
