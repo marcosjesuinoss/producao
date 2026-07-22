@@ -27,11 +27,17 @@ const parseBRNum = (v) => {
   if (!s || !BR_NUM_RE.test(s)) return 0
   return Number(s.replace(/\./g, '').replace(',', '.')) || 0
 }
-const onDotKey = (setter) => (e) => {
-  if (e.key !== '.') return
-  e.preventDefault()
-  const { selectionStart: s, selectionEnd: en, value } = e.target
-  setter(applyMask(value.slice(0, s) + ',' + value.slice(en)))
+// Via evento nativo 'input' (nativeEvent.data), nao onKeyDown: varios
+// teclados Android nao disparam keydown com a tecla certa pro teclado
+// numerico virtual, so o input mesmo dispara de forma confiavel.
+const onMaskedChange = (setter) => (e) => {
+  const { value, selectionStart } = e.target
+  if (e.nativeEvent?.data === '.') {
+    const i = selectionStart - 1
+    setter(applyMask(value.slice(0, i) + ',' + value.slice(i + 1)))
+  } else {
+    setter(applyMask(value))
+  }
 }
 const fillCentsIf = (setter, condition) => (e) => {
   if (!condition) return
@@ -221,8 +227,7 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
           style={{ flex: 1, minWidth: 0 }}
           placeholder={isValueProduct ? '100.000,00' : 'Ex: 20'}
           value={inputVal}
-          onChange={(e) => setInputVal(applyMask(e.target.value))}
-          onKeyDown={onDotKey(setInputVal)}
+          onChange={onMaskedChange(setInputVal)}
           onBlur={fillCentsIf(setInputVal, isValueProduct)}
         />
         <button className="btn btn-brand text-xs px-3 py-1.5 shrink-0" onClick={handleSave}>

@@ -101,12 +101,20 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
     accountRef.current.setSelectionRange(pos, pos)
   })
 
-  // Intercepta tecla "." e insere "," no lugar (ponto = milhar, não decimal)
-  const onDotKey = (field) => (e) => {
-    if (e.key !== '.') return
-    e.preventDefault()
-    const { selectionStart: s, selectionEnd: en, value } = e.target
-    set(field, applyMask(value.slice(0, s) + ',' + value.slice(en)))
+  // Intercepta "." digitado e troca por "," (ponto = milhar, não decimal).
+  // Via evento nativo 'input' (nativeEvent.data), não onKeyDown: varios
+  // teclados Android (Gboard, teclado Samsung) nao disparam keydown com a
+  // tecla certa pro teclado numerico virtual — so o input mesmo dispara de
+  // forma confiavel em qualquer teclado. Sem isso, o "." sumia sem virar
+  // virgula pra quem usava esses teclados.
+  const onMaskedChange = (field) => (e) => {
+    const { value, selectionStart } = e.target
+    if (e.nativeEvent?.data === '.') {
+      const i = selectionStart - 1
+      set(field, applyMask(value.slice(0, i) + ',' + value.slice(i + 1)))
+    } else {
+      set(field, applyMask(value))
+    }
   }
 
   // Ao sair do campo de valor R$, completa ",00" se não houver centavos
@@ -164,8 +172,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
           <input id="r-value" type="text" inputMode="decimal" className={inputCls('value')}
             placeholder="100.000,00"
             value={form.value}
-            onChange={(e) => set('value', applyMask(e.target.value))}
-            onKeyDown={onDotKey('value')}
+            onChange={onMaskedChange('value')}
             onBlur={fillCents('value')} />
           {errors.value && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.value}</p>}
         </div>
@@ -175,8 +182,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
           <input id="r-qty" type="text" inputMode="decimal" className={inputCls('quantity')}
             placeholder="ex: 1 ou 1,5"
             value={form.quantity}
-            onChange={(e) => set('quantity', applyMask(e.target.value))}
-            onKeyDown={onDotKey('quantity')} />
+            onChange={onMaskedChange('quantity')} />
           {errors.quantity && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.quantity}</p>}
         </div>
       )}
