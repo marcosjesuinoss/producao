@@ -254,7 +254,7 @@ export default function SettingsPage() {
 
       {/* Registro */}
       <div className="card space-y-3" id="registro">
-        <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Registro</h3>
+        <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Registros</h3>
         <div className="flex items-center gap-3 flex-wrap">
           <label className="switch">
             <input
