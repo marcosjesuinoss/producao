@@ -46,14 +46,18 @@ const validate = (f, isValueFn, agenciaEnabled) => {
   const isValueProd = isValueFn(f.product)
   if (!f.date) e.date = 'Informe a data'
   if (!f.product) e.product = 'Informe o produto'
-  if (agenciaEnabled) {
-    // Com agencia ativada, os 4 primeiros digitos sao so a agencia — exige
-    // pelo menos 1 digito de conta alem deles (senao "salva" so a agencia
-    // pre-preenchida sem o usuario ter digitado a conta de verdade).
+  {
+    // Conta valida = pelo menos 1 digito de corpo + 1 digito verificador
+    // (ex: "1-2"). Com agencia ativada, isso vem depois dos 4 digitos dela
+    // (ex: "1234 / 1-2") — senao "salva" so a agencia pre-preenchida sem o
+    // usuario ter digitado a conta de verdade.
     const digits = String(f.account ?? '').replace(/\D/g, '')
-    if (digits.length <= 4) e.account = 'Informe o número da conta'
-  } else if (!f.account?.trim()) {
-    e.account = 'Informe a conta de produção'
+    const minDigits = agenciaEnabled ? 6 : 2
+    if (digits.length < minDigits) {
+      e.account = agenciaEnabled
+        ? 'Conta incompleta — informe pelo menos 1 dígito + verificador (ex: 1234 / 1-2)'
+        : 'Conta incompleta — informe pelo menos 1 dígito + verificador (ex: 1-2)'
+    }
   }
   if (isValueProd) {
     const n = parseBR(f.value)
