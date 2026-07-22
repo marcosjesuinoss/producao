@@ -255,7 +255,25 @@ export default function SettingsPage() {
       {/* Registro */}
       <div className="card space-y-3" id="registro">
         <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Registros</h3>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div>
+          <label className="label" htmlFor="s-agencia-value">Definir minha agência</label>
+          <input
+            id="s-agencia-value"
+            type="text"
+            inputMode="numeric"
+            className="input !w-24"
+            placeholder="1234"
+            disabled={!agenciaEnabled}
+            style={!agenciaEnabled ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+            value={agenciaValue}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
+              setAgenciaValue(digits)
+              setAgenciaDefault(digits)
+            }}
+          />
+        </div>
+        <div className="flex items-center gap-3">
           <label className="switch">
             <input
               id="s-agencia-enabled"
@@ -274,24 +292,8 @@ export default function SettingsPage() {
             className="text-sm font-medium cursor-pointer select-none"
             style={{ color: 'var(--text-secondary)' }}
           >
-            Definir minha agência
+            Solicitar agência nos registros
           </label>
-          <input
-            id="s-agencia-value"
-            type="text"
-            inputMode="numeric"
-            className="input !w-24 ml-auto"
-            placeholder="1234"
-            aria-label="Agência (4 dígitos)"
-            disabled={!agenciaEnabled}
-            style={!agenciaEnabled ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
-            value={agenciaValue}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
-              setAgenciaValue(digits)
-              setAgenciaDefault(digits)
-            }}
-          />
         </div>
         <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
           {agenciaEnabled
