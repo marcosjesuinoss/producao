@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Sun, Moon, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useRegisterSW } from 'virtual:pwa-register/react'
@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { seedIfEmpty, resetAll } from '../lib/seed.js'
 import { exportBackup, readImportFile, importBackup, importMerge, describePeriod, findContentDuplicates } from '../lib/backup.js'
+import { getAgenciaEnabled, setAgenciaEnabled, getAgenciaDefault, setAgenciaDefault } from '../lib/agencia.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import PeriodPicker from '../components/PeriodPicker.jsx'
 import DuplicateReview from '../components/DuplicateReview.jsx'
@@ -27,8 +28,18 @@ export default function SettingsPage() {
   const [importPayload, setImportPayload] = useState(null)
   const [producaoPayload, setProducaoPayload] = useState(null)
   const [duplicateReview, setDuplicateReview] = useState(null) // { payload, matches, label, errorMsg }
+  const [agenciaEnabled, setAgenciaEnabledState] = useState(getAgenciaEnabled())
+  const [agenciaValue, setAgenciaValue] = useState(getAgenciaDefault())
   const fileInputRef = useRef(null)
   const producaoInputRef = useRef(null)
+
+  // Chegando via o botão de engrenagem do campo "Agência / Conta do produto"
+  // (RecordForm.jsx) — rola direto pro bloco Registro.
+  useEffect(() => {
+    if (window.location.hash === '#registro') {
+      document.getElementById('registro')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [])
 
   const handleUpdate = () => {
     if (needRefresh) updateServiceWorker(true)
@@ -239,6 +250,52 @@ export default function SettingsPage() {
             Modo escuro
           </button>
         </div>
+      </div>
+
+      {/* Registro */}
+      <div className="card space-y-3" id="registro">
+        <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Registro</h3>
+        <div className="flex items-center gap-2">
+          <input
+            id="s-agencia-enabled"
+            type="checkbox"
+            className="w-4 h-4 accent-[color:var(--c-brand)]"
+            checked={agenciaEnabled}
+            onChange={(e) => {
+              const v = e.target.checked
+              setAgenciaEnabledState(v)
+              setAgenciaEnabled(v)
+            }}
+          />
+          <label
+            htmlFor="s-agencia-enabled"
+            className="text-sm font-medium cursor-pointer select-none"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Definir minha agência
+          </label>
+        </div>
+        {agenciaEnabled && (
+          <div>
+            <label className="label" htmlFor="s-agencia-value">Agência (4 dígitos)</label>
+            <input
+              id="s-agencia-value"
+              type="text"
+              inputMode="numeric"
+              className="input !w-fit"
+              placeholder="1234"
+              value={agenciaValue}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
+                setAgenciaValue(digits)
+                setAgenciaDefault(digits)
+              }}
+            />
+            <p className="text-xs mt-1" style={{ color: 'var(--text-faint)' }}>
+              Vem pré-preenchida no campo "Agência / Conta do produto" ao criar um novo registro — dá pra apagar na hora, se precisar.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Notificações */}

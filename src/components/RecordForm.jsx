@@ -1,13 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Settings } from 'lucide-react'
 import { PRODUCTS, BR_NUM_RE, todayISO } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
+import { getAgenciaEnabled, getAgenciaDefault, formatAccountMask, accountCursorForDigitCount } from '../lib/agencia.js'
 
 const ABERTURA = 'Abertura de Conta'
-
-// Conta producao: aceita so digitos e "/". O "." e um atalho pro "/" (o
-// teclado numerico do celular tem "." mas nao "/") — a troca acontece ANTES
-// do filtro, senao o ponto seria descartado como caractere invalido.
-const cleanAccount = (v) => String(v ?? '').replace(/\./g, '/').replace(/[^0-9/]/g, '')
 
 const empty = {
   date: todayISO(),
@@ -43,12 +41,12 @@ const parseBR = (v) => {
   return Number.isFinite(n) ? n : null
 }
 
-const validate = (f, isValueFn) => {
+const validate = (f, isValueFn, agenciaEnabled) => {
   const e = {}
   const isValueProd = isValueFn(f.product)
   if (!f.date) e.date = 'Informe a data'
   if (!f.product) e.product = 'Informe o produto'
-  if (!f.account?.trim()) e.account = 'Informe a conta de produção'
+  if (!f.account?.trim()) e.account = agenciaEnabled ? 'Informe a agência e a conta' : 'Informe a conta de produção'
   if (isValueProd) {
     const n = parseBR(f.value)
     if (n === undefined) e.value = 'Formato inválido — use vírgula para decimal: 8,4 ou 8.400,00'
@@ -63,15 +61,22 @@ const validate = (f, isValueFn) => {
 
 export default function RecordForm({ initial, onSubmit, onCancel, noCard = false }) {
   const { allProducts, isValue } = useProducts()
+  const navigate = useNavigate()
+  const agenciaEnabled = getAgenciaEnabled()
   const [form, setForm] = useState(empty)
   const [errors, setErrors] = useState({})
   const accountRef = useRef(null)
   const accountCursor = useRef(null) // posicao pendente de restaurar apos o render
 
   useEffect(() => {
-    setForm(initial
-      ? { ...empty, ...initial, value: numToDisplay(initial.value), quantity: numToDisplay(initial.quantity) }
-      : empty)
+    if (initial) {
+      setForm({ ...empty, ...initial, value: numToDisplay(initial.value), quantity: numToDisplay(initial.quantity) })
+    } else {
+      // Registro novo: pre-preenche com a agencia padrao (Ajustes > Registro),
+      // se estiver ativada — o usuario pode apagar com backspace normalmente.
+      const agencia = agenciaEnabled ? getAgenciaDefault() : ''
+      setForm({ ...empty, account: agencia ? formatAccountMask(agencia, true) : '' })
+    }
     setErrors({})
   }, [initial])
 
@@ -81,12 +86,19 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
   }
 
   const onAccountChange = (e) => {
-    const raw = e.target.value
-    // Onde o cursor deve parar: limpa so o trecho ANTES dele e usa o tamanho
-    // resultante. Assim "." -> "/" mantem a posicao, e um caractere rejeitado
-    // no meio do texto nao empurra o cursor pro fim.
-    accountCursor.current = cleanAccount(raw.slice(0, e.target.selectionStart)).length
-    set('account', cleanAccount(raw))
+    const { value, selectionStart } = e.target
+    const digitsBeforeCursor = (value.slice(0, selectionStart).match(/\d/g) || []).length
+    const masked = formatAccountMask(value, agenciaEnabled)
+    // Onde o cursor deve parar: conta quantos digitos vieram antes dele no
+    // texto digitado e acha a posicao equivalente no texto ja mascarado
+    // (pulando os separadores "/" e "-" auto-inseridos).
+    accountCursor.current = accountCursorForDigitCount(masked, digitsBeforeCursor)
+    set('account', masked)
+  }
+
+  const goToAgenciaSettings = () => {
+    onCancel?.()
+    navigate('/ajustes#registro')
   }
 
   // Restaura o cursor depois que o React reescreve o value do input (o que,
@@ -125,7 +137,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
 
   const submit = (e) => {
     e.preventDefault()
-    const errs = validate(form, isValue)
+    const errs = validate(form, isValue, agenciaEnabled)
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
     onSubmit(form)
@@ -159,9 +171,23 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
       </div>
 
       <div>
-        <label className="label" htmlFor="r-account">Conta produção *</label>
-        <input id="r-account" ref={accountRef} className={inputCls('account')} placeholder="AG / CONTA" inputMode="numeric"
-          value={form.account} onChange={onAccountChange} />
+        <label className="label" htmlFor="r-account">
+          {agenciaEnabled ? 'Agência / Conta do produto' : 'Conta produção'} *
+        </label>
+        <div className="flex gap-2">
+          <input id="r-account" ref={accountRef} className={`${inputCls('account')} flex-1 min-w-0`}
+            placeholder={agenciaEnabled ? '1234 / 1234567-8' : '1234567-8'} inputMode="numeric"
+            value={form.account} onChange={onAccountChange} />
+          <button
+            type="button"
+            onClick={goToAgenciaSettings}
+            aria-label="Configurar agência padrão"
+            className="shrink-0 px-2.5 rounded-lg"
+            style={{ background: 'var(--bg-card-deep)', border: '1px solid var(--input-border)', color: 'var(--text-muted)' }}
+          >
+            <Settings size={16} />
+          </button>
+        </div>
         {errors.account && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.account}</p>}
       </div>
 
