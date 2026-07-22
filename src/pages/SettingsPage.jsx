@@ -255,18 +255,20 @@ export default function SettingsPage() {
       {/* Registro */}
       <div className="card space-y-3" id="registro">
         <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Registro</h3>
-        <div className="flex items-center gap-2">
-          <input
-            id="s-agencia-enabled"
-            type="checkbox"
-            className="w-4 h-4 accent-[color:var(--c-brand)]"
-            checked={agenciaEnabled}
-            onChange={(e) => {
-              const v = e.target.checked
-              setAgenciaEnabledState(v)
-              setAgenciaEnabled(v)
-            }}
-          />
+        <div className="flex items-center gap-3 flex-wrap">
+          <label className="switch">
+            <input
+              id="s-agencia-enabled"
+              type="checkbox"
+              checked={agenciaEnabled}
+              onChange={(e) => {
+                const v = e.target.checked
+                setAgenciaEnabledState(v)
+                setAgenciaEnabled(v)
+              }}
+            />
+            <span className="switch-track" aria-hidden />
+          </label>
           <label
             htmlFor="s-agencia-enabled"
             className="text-sm font-medium cursor-pointer select-none"
@@ -274,16 +276,14 @@ export default function SettingsPage() {
           >
             Definir minha agência
           </label>
-        </div>
-        {agenciaEnabled && (
-          <div>
-            <label className="label" htmlFor="s-agencia-value">Agência (4 dígitos)</label>
+          {agenciaEnabled && (
             <input
               id="s-agencia-value"
               type="text"
               inputMode="numeric"
-              className="input !w-fit"
+              className="input !w-24 ml-auto"
               placeholder="1234"
+              aria-label="Agência (4 dígitos)"
               value={agenciaValue}
               onChange={(e) => {
                 const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
@@ -291,10 +291,12 @@ export default function SettingsPage() {
                 setAgenciaDefault(digits)
               }}
             />
-            <p className="text-xs mt-1" style={{ color: 'var(--text-faint)' }}>
-              Vem pré-preenchida no campo "Agência / Conta do produto" ao criar um novo registro — dá pra apagar na hora, se precisar.
-            </p>
-          </div>
+          )}
+        </div>
+        {agenciaEnabled && (
+          <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
+            Vem pré-preenchida no campo "Agência / Conta do produto" ao criar um novo registro — dá pra apagar na hora, se precisar.
+          </p>
         )}
       </div>
 
