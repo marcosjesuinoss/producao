@@ -255,24 +255,6 @@ export default function SettingsPage() {
       {/* Registro */}
       <div className="card space-y-3" id="registro">
         <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Registros</h3>
-        <div>
-          <label className="label" htmlFor="s-agencia-value">Definir minha agência</label>
-          <input
-            id="s-agencia-value"
-            type="text"
-            inputMode="numeric"
-            className="input !w-24"
-            placeholder="1234"
-            disabled={!agenciaEnabled}
-            style={!agenciaEnabled ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
-            value={agenciaValue}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
-              setAgenciaValue(digits)
-              setAgenciaDefault(digits)
-            }}
-          />
-        </div>
         <div className="flex items-center gap-3">
           <label className="switch">
             <input
@@ -294,6 +276,26 @@ export default function SettingsPage() {
           >
             Solicitar agência nos registros
           </label>
+        </div>
+        <div className="flex items-center gap-3">
+          <label htmlFor="s-agencia-value" className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+            Minha agência
+          </label>
+          <input
+            id="s-agencia-value"
+            type="text"
+            inputMode="numeric"
+            className="input !w-24"
+            placeholder="1234"
+            disabled={!agenciaEnabled}
+            style={!agenciaEnabled ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+            value={agenciaValue}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
+              setAgenciaValue(digits)
+              setAgenciaDefault(digits)
+            }}
+          />
         </div>
         <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
           {agenciaEnabled
