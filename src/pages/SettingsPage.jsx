@@ -298,7 +298,6 @@ export default function SettingsPage() {
             ? 'Vem pré-preenchida no campo "Agência / Conta do produto" ao criar um novo registro — dá pra apagar na hora, se precisar.'
             : 'Ative pra pré-preencher a agência automaticamente nos novos registros.'}
         </p>
-        )}
       </div>
 
       {/* Notificações */}
