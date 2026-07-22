@@ -276,27 +276,28 @@ export default function SettingsPage() {
           >
             Definir minha agência
           </label>
-          {agenciaEnabled && (
-            <input
-              id="s-agencia-value"
-              type="text"
-              inputMode="numeric"
-              className="input !w-24 ml-auto"
-              placeholder="1234"
-              aria-label="Agência (4 dígitos)"
-              value={agenciaValue}
-              onChange={(e) => {
-                const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
-                setAgenciaValue(digits)
-                setAgenciaDefault(digits)
-              }}
-            />
-          )}
+          <input
+            id="s-agencia-value"
+            type="text"
+            inputMode="numeric"
+            className="input !w-24 ml-auto"
+            placeholder="1234"
+            aria-label="Agência (4 dígitos)"
+            disabled={!agenciaEnabled}
+            style={!agenciaEnabled ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+            value={agenciaValue}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
+              setAgenciaValue(digits)
+              setAgenciaDefault(digits)
+            }}
+          />
         </div>
-        {agenciaEnabled && (
-          <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
-            Vem pré-preenchida no campo "Agência / Conta do produto" ao criar um novo registro — dá pra apagar na hora, se precisar.
-          </p>
+        <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
+          {agenciaEnabled
+            ? 'Vem pré-preenchida no campo "Agência / Conta do produto" ao criar um novo registro — dá pra apagar na hora, se precisar.'
+            : 'Ative pra pré-preencher a agência automaticamente nos novos registros.'}
+        </p>
         )}
       </div>
 
