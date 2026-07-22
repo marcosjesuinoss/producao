@@ -1,19 +1,24 @@
 import Papa from 'papaparse'
+import { splitAccount } from './agencia.js'
 
 /*
   Exportacao CSV (POST /export?format=csv) usando papaparse.
   Recebe os registros JA filtrados e dispara o download.
 */
 export function recordsToCsv(records) {
-  const rows = records.map((r) => ({
-    data: r.date,
-    produto: r.product,
-    conta: r.account,
-    gerente: r.manager,
-    quantidade: r.quantity,
-    valor: r.value ?? '',
-    observacoes: r.notes ?? ''
-  }))
+  const rows = records.map((r) => {
+    const { agencia, conta } = splitAccount(r.account)
+    return {
+      data: r.date,
+      produto: r.product,
+      agencia,
+      conta,
+      gerente: r.manager,
+      quantidade: r.quantity,
+      valor: r.value ?? '',
+      observacoes: r.notes ?? ''
+    }
+  })
   return Papa.unparse(rows, { delimiter: ';' }) // ';' = melhor p/ Excel pt-BR
 }
 

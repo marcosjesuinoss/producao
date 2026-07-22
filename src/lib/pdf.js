@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { dateBR, brl, num, FULL_MONTHS } from './format.js'
+import { splitAccount } from './agencia.js'
 
 /*
   Exportacao PDF - mesmo conjunto de registros do CSV, mas formatado como
@@ -24,16 +25,20 @@ export function exportPdf(records, scopeDescription, filename = 'producao.pdf') 
 
   autoTable(doc, {
     startY: 36,
-    head: [['Data', 'Produto', 'Conta', 'Quantidade', 'Valor', 'Observações']],
-    body: records.map((r) => [
-      dateBR(r.date),
-      r.product,
-      r.account || '-',
-      r.quantity ? num(r.quantity) : '-',
-      r.value ? brl(r.value) : '-',
-      r.notes || '',
-    ]),
-    foot: [[`${records.length} registro${records.length === 1 ? '' : 's'}`, '', '', num(totalQuantity), brl(totalValue), '']],
+    head: [['Data', 'Produto', 'Agência', 'Conta', 'Quantidade', 'Valor', 'Observações']],
+    body: records.map((r) => {
+      const { agencia, conta } = splitAccount(r.account)
+      return [
+        dateBR(r.date),
+        r.product,
+        agencia || '-',
+        conta || '-',
+        r.quantity ? num(r.quantity) : '-',
+        r.value ? brl(r.value) : '-',
+        r.notes || '',
+      ]
+    }),
+    foot: [[`${records.length} registro${records.length === 1 ? '' : 's'}`, '', '', '', num(totalQuantity), brl(totalValue), '']],
     styles: { fontSize: 9 },
     headStyles: { fillColor: [79, 70, 229] },
     footStyles: { fillColor: [240, 240, 240], textColor: [30, 30, 30], fontStyle: 'bold' },
@@ -85,11 +90,11 @@ const HERO = { pad: 32, titleBase: 24, subGap: 22, totalGap: 48, labelGap: 18 }
 const heroHeightPx =
   HERO.pad + HERO.titleBase + HERO.subGap + HERO.totalGap + HERO.labelGap + HERO.pad
 
-// Lista em colunas (Data | Conta | Observações | Valor), uma linha por
-// registro. Larguras das 3 primeiras colunas fixas (em px); a de
+// Lista em colunas (Data | Agência | Conta | Observações | Valor), uma
+// linha por registro. Larguras das 4 primeiras colunas fixas (em px); a de
 // Observações ocupa o espaço restante - calculada em runtime (depende da
 // largura da pagina).
-const ROW = { padX: 20, rowH: 40, headerH: 34, colData: 78, colConta: 78, colValor: 110 }
+const ROW = { padX: 20, rowH: 40, headerH: 34, colData: 78, colAgencia: 50, colConta: 64, colValor: 110 }
 
 // Encurta o texto ate caber em maxW (pt), ou devolve como esta. Usa "..."
 // (3 pontos ASCII) em vez do glifo unico "…": a fonte Helvetica padrao do
@@ -132,10 +137,11 @@ export function exportProductRecordsPdf({ product, records, isValue, total, star
   const contentX = cardX + rowPadX
   const contentW = cardW - rowPadX * 2
   const colDataX = contentX
-  const colContaX = contentX + px(ROW.colData)
-  const colObsX = contentX + px(ROW.colData) + px(ROW.colConta)
+  const colAgenciaX = contentX + px(ROW.colData)
+  const colContaX = contentX + px(ROW.colData) + px(ROW.colAgencia)
+  const colObsX = contentX + px(ROW.colData) + px(ROW.colAgencia) + px(ROW.colConta)
   const colValorRightX = contentX + contentW
-  const colObsW = contentW - px(ROW.colData) - px(ROW.colConta) - px(ROW.colValor) - px(10)
+  const colObsW = contentW - px(ROW.colData) - px(ROW.colAgencia) - px(ROW.colConta) - px(ROW.colValor) - px(10)
 
   const totalStr = isValue ? brl(total) : num(total)
   const countStr = `${records.length} registro${records.length === 1 ? '' : 's'}`
@@ -226,6 +232,7 @@ export function exportProductRecordsPdf({ product, records, isValue, total, star
     doc.setFontSize(px(9))
     doc.setTextColor(COLOR.colHeader)
     doc.text('DATA', colDataX, headerBase, { charSpace: px(0.3) })
+    doc.text('AGÊNCIA', colAgenciaX, headerBase, { charSpace: px(0.3) })
     doc.text('CONTA', colContaX, headerBase, { charSpace: px(0.3) })
     doc.text('OBSERVAÇÕES', colObsX, headerBase, { charSpace: px(0.3) })
     doc.text(isValue ? 'VALOR' : 'QUANTIDADE', colValorRightX, headerBase, { align: 'right', charSpace: px(0.3) })
@@ -244,10 +251,12 @@ export function exportProductRecordsPdf({ product, records, isValue, total, star
       doc.setTextColor(COLOR.date)
       doc.text(dateBR(r.date), colDataX, base)
 
+      const { agencia, conta } = splitAccount(r.account)
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(px(12))
       doc.setTextColor(COLOR.account)
-      doc.text(r.account || '-', colContaX, base)
+      doc.text(agencia || '-', colAgenciaX, base)
+      doc.text(conta || '-', colContaX, base)
 
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(px(10))

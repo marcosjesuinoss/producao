@@ -34,6 +34,17 @@ export function formatAccountMask(raw, agenciaEnabled) {
   return `${agencia} / ${splitCheckDigit(resto)}`
 }
 
+// Separa o valor salvo em { agencia, conta } pros relatorios (CSV/PDF)
+// mostrarem em colunas distintas. Registros com "/" (agencia ativada na
+// hora do lancamento) tem os dois; registros antigos ou sem agencia
+// (sem "/") tem so a conta, agencia fica vazia.
+export function splitAccount(account) {
+  const str = String(account ?? '').trim()
+  const i = str.indexOf('/')
+  if (i === -1) return { agencia: '', conta: str }
+  return { agencia: str.slice(0, i).trim(), conta: str.slice(i + 1).trim() }
+}
+
 // Acha a posicao de cursor no texto mascarado que corresponde a "n" digitos
 // digitados antes dele — pula os separadores auto-inseridos logo depois do
 // n-esimo digito (comportamento padrao de campo com mascara).
