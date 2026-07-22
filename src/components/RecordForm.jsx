@@ -46,7 +46,15 @@ const validate = (f, isValueFn, agenciaEnabled) => {
   const isValueProd = isValueFn(f.product)
   if (!f.date) e.date = 'Informe a data'
   if (!f.product) e.product = 'Informe o produto'
-  if (!f.account?.trim()) e.account = agenciaEnabled ? 'Informe a agência e a conta' : 'Informe a conta de produção'
+  if (agenciaEnabled) {
+    // Com agencia ativada, os 4 primeiros digitos sao so a agencia — exige
+    // pelo menos 1 digito de conta alem deles (senao "salva" so a agencia
+    // pre-preenchida sem o usuario ter digitado a conta de verdade).
+    const digits = String(f.account ?? '').replace(/\D/g, '')
+    if (digits.length <= 4) e.account = 'Informe o número da conta'
+  } else if (!f.account?.trim()) {
+    e.account = 'Informe a conta de produção'
+  }
   if (isValueProd) {
     const n = parseBR(f.value)
     if (n === undefined) e.value = 'Formato inválido — use vírgula para decimal: 8,4 ou 8.400,00'
