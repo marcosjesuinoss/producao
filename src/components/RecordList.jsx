@@ -214,11 +214,29 @@ export default function RecordList({ records, onEdit, onDelete, onIgnore, groupB
                     {r.clientName.trim()}
                   </div>
                 )}
-                <div className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
-                  {shortDate(r.date)}
-                  {r.account ? ` · Ag/Conta: ${r.account}` : ''}
-                  {!isValue(r.product) && r.value != null ? ` · ${brl(r.value)}` : ''}
-                </div>
+                {groupByDate ? (
+                  // Data ja aparece na pilula do grupo (ver showDateHeader) —
+                  // repeti-la aqui so tomaria espaco de "Ag/Conta" a toa.
+                  (r.account || (!isValue(r.product) && r.value != null)) && (
+                    <div className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                      {r.account ? `Ag/Conta: ${r.account}` : ''}
+                      {r.account && !isValue(r.product) && r.value != null ? ' · ' : ''}
+                      {!isValue(r.product) && r.value != null ? brl(r.value) : ''}
+                    </div>
+                  )
+                ) : (
+                  <>
+                    <div className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                      {shortDate(r.date)}
+                      {!isValue(r.product) && r.value != null ? ` · ${brl(r.value)}` : ''}
+                    </div>
+                    {r.account && (
+                      <div className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                        Ag/Conta: {r.account}
+                      </div>
+                    )}
+                  </>
+                )}
                 {r.notes?.trim() && (
                   <div className="text-xs truncate mt-0.5" style={{ color: 'var(--text-faint)' }}>
                     {r.notes.trim()}
