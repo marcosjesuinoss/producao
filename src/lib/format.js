@@ -1,12 +1,10 @@
 export const PRODUCTS = [
   'Abertura de Conta',
+  'Aplicação CDB',
   'Capitalizacao - Mensal',
   'Capitalizacao - Unica',
   'Cartao de Credito',
   'CDC',
-  'Cobranca - CA',
-  'Cobranca - LP',
-  'Cobranca - Mora',
   'Consorcio',
   'Credito Consignado',
   'Credito Imobiliario',
@@ -20,7 +18,10 @@ export const PRODUCTS = [
   'Seguro de Vida - Mensal',
   'Seguro de Vida - Unico',
   'Seguro Prestamista',
-  'Seguro Residencial'
+  'Seguro Residencial',
+  'Vencidos - LP',
+  'Vencidos acima de 59 dias',
+  'Vencidos até 59 dias'
 ]
 
 export const MONTHS = [
