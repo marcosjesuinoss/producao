@@ -224,13 +224,13 @@ export default function SettingsPage() {
             <Sun size={14} />
             Claro
           </button>
+          <button onClick={() => setTheme('midnight')} style={themeBtnStyle(theme === 'midnight')}>
+            <MoonStar size={14} />
+            Anoitecer
+          </button>
           <button onClick={() => setTheme('dark')} style={themeBtnStyle(theme === 'dark')}>
             <Moon size={14} />
             Escuro
-          </button>
-          <button onClick={() => setTheme('midnight')} style={themeBtnStyle(theme === 'midnight')}>
-            <MoonStar size={14} />
-            Meia-noite
           </button>
         </div>
       </div>
