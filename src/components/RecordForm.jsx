@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Settings } from 'lucide-react'
 import { PRODUCTS, BR_NUM_RE, todayISO } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
-import { getAgenciaEnabled, getAgenciaDefault, formatAccountMask, accountCursorForDigitCount } from '../lib/agencia.js'
+import { getAgenciaEnabled, getAgenciaDefault, getDigitoEnabled, formatAccountMask, accountCursorForDigitCount } from '../lib/agencia.js'
 
 const ABERTURA = 'Abertura de Conta'
 
@@ -41,22 +41,25 @@ const parseBR = (v) => {
   return Number.isFinite(n) ? n : null
 }
 
-const validate = (f, isValueFn, agenciaEnabled) => {
+const validate = (f, isValueFn, agenciaEnabled, digitoEnabled) => {
   const e = {}
   const isValueProd = isValueFn(f.product)
   if (!f.date) e.date = 'Informe a data'
   if (!f.product) e.product = 'Informe o produto'
   {
-    // Conta valida = pelo menos 1 digito de corpo + 1 digito verificador
-    // (ex: "1-2"). Com agencia ativada, isso vem depois dos 4 digitos dela
-    // (ex: "1234 / 1-2") — senao "salva" so a agencia pre-preenchida sem o
-    // usuario ter digitado a conta de verdade.
+    // Conta valida = pelo menos 1 digito de corpo (+ 1 verificador, se
+    // digitoEnabled — ex: "1-2"). Com agencia ativada, isso vem depois dos
+    // 4 digitos dela (ex: "1234 / 1-2") — senao "salva" so a agencia
+    // pre-preenchida sem o usuario ter digitado a conta de verdade.
     const digits = String(f.account ?? '').replace(/\D/g, '')
-    const minDigits = agenciaEnabled ? 6 : 2
+    const minDigits = (agenciaEnabled ? 4 : 0) + (digitoEnabled ? 2 : 1)
     if (digits.length < minDigits) {
-      e.account = agenciaEnabled
-        ? 'Conta incompleta — informe pelo menos 1 dígito + verificador (ex: 1234 / 1-2)'
-        : 'Conta incompleta — informe pelo menos 1 dígito + verificador (ex: 1-2)'
+      const exemplo = digitoEnabled
+        ? (agenciaEnabled ? '1234 / 1-2' : '1-2')
+        : (agenciaEnabled ? '1234 / 1' : '1')
+      e.account = digitoEnabled
+        ? `Conta incompleta — informe pelo menos 1 dígito + verificador (ex: ${exemplo})`
+        : `Informe a conta (ex: ${exemplo})`
     }
   }
   if (isValueProd) {
@@ -75,6 +78,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
   const { allProducts, isValue } = useProducts()
   const navigate = useNavigate()
   const agenciaEnabled = getAgenciaEnabled()
+  const digitoEnabled = getDigitoEnabled()
   const [form, setForm] = useState(empty)
   const [errors, setErrors] = useState({})
   const accountRef = useRef(null)
@@ -87,7 +91,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
       // Registro novo: pre-preenche com a agencia padrao (Ajustes > Registro),
       // se estiver ativada — o usuario pode apagar com backspace normalmente.
       const agencia = agenciaEnabled ? getAgenciaDefault() : ''
-      setForm({ ...empty, account: agencia ? formatAccountMask(agencia, true) : '' })
+      setForm({ ...empty, account: agencia ? formatAccountMask(agencia, true, digitoEnabled) : '' })
     }
     setErrors({})
   }, [initial])
@@ -100,7 +104,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
   const onAccountChange = (e) => {
     const { value, selectionStart } = e.target
     const digitsBeforeCursor = (value.slice(0, selectionStart).match(/\d/g) || []).length
-    const masked = formatAccountMask(value, agenciaEnabled)
+    const masked = formatAccountMask(value, agenciaEnabled, digitoEnabled)
     // Onde o cursor deve parar: conta quantos digitos vieram antes dele no
     // texto digitado e acha a posicao equivalente no texto ja mascarado
     // (pulando os separadores "/" e "-" auto-inseridos).
@@ -149,7 +153,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
 
   const submit = (e) => {
     e.preventDefault()
-    const errs = validate(form, isValue, agenciaEnabled)
+    const errs = validate(form, isValue, agenciaEnabled, digitoEnabled)
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
     onSubmit(form)
@@ -188,7 +192,12 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
         </label>
         <div className="flex gap-2">
           <input id="r-account" ref={accountRef} className={`${inputCls('account')} flex-1 min-w-0`}
-            placeholder={agenciaEnabled ? '1234 / 1234567-8' : '1234567-8'} inputMode="numeric"
+            placeholder={
+              agenciaEnabled
+                ? (digitoEnabled ? '1234 / 1234567-8' : '1234 / 12345678')
+                : (digitoEnabled ? '1234567-8' : '12345678')
+            }
+            inputMode="numeric"
             value={form.account} onChange={onAccountChange} />
           <button
             type="button"

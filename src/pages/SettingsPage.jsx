@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Sun, Moon, MoonStar, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload } from 'lucide-react'
+import { Sun, Moon, MoonStar, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload, Info } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { seedIfEmpty, resetAll } from '../lib/seed.js'
 import { exportBackup, readImportFile, importBackup, importMerge, describePeriod, findContentDuplicates } from '../lib/backup.js'
-import { getAgenciaEnabled, setAgenciaEnabled, getAgenciaDefault, setAgenciaDefault } from '../lib/agencia.js'
+import { getAgenciaEnabled, setAgenciaEnabled, getAgenciaDefault, setAgenciaDefault, getDigitoEnabled, setDigitoEnabled } from '../lib/agencia.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import PeriodPicker from '../components/PeriodPicker.jsx'
 import DuplicateReview from '../components/DuplicateReview.jsx'
@@ -30,6 +30,7 @@ export default function SettingsPage() {
   const [duplicateReview, setDuplicateReview] = useState(null) // { payload, matches, label, errorMsg }
   const [agenciaEnabled, setAgenciaEnabledState] = useState(getAgenciaEnabled())
   const [agenciaValue, setAgenciaValue] = useState(getAgenciaDefault())
+  const [digitoEnabled, setDigitoEnabledState] = useState(getDigitoEnabled())
   const fileInputRef = useRef(null)
   const producaoInputRef = useRef(null)
 
@@ -238,7 +239,7 @@ export default function SettingsPage() {
       {/* Registro */}
       <div className="card space-y-3" id="registro">
         <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Registros</h3>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <label className="switch">
             <input
               id="s-agencia-enabled"
@@ -259,6 +260,15 @@ export default function SettingsPage() {
           >
             Solicitar agência nos registros
           </label>
+          <button
+            type="button"
+            onClick={() => showToast('Quando ativado, o campo "Agência / Conta do produto" separa os 4 primeiros dígitos digitados como agência e o resto como conta. Se você definir uma agência abaixo, ela vem pré-preenchida em todo registro novo — mas dá pra apagar na hora, se precisar.')}
+            aria-label="O que é isso?"
+            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+            style={{ background: 'var(--bg-card-deep)', color: 'var(--text-faint)' }}
+          >
+            <Info size={12} />
+          </button>
         </div>
         <div className="flex items-center gap-3">
           <label htmlFor="s-agencia-value" className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
@@ -280,11 +290,37 @@ export default function SettingsPage() {
             }}
           />
         </div>
-        <p className="text-xs" style={{ color: 'var(--text-faint)' }}>
-          {agenciaEnabled
-            ? 'Vem pré-preenchida no campo "Agência / Conta do produto" ao criar um novo registro — dá pra apagar na hora, se precisar.'
-            : 'Ative pra pré-preencher a agência automaticamente nos novos registros.'}
-        </p>
+        <div className="flex items-center gap-2">
+          <label className="switch">
+            <input
+              id="s-digito-enabled"
+              type="checkbox"
+              checked={digitoEnabled}
+              onChange={(e) => {
+                const v = e.target.checked
+                setDigitoEnabledState(v)
+                setDigitoEnabled(v)
+              }}
+            />
+            <span className="switch-track" aria-hidden />
+          </label>
+          <label
+            htmlFor="s-digito-enabled"
+            className="text-sm font-medium cursor-pointer select-none"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Solicitar dígito nas contas
+          </label>
+          <button
+            type="button"
+            onClick={() => showToast('Ativado (padrão), a conta exige um dígito verificador depois do "-" (ex: 1-2). Desativado, a conta aceita só números, sem dígito nem separador (ex: 12).')}
+            aria-label="O que é isso?"
+            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+            style={{ background: 'var(--bg-card-deep)', color: 'var(--text-faint)' }}
+          >
+            <Info size={12} />
+          </button>
+        </div>
       </div>
 
       {/* Notificações */}

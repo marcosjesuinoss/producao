@@ -4,12 +4,18 @@
 
 const ENABLED_KEY = 'agenciaEnabled'
 const VALUE_KEY = 'agenciaDefault'
+const DIGITO_KEY = 'digitoEnabled'
 
 export const getAgenciaEnabled = () => localStorage.getItem(ENABLED_KEY) === '1'
 export const setAgenciaEnabled = (v) => localStorage.setItem(ENABLED_KEY, v ? '1' : '0')
 
 export const getAgenciaDefault = () => localStorage.getItem(VALUE_KEY) || ''
 export const setAgenciaDefault = (v) => localStorage.setItem(VALUE_KEY, String(v ?? '').replace(/\D/g, '').slice(0, 4))
+
+// Padrao ativado (== comportamento de antes desse toggle existir): so fica
+// desativado se a pessoa explicitamente desligar.
+export const getDigitoEnabled = () => localStorage.getItem(DIGITO_KEY) !== '0'
+export const setDigitoEnabled = (v) => localStorage.setItem(DIGITO_KEY, v ? '1' : '0')
 
 // "1234567" -> "123456-7" (ultimo digito = verificador, aparece so com 2+
 // digitos no corpo — com 1 so digito ainda nao da pra saber se e o
@@ -20,18 +26,21 @@ const splitCheckDigit = (digits) => {
 }
 
 // Mascara do campo "Agencia / Conta do produto": digita so numero, "/" e
-// "-" aparecem sozinhos. Com agencia ativada: 4 primeiros digitos =
-// agencia, resto = conta (max 8) + digito verificador (1) = 13 no total.
-// Sem agencia: tudo vira conta (max 8) + digito verificador (1) = 9 total.
-export function formatAccountMask(raw, agenciaEnabled) {
+// "-" aparecem sozinhos (esse ultimo so quando digitoEnabled). Com agencia
+// ativada: 4 primeiros digitos = agencia, resto = conta (max 8) + digito
+// verificador (1, se digitoEnabled) = 13 no total. Sem agencia: tudo vira
+// conta (max 8) + digito (1, se digitoEnabled) = 9 total. As duas opcoes
+// sao independentes — funcionam em qualquer combinacao.
+export function formatAccountMask(raw, agenciaEnabled, digitoEnabled = true) {
   const digits = String(raw ?? '').replace(/\D/g, '')
+  const formatConta = (d) => (digitoEnabled ? splitCheckDigit(d) : d)
   if (!agenciaEnabled) {
-    return splitCheckDigit(digits.slice(0, 9))
+    return formatConta(digits.slice(0, 9))
   }
   if (digits.length <= 4) return digits
   const agencia = digits.slice(0, 4)
   const resto = digits.slice(4, 13)
-  return `${agencia} / ${splitCheckDigit(resto)}`
+  return `${agencia} / ${formatConta(resto)}`
 }
 
 // Separa o valor salvo em { agencia, conta } pros relatorios (CSV/PDF)
