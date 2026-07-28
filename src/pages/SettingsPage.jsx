@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Sun, Moon, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload } from 'lucide-react'
+import { Sun, Moon, MoonStar, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -46,7 +46,22 @@ export default function SettingsPage() {
     else window.location.reload()
   }
 
-  const isDark = theme === 'dark'
+  const themeBtnStyle = (active) => ({
+    flex: 1,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    padding: '0.5em 0.75em',
+    fontSize: '0.875em',
+    fontWeight: 500,
+    borderRadius: '8px',
+    border: active ? '1px solid #818cf8' : '1px solid var(--input-border)',
+    background: active ? 'rgba(99,102,241,0.1)' : 'var(--bg-card-deep)',
+    color: active ? '#818cf8' : 'var(--text-secondary)',
+    cursor: 'pointer',
+    transition: 'all 0.15s',
+  })
 
   const handleClearConfirm = async () => {
     try {
@@ -204,50 +219,18 @@ export default function SettingsPage() {
       {/* Aparência */}
       <div className="card space-y-3">
         <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Aparência</h3>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={() => setTheme('light')}
-            style={{
-              flex: 1,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              padding: '0.5em 0.75em',
-              fontSize: '0.875em',
-              fontWeight: 500,
-              borderRadius: '8px',
-              border: !isDark ? '1px solid #818cf8' : '1px solid var(--input-border)',
-              background: !isDark ? 'rgba(99,102,241,0.1)' : 'var(--bg-card-deep)',
-              color: !isDark ? '#818cf8' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-          >
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button onClick={() => setTheme('light')} style={themeBtnStyle(theme === 'light')}>
             <Sun size={14} />
-            Modo claro
+            Claro
           </button>
-          <button
-            onClick={() => setTheme('dark')}
-            style={{
-              flex: 1,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              padding: '0.5em 0.75em',
-              fontSize: '0.875em',
-              fontWeight: 500,
-              borderRadius: '8px',
-              border: isDark ? '1px solid #818cf8' : '1px solid var(--input-border)',
-              background: isDark ? 'rgba(99,102,241,0.1)' : 'var(--bg-card-deep)',
-              color: isDark ? '#818cf8' : 'var(--text-secondary)',
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-            }}
-          >
+          <button onClick={() => setTheme('dark')} style={themeBtnStyle(theme === 'dark')}>
             <Moon size={14} />
-            Modo escuro
+            Escuro
+          </button>
+          <button onClick={() => setTheme('midnight')} style={themeBtnStyle(theme === 'midnight')}>
+            <MoonStar size={14} />
+            Meia-noite
           </button>
         </div>
       </div>
