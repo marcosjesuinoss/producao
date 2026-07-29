@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Sun, Moon, MoonStar, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload, Info } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useRegisterSW } from 'virtual:pwa-register/react'
@@ -13,45 +14,49 @@ import DuplicateReview from '../components/DuplicateReview.jsx'
 import Toast from '../components/Toast.jsx'
 import { useToast } from '../hooks/useToast.js'
 
-// Botão "i" com popover ancorado nele mesmo — diferente do toast (que fica
-// fixo embaixo da tela, longe do botão que a pessoa acabou de clicar), a
-// explicação aparece bem do lado, como um tooltip. Mesmo padrão de overlay
-// invisível pra fechar ao clicar fora já usado no menu de opções de
-// GoalsPage.jsx.
+// Botão "i" com popup centralizado na tela (mesmo padrão dos outros popups
+// do app — portal pro <body>, fixed inset-0 + flex center — em vez de
+// ancorado no proprio botao, que estourava a borda da tela quando o botao
+// ficava perto da direita). Tom indigo (cor "marca" do app) em vez do verde
+// do toast: aqui nao e uma confirmacao de sucesso, e so uma informacao.
 function InfoButton({ id, description, open, onToggle }) {
   const isOpen = open === id
   return (
-    <div className="relative shrink-0">
+    <>
       <button
         type="button"
         onClick={() => onToggle(isOpen ? null : id)}
         aria-label="O que é isso?"
-        className="w-5 h-5 rounded-full flex items-center justify-center"
+        className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
         style={{ background: 'var(--bg-card-deep)', color: 'var(--text-faint)' }}
       >
         <Info size={12} />
       </button>
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => onToggle(null)} aria-hidden />
+      {isOpen && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => onToggle(null)}
+        >
+          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }} aria-hidden />
           <div
-            className="absolute left-0 top-full mt-1.5 z-20 p-3 shadow-lg"
+            role="status"
+            className="relative w-full max-w-sm p-4 shadow-lg"
             style={{
-              background: 'var(--c-surface)',
-              border: '1px solid var(--c-border)',
-              borderRadius: '12px',
-              width: 'min(280px, calc(100vw - 64px))',
-              fontSize: '13px',
-              lineHeight: '1.45',
-              fontWeight: 400,
-              color: 'var(--text-secondary)',
+              backgroundColor: 'var(--c-surface)',
+              backgroundImage: 'linear-gradient(rgba(99,102,241,0.12), rgba(99,102,241,0.12))',
+              border: '1.5px solid var(--c-brand)',
+              borderRadius: '14px',
+              fontSize: '14px',
+              lineHeight: '1.5',
+              color: 'var(--text-primary)',
             }}
           >
             {description}
           </div>
-        </>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   )
 }
 
