@@ -50,7 +50,7 @@ export default function RecordsPage() {
   const [showSendPicker, setShowSendPicker] = useState(false)
   const [sendRecords, setSendRecords] = useState(null)
   const [showDownloadWarning, setShowDownloadWarning] = useState(false)
-  const { toast, showToast } = useToast()
+  const { toast, showToast, hideToast } = useToast()
 
   const all = useLiveQuery(
     () => db.records.where({ year: Number(year), month: Number(month) }).reverse().sortBy('date'),
@@ -155,7 +155,7 @@ export default function RecordsPage() {
         </div>
       </div>
 
-      <Toast toast={toast} />
+      <Toast toast={toast} onDismiss={hideToast} />
 
       <Filters value={filters} onChange={setFilters} accounts={accounts} sortMode={sortMode} onSortChange={setSortMode} />
 

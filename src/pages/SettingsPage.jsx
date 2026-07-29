@@ -19,7 +19,7 @@ export default function SettingsPage() {
   const { hasPin, setPin, removePin } = useAuth()
   const { theme, setTheme } = useTheme()
   const [pin, setPinValue] = useState('')
-  const { toast, showToast } = useToast()
+  const { toast, showToast, hideToast } = useToast()
   const [showClearDialog, setShowClearDialog] = useState(false)
   const [showRemovePinDialog, setShowRemovePinDialog] = useState(false)
   const [showExportPicker, setShowExportPicker] = useState(false)
@@ -445,7 +445,7 @@ export default function SettingsPage() {
         />
       </div>
 
-      <Toast toast={toast} />
+      <Toast toast={toast} onDismiss={hideToast} />
 
       {showClearDialog && (
         <ConfirmDialog

@@ -50,7 +50,7 @@ export default function GoalsPage() {
   const { year, month } = useMonth()
   const [manager] = useState('')
   const [productModalOpen, setProductModalOpen] = useState(false)
-  const { toast, showToast } = useToast()
+  const { toast, showToast, hideToast } = useToast()
 
   const { allProducts, custom, isValue } = useProducts()
   const productById = useMemo(() => new Map(custom.map((p) => [p.name, p.id])), [custom])
@@ -107,7 +107,7 @@ export default function GoalsPage() {
 
   return (
     <>
-      <Toast toast={toast} />
+      <Toast toast={toast} onDismiss={hideToast} />
     <section className="space-y-4">
 
       {/* Page header */}

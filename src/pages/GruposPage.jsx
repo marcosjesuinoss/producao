@@ -14,7 +14,7 @@ export default function GruposPage() {
   const navigate = useNavigate()
   const [modalState, setModalState] = useState(null) // null | { editing: null | grupoObj }
   const [deleteTarget, setDeleteTarget] = useState(null) // grupo pendente de exclusao
-  const { toast, showToast } = useToast()
+  const { toast, showToast, hideToast } = useToast()
 
   const allGrupos   = useLiveQuery(() => db.classes.toArray(), [], [])
   const allProducts = useLiveQuery(() => db.products.toArray(), [], [])
@@ -133,7 +133,7 @@ export default function GruposPage() {
         />
       )}
 
-      <Toast toast={toast} />
+      <Toast toast={toast} onDismiss={hideToast} />
     </section>
   )
 }

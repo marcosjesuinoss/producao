@@ -8,7 +8,7 @@ const Ctx = createContext(null)
 
 export function RecordModalProvider({ children }) {
   const [state, setState] = useState({ open: false, initial: null })
-  const { toast, showToast } = useToast()
+  const { toast, showToast, hideToast } = useToast()
 
   const open = (initial = null) => setState({ open: true, initial })
   const close = () => setState({ open: false, initial: null })
@@ -35,7 +35,7 @@ export function RecordModalProvider({ children }) {
       {state.open && (
         <RecordModal initial={state.initial} onSubmit={handleSubmit} onClose={close} />
       )}
-      <Toast toast={toast} />
+      <Toast toast={toast} onDismiss={hideToast} />
     </Ctx.Provider>
   )
 }
