@@ -315,7 +315,10 @@ export default function SettingsPage() {
             description='Quando ativado, o campo "Agência / Conta do produto" separa os 4 primeiros dígitos digitados como agência e o resto como conta. Se você definir uma agência abaixo, ela vem pré-preenchida em todo registro novo — mas dá pra apagar na hora, se precisar.'
           />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Espaçador do mesmo tamanho do switch (.switch = 42px) — alinha
+              "Minha agência" na mesma coluna dos rótulos "Solicitar..." */}
+          <div style={{ width: '42px' }} aria-hidden />
           <label htmlFor="s-agencia-value" className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
             Minha agência
           </label>
