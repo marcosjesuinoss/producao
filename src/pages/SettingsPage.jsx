@@ -13,6 +13,48 @@ import DuplicateReview from '../components/DuplicateReview.jsx'
 import Toast from '../components/Toast.jsx'
 import { useToast } from '../hooks/useToast.js'
 
+// Botão "i" com popover ancorado nele mesmo — diferente do toast (que fica
+// fixo embaixo da tela, longe do botão que a pessoa acabou de clicar), a
+// explicação aparece bem do lado, como um tooltip. Mesmo padrão de overlay
+// invisível pra fechar ao clicar fora já usado no menu de opções de
+// GoalsPage.jsx.
+function InfoButton({ id, description, open, onToggle }) {
+  const isOpen = open === id
+  return (
+    <div className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => onToggle(isOpen ? null : id)}
+        aria-label="O que é isso?"
+        className="w-5 h-5 rounded-full flex items-center justify-center"
+        style={{ background: 'var(--bg-card-deep)', color: 'var(--text-faint)' }}
+      >
+        <Info size={12} />
+      </button>
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => onToggle(null)} aria-hidden />
+          <div
+            className="absolute left-0 top-full mt-1.5 z-20 p-3 shadow-lg"
+            style={{
+              background: 'var(--c-surface)',
+              border: '1px solid var(--c-border)',
+              borderRadius: '12px',
+              width: 'min(280px, calc(100vw - 64px))',
+              fontSize: '13px',
+              lineHeight: '1.45',
+              fontWeight: 400,
+              color: 'var(--text-secondary)',
+            }}
+          >
+            {description}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   const navigate = useNavigate()
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW()
@@ -31,6 +73,7 @@ export default function SettingsPage() {
   const [agenciaEnabled, setAgenciaEnabledState] = useState(getAgenciaEnabled())
   const [agenciaValue, setAgenciaValue] = useState(getAgenciaDefault())
   const [digitoEnabled, setDigitoEnabledState] = useState(getDigitoEnabled())
+  const [infoOpen, setInfoOpen] = useState(null) // null | 'agencia' | 'digito'
   const fileInputRef = useRef(null)
   const producaoInputRef = useRef(null)
 
@@ -260,15 +303,12 @@ export default function SettingsPage() {
           >
             Solicitar agência nos registros
           </label>
-          <button
-            type="button"
-            onClick={() => showToast('Quando ativado, o campo "Agência / Conta do produto" separa os 4 primeiros dígitos digitados como agência e o resto como conta. Se você definir uma agência abaixo, ela vem pré-preenchida em todo registro novo — mas dá pra apagar na hora, se precisar.')}
-            aria-label="O que é isso?"
-            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-            style={{ background: 'var(--bg-card-deep)', color: 'var(--text-faint)' }}
-          >
-            <Info size={12} />
-          </button>
+          <InfoButton
+            id="agencia"
+            open={infoOpen}
+            onToggle={setInfoOpen}
+            description='Quando ativado, o campo "Agência / Conta do produto" separa os 4 primeiros dígitos digitados como agência e o resto como conta. Se você definir uma agência abaixo, ela vem pré-preenchida em todo registro novo — mas dá pra apagar na hora, se precisar.'
+          />
         </div>
         <div className="flex items-center gap-3">
           <label htmlFor="s-agencia-value" className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
@@ -311,15 +351,12 @@ export default function SettingsPage() {
           >
             Solicitar dígito nas contas
           </label>
-          <button
-            type="button"
-            onClick={() => showToast('Ativado (padrão), a conta exige um dígito verificador depois do "-" (ex: 1-2). Desativado, a conta aceita só números, sem dígito nem separador (ex: 12).')}
-            aria-label="O que é isso?"
-            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-            style={{ background: 'var(--bg-card-deep)', color: 'var(--text-faint)' }}
-          >
-            <Info size={12} />
-          </button>
+          <InfoButton
+            id="digito"
+            open={infoOpen}
+            onToggle={setInfoOpen}
+            description='Ativado (padrão), a conta exige um dígito verificador depois do "-" (ex: 1-2). Desativado, a conta aceita só números, sem dígito nem separador (ex: 12).'
+          />
         </div>
       </div>
 
