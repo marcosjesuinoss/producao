@@ -17,6 +17,13 @@ export default function Toast({ toast, onDismiss }) {
 
   if (!toast) return null
   const isError = toast.kind === 'error'
+  const toneColor = isError ? 'var(--accent-red)' : 'var(--c-good)'
+  // Mesmo tom suave usado nos ícones de aviso do ConfirmDialog — em vez de
+  // fundo solido vermelho/verde (destoava dos temas) ou --c-surface puro
+  // (ficava camuflado demais). backgroundImage por cima de backgroundColor
+  // pra ficar opaco (nao deixa o conteudo por tras transparecer) mas ainda
+  // tingido com a cor, em qualquer tema.
+  const toneBg = isError ? 'rgba(239,68,68,0.14)' : 'rgba(34,197,94,0.14)'
 
   return (
     <div
@@ -28,8 +35,9 @@ export default function Toast({ toast, onDismiss }) {
         onClick={onDismiss}
         className="flex items-center gap-2 px-4 py-3 shadow-lg cursor-pointer"
         style={{
-          background: 'var(--c-surface)',
-          border: `1px solid ${isError ? 'var(--accent-red)' : 'var(--c-border)'}`,
+          backgroundColor: 'var(--c-surface)',
+          backgroundImage: `linear-gradient(${toneBg}, ${toneBg})`,
+          border: `1.5px solid ${toneColor}`,
           borderRadius: '14px',
           color: 'var(--text-primary)',
           fontSize: '14px',
@@ -39,7 +47,7 @@ export default function Toast({ toast, onDismiss }) {
           pointerEvents: 'auto',
         }}
       >
-        <span style={{ color: isError ? 'var(--accent-red)' : 'var(--c-good)', flexShrink: 0 }}>
+        <span style={{ color: toneColor, flexShrink: 0 }}>
           {isError ? '⚠' : '✓'}
         </span>
         {toast.message}
