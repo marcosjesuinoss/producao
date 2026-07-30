@@ -95,9 +95,9 @@ export default function SettingsPage() {
     else window.location.reload()
   }
 
-  // Sem borda: o estado selecionado usa um "anel" via box-shadow (0 0 0 Npx)
-  // em vez de borda de verdade — mesmo efeito visual sem voltar a usar
-  // border, e o não-selecionado usa --btn-bg/--shadow-btn (igual .btn).
+  // Sem borda: o estado selecionado usa preenchimento tingido + texto na
+  // cor da marca — mesmo esquema do .btn-danger ("Limpar tudo"), só que em
+  // indigo. O não-selecionado usa --btn-bg/--shadow-btn (igual .btn).
   const themeBtnStyle = (active) => ({
     flex: 1,
     display: 'inline-flex',
@@ -108,9 +108,9 @@ export default function SettingsPage() {
     fontSize: '0.875em',
     fontWeight: 500,
     borderRadius: '12px',
-    background: active ? 'rgba(99,102,241,0.1)' : 'var(--btn-bg)',
+    background: active ? 'rgba(99,102,241,0.18)' : 'var(--btn-bg)',
     color: active ? '#818cf8' : 'var(--text-secondary)',
-    boxShadow: active ? '0 0 0 1.5px #818cf8, 0 2px 6px rgba(99,102,241,0.25)' : 'var(--shadow-btn)',
+    boxShadow: active ? 'none' : 'var(--shadow-btn)',
     cursor: 'pointer',
     transition: 'all 0.15s',
   })
