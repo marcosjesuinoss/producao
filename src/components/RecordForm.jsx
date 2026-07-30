@@ -204,7 +204,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
             onClick={goToAgenciaSettings}
             aria-label="Configurar agência padrão"
             className="shrink-0 px-2.5 rounded-lg"
-            style={{ background: 'var(--bg-card-deep)', border: '1px solid var(--input-border)', color: 'var(--text-muted)' }}
+            style={{ background: 'var(--btn-bg)', boxShadow: 'var(--shadow-btn)', color: 'var(--text-muted)' }}
           >
             <Settings size={16} />
           </button>

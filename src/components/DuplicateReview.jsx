@@ -5,8 +5,8 @@ import { dateBR, brl, num } from '../lib/format.js'
 
 const toggleBtnStyle = (active) => ({
   flex: 1,
-  border: active ? '1px solid #818cf8' : '1px solid var(--input-border)',
-  background: active ? 'rgba(99,102,241,0.1)' : 'var(--bg-card-deep)',
+  background: active ? 'rgba(99,102,241,0.1)' : 'var(--btn-bg)',
+  boxShadow: active ? 'none' : 'var(--shadow-btn)',
   color: active ? '#818cf8' : 'var(--text-secondary)',
 })
 

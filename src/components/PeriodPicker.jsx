@@ -6,8 +6,8 @@ import { todayISO } from '../lib/format.js'
 const optionCardStyle = (active) => ({
   padding: '12px',
   borderRadius: '10px',
-  border: `1.5px solid ${active ? '#818cf8' : '#2d3748'}`,
-  background: active ? 'rgba(99,102,241,0.12)' : 'var(--bg-card-deep)',
+  background: active ? 'rgba(99,102,241,0.12)' : 'var(--btn-bg)',
+  boxShadow: active ? 'none' : 'var(--shadow-btn)',
   cursor: 'pointer',
   transition: 'all 0.15s',
   textAlign: 'center',
@@ -15,8 +15,8 @@ const optionCardStyle = (active) => ({
 
 const toggleBtnStyle = (active) => ({
   flex: 1,
-  border: active ? '1px solid #818cf8' : '1px solid var(--input-border)',
-  background: active ? 'rgba(99,102,241,0.1)' : 'var(--bg-card-deep)',
+  background: active ? 'rgba(99,102,241,0.1)' : 'var(--btn-bg)',
+  boxShadow: active ? 'none' : 'var(--shadow-btn)',
   color: active ? '#818cf8' : 'var(--text-secondary)',
 })
 

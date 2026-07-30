@@ -38,8 +38,8 @@ const modeCardStyle = (active) => ({
   flex: 1,
   padding: '12px',
   borderRadius: '10px',
-  border: `1.5px solid ${active ? '#818cf8' : '#2d3748'}`,
-  background: active ? 'rgba(99,102,241,0.12)' : 'var(--bg-card-deep)',
+  background: active ? 'rgba(99,102,241,0.12)' : 'var(--btn-bg)',
+  boxShadow: active ? 'none' : 'var(--shadow-btn)',
   cursor: 'pointer',
   transition: 'all 0.15s',
 })
