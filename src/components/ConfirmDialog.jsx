@@ -116,7 +116,7 @@ export default function ConfirmDialog({
               opacity: ready ? 1 : 0.35,
               cursor: ready ? 'pointer' : 'not-allowed',
               ...(isWarning
-                ? { background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', color: 'var(--accent-yellow)' }
+                ? { background: 'rgba(234,179,8,0.1)', color: 'var(--accent-yellow)' }
                 : {}),
             }}
           >
