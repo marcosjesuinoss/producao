@@ -19,6 +19,7 @@ export default function BottomNav() {
         zIndex: 20,
         background: 'var(--c-surface)',
         borderTop: '1px solid var(--c-border)',
+        boxShadow: 'var(--shadow-nav)',
         paddingBottom: 'env(safe-area-inset-bottom)',
         display: 'flex',
       }}
