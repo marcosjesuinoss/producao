@@ -142,12 +142,16 @@ body {
 }
 
 /* ─── BUTTONS ─────────────────────────────────────── */
+/* Escala de raio do app (do menor pro maior): 10px chips/cartoes de opcao
+   -> 12px botoes/inputs -> 14px cards -> 20px dialogos pequenos -> 24px
+   modais grandes. .btn-brand era o unico botao em 12px (os outros dois
+   ficavam em 8px) — trazido pro mesmo valor. */
 .btn {
   @apply inline-flex items-center justify-center gap-2 text-sm font-medium transition;
   padding: 0.5rem 0.75rem;
   background: var(--bg-card-deep);
   border: 1px solid var(--input-border);
-  border-radius: 8px;
+  border-radius: 12px;
   color: var(--text-secondary);
 }
 .btn:hover { opacity: 0.85; }
@@ -165,7 +169,7 @@ body {
 .btn-danger {
   background: rgba(239,68,68,0.1);
   border: 1px solid rgba(239,68,68,0.3);
-  border-radius: 8px;
+  border-radius: 12px;
   color: var(--accent-red);
 }
 
@@ -223,7 +227,7 @@ body {
   padding: 0.5rem 0.75rem;
   background: var(--bg-card-deep);
   border: 1px solid var(--input-border);
-  border-radius: 8px;
+  border-radius: 12px;
   color: var(--text-secondary);
   font-size: 13px;
 }
