@@ -33,6 +33,7 @@
   --accent-yellow:  #ca8a04;
   --accent-red:     #dc2626;
   --accent-cyan:    #0891b2;
+  --shadow-card:    0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04);
 }
 
 /* ─── TOKENS — meia noite (era "dark") ───────────── */
@@ -65,6 +66,7 @@
   --accent-yellow:  #eab308;
   --accent-red:     #ef4444;
   --accent-cyan:    #06b6d4;
+  --shadow-card:    0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
 }
 
 /* ─── TOKENS — escuro (novo, preto/tons bem escuros) ── */
@@ -97,6 +99,11 @@
   --accent-yellow:  #eab308;
   --accent-red:     #ef4444;
   --accent-cyan:    #06b6d4;
+  /* Sombra sozinha nao aparece sobre preto puro (#000) — qualquer preto
+     com alpha, composto sobre preto, continua preto. Em vez disso, um
+     realce bem sutil na borda superior (luz "batendo" de cima), truque
+     comum pra dar volume a cards em temas realmente pretos. */
+  --shadow-card:    inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.5);
 }
 
 html {
@@ -131,6 +138,7 @@ body {
   border-radius: 14px;
   background: var(--c-surface);
   border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-card);
 }
 
 /* ─── BUTTONS ─────────────────────────────────────── */
