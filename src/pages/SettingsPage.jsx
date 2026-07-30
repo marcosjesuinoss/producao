@@ -95,6 +95,9 @@ export default function SettingsPage() {
     else window.location.reload()
   }
 
+  // Sem borda: o estado selecionado usa um "anel" via box-shadow (0 0 0 Npx)
+  // em vez de borda de verdade — mesmo efeito visual sem voltar a usar
+  // border, e o não-selecionado usa --btn-bg/--shadow-btn (igual .btn).
   const themeBtnStyle = (active) => ({
     flex: 1,
     display: 'inline-flex',
@@ -105,9 +108,9 @@ export default function SettingsPage() {
     fontSize: '0.875em',
     fontWeight: 500,
     borderRadius: '12px',
-    border: active ? '1px solid #818cf8' : '1px solid var(--input-border)',
-    background: active ? 'rgba(99,102,241,0.1)' : 'var(--bg-card-deep)',
+    background: active ? 'rgba(99,102,241,0.1)' : 'var(--btn-bg)',
     color: active ? '#818cf8' : 'var(--text-secondary)',
+    boxShadow: active ? '0 0 0 1.5px #818cf8, 0 2px 6px rgba(99,102,241,0.25)' : 'var(--shadow-btn)',
     cursor: 'pointer',
     transition: 'all 0.15s',
   })
@@ -232,8 +235,8 @@ export default function SettingsPage() {
               fontSize: '0.875em',
               fontWeight: 500,
               borderRadius: '12px',
-              border: '1px solid var(--input-border)',
-              background: 'var(--bg-card-deep)',
+              background: 'var(--btn-bg)',
+              boxShadow: 'var(--shadow-btn)',
               color: 'var(--text-secondary)',
               cursor: 'pointer',
             }}
@@ -253,8 +256,8 @@ export default function SettingsPage() {
               fontSize: '0.875em',
               fontWeight: 500,
               borderRadius: '12px',
-              border: '1px solid var(--input-border)',
-              background: 'var(--bg-card-deep)',
+              background: 'var(--btn-bg)',
+              boxShadow: 'var(--shadow-btn)',
               color: 'var(--text-secondary)',
               cursor: 'pointer',
             }}
