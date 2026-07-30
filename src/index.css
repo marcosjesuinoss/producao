@@ -211,10 +211,10 @@ body {
 .switch-track {
   position: absolute;
   inset: 0;
-  background: var(--bg-card-deep);
-  border: 1px solid var(--input-border);
+  background: var(--btn-bg);
   border-radius: 999px;
-  transition: background 0.15s, border-color 0.15s;
+  box-shadow: var(--shadow-btn);
+  transition: background 0.15s, box-shadow 0.15s;
 }
 .switch-track::after {
   content: '';
@@ -225,15 +225,19 @@ body {
   height: 18px;
   border-radius: 50%;
   background: var(--text-faint);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.25);
   transition: transform 0.15s, background 0.15s;
 }
+/* Ligado: mesmo esquema de destaque do botão de tema selecionado —
+   preenchimento tingido forte + brilho colorido, sem borda. */
 .switch input:checked + .switch-track {
-  background: var(--c-brand-soft);
-  border-color: var(--c-brand);
+  background: rgba(99,102,241,0.28);
+  box-shadow: 0 2px 8px rgba(99,102,241,0.35);
 }
 .switch input:checked + .switch-track::after {
   transform: translateX(18px);
   background: var(--c-brand);
+  box-shadow: 0 1px 3px rgba(99,102,241,0.5);
 }
 .switch input:focus-visible + .switch-track {
   outline: 2px solid var(--c-brand);
