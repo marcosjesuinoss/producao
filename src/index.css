@@ -35,6 +35,10 @@
   --accent-cyan:    #0891b2;
   --shadow-card:    0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04);
   --shadow-nav:     0 -2px 8px rgba(15,23,42,0.06);
+  /* --bg-card-deep (usado nos inputs/chips) fica quase igual a --c-surface
+     aqui — sem borda, o .btn ficava "sem preenchimento" visualmente. */
+  --btn-bg:         #eef1f6;
+  --shadow-btn:     0 1px 2px rgba(15,23,42,0.08);
 }
 
 /* ─── TOKENS — meia noite (era "dark") ───────────── */
@@ -69,6 +73,10 @@
   --accent-cyan:    #06b6d4;
   --shadow-card:    0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
   --shadow-nav:     0 -2px 8px rgba(0,0,0,0.25);
+  /* --bg-card-deep (#111827) ja contrasta bem com --c-surface (#1e293b),
+     mantem o mesmo valor aqui. */
+  --btn-bg:         #111827;
+  --shadow-btn:     0 1px 2px rgba(0,0,0,0.25);
 }
 
 /* ─── TOKENS — escuro (novo, preto/tons bem escuros) ── */
@@ -109,6 +117,11 @@
   /* Mesmo truque do --shadow-card (realce em vez de sombra) — aqui na
      borda de CIMA do menu, já que ele fica colado embaixo da tela. */
   --shadow-nav:     inset 0 1px 0 rgba(255,255,255,0.06);
+  /* --bg-card-deep (#0a0a0a) e mais escuro que --c-surface (#121212) —
+     um tom mais claro aqui faz o botao parecer "aceso" por cima do card,
+     em vez de um buraco mais escuro. */
+  --btn-bg:         #1c1c1c;
+  --shadow-btn:     inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
 html {
@@ -153,8 +166,9 @@ body {
 .btn {
   @apply inline-flex items-center justify-center gap-2 text-sm font-medium transition;
   padding: 0.5rem 0.75rem;
-  background: var(--bg-card-deep);
+  background: var(--btn-bg);
   border-radius: 12px;
+  box-shadow: var(--shadow-btn);
   color: var(--text-secondary);
 }
 .btn:hover { opacity: 0.85; }
