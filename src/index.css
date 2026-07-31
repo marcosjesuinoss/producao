@@ -36,8 +36,13 @@
   --shadow-card:    0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04);
   --shadow-nav:     0 -2px 8px rgba(15,23,42,0.06);
   /* --bg-card-deep (usado nos inputs/chips) fica quase igual a --c-surface
-     aqui — sem borda, o .btn ficava "sem preenchimento" visualmente. */
-  --btn-bg:         #eef1f6;
+     aqui — sem borda, o .btn ficava "sem preenchimento" visualmente. Precisa
+     contrastar tanto com --c-surface (botao dentro de card) quanto com
+     --bg-base (botao direto na pagina, ex.: "Enviar produção"/"Baixar" em
+     Registros) — o #eef1f6 anterior ficava camuflado contra --bg-base
+     (#f1f5f9, quase identico). #e2e8f0 (mesmo tom de --c-border/--bg-bar)
+     contrasta com os dois. */
+  --btn-bg:         #e2e8f0;
   --shadow-btn:     0 1px 2px rgba(15,23,42,0.08);
 }
 
@@ -73,9 +78,12 @@
   --accent-cyan:    #06b6d4;
   --shadow-card:    0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
   --shadow-nav:     0 -2px 8px rgba(0,0,0,0.25);
-  /* --bg-card-deep (#111827) ja contrasta bem com --c-surface (#1e293b),
-     mantem o mesmo valor aqui. */
-  --btn-bg:         #111827;
+  /* #111827 contrastava bem com --c-surface (#1e293b), mas ficava quase
+     identico a --bg-base (#0f172a) — camuflado nos botões que ficam direto
+     na página, sem card por baixo (ex.: "Enviar produção"/"Baixar" em
+     Registros). #334155 (mesmo tom de --bg-bar/--c-border) é mais claro
+     que os dois fundos, ficando visível em qualquer um. */
+  --btn-bg:         #334155;
   --shadow-btn:     0 1px 2px rgba(0,0,0,0.25);
 }
 
