@@ -250,12 +250,20 @@ body {
 }
 
 /* ─── INPUTS ──────────────────────────────────────── */
+/* --bg-card-deep + --input-border ficavam camuflados contra --c-surface
+   (dentro de cards, ex.: campo "Minha agência") e contra --bg-base (ex.:
+   seletor de período do Acumulado, que fica direto na página) — mesmo
+   problema ja corrigido nos botões. Reusa --btn-bg/--shadow-btn (ja
+   calibrados pra contrastar com os dois fundos, nos 3 temas). Border
+   continua definida (so transparente) pra nao quebrar o contorno vermelho
+   de erro de validação (RecordForm.jsx usa !border-[color:var(--c-bad)]). */
 .input {
   @apply w-full outline-none;
   padding: 0.5rem 0.75rem;
-  background: var(--bg-card-deep);
-  border: 1px solid var(--input-border);
+  background: var(--btn-bg);
+  border: 1px solid transparent;
   border-radius: 12px;
+  box-shadow: var(--shadow-btn);
   color: var(--text-secondary);
   font-size: 13px;
 }
