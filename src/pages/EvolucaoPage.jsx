@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Star, Target } from 'lucide-react'
+import { ChevronDown, Star, Target } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
 import { evolucaoBreakdown } from '../lib/evolucao.js'
@@ -143,10 +143,50 @@ function PickerRow({ item, isFavorite, onToggleFavorite, onSelect, active }) {
   )
 }
 
+// Campo de selecao personalizado: fechado mostra o item escolhido (ou um
+// placeholder), clicar abre a lista completa (grupos/subgrupos/produtos)
+// com estrela em cada linha pra favoritar sem precisar selecionar.
+function ChartPicker({ items, isFavorite, onToggleFavorite, selectedKey, onSelect }) {
+  const [open, setOpen] = useState(false)
+  const selectedItem = items.find((i) => itemKey(i) === selectedKey)
+
+  return (
+    <div>
+      <button
+        type="button"
+        className="input w-full flex items-center justify-between gap-2"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="truncate" style={{ color: selectedItem ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+          {selectedItem ? selectedItem.label : 'Ver outro produto'}
+        </span>
+        <ChevronDown size={16} style={{
+          transition: 'transform 0.2s',
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          color: 'var(--text-faint)', flexShrink: 0,
+        }} />
+      </button>
+
+      {open && (
+        <div className="card space-y-0.5" style={{ marginTop: '8px' }}>
+          {items.map((item) => (
+            <PickerRow
+              key={itemKey(item)} item={item}
+              isFavorite={isFavorite(itemKey(item))}
+              onToggleFavorite={() => onToggleFavorite(itemKey(item))}
+              onSelect={() => { onSelect(itemKey(item)); setOpen(false) }}
+              active={selectedKey === itemKey(item)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function EvolucaoPage() {
   const { year, month } = useMonth()
   const { favorites, isFavorite, toggleFavorite } = useEvolucaoFavorites()
-  const [showPicker, setShowPicker] = useState(false)
   const [exploringKey, setExploringKey] = useState(null)
 
   const breakdown = useLiveQuery(() => evolucaoBreakdown({ year, month }), [year, month], null)
@@ -212,34 +252,20 @@ export default function EvolucaoPage() {
             />
           ))}
 
-          {favoriteItems.length > 0 && (
-            <button className="btn w-full" onClick={() => setShowPicker((s) => !s)}>
-              {showPicker ? 'Fechar' : 'Ver outro produto'}
-            </button>
-          )}
+          <ChartPicker
+            items={chartableItems}
+            isFavorite={isFavorite}
+            onToggleFavorite={toggleFavorite}
+            selectedKey={exploringKey}
+            onSelect={setExploringKey}
+          />
 
-          {(showPicker || favoriteItems.length === 0) && (
-            <>
-              <div className="card space-y-0.5">
-                {chartableItems.map((item) => (
-                  <PickerRow
-                    key={itemKey(item)} item={item}
-                    isFavorite={isFavorite(itemKey(item))}
-                    onToggleFavorite={() => toggleFavorite(itemKey(item))}
-                    onSelect={() => setExploringKey(itemKey(item))}
-                    active={exploringKey === itemKey(item)}
-                  />
-                ))}
-              </div>
-
-              {exploringItem && (
-                <ChartCard
-                  item={exploringItem} refDay={breakdown.refDay}
-                  isFavorite={isFavorite(itemKey(exploringItem))}
-                  onToggleFavorite={() => toggleFavorite(itemKey(exploringItem))}
-                />
-              )}
-            </>
+          {exploringItem && !isFavorite(itemKey(exploringItem)) && (
+            <ChartCard
+              item={exploringItem} refDay={breakdown.refDay}
+              isFavorite={false}
+              onToggleFavorite={() => toggleFavorite(itemKey(exploringItem))}
+            />
           )}
         </>
       )}
