@@ -113,6 +113,22 @@ function OrderControls({ onMoveUp, onMoveDown, isFirst, isLast }) {
 }
 
 function ChartCard({ item, refDay, isFavorite, onToggleFavorite, reordering, onMove, isFirst, isLast }) {
+  // Durante a reordenacao, fecha o grafico e mostra so o nome + setas —
+  // facilita organizar varios favoritos sem rolar por graficos inteiros.
+  if (reordering && onMove) {
+    return (
+      <div className="card">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{item.label}</span>
+          <OrderControls
+            isFirst={isFirst} isLast={isLast}
+            onMoveUp={() => onMove('up')} onMoveDown={() => onMove('down')}
+          />
+        </div>
+      </div>
+    )
+  }
+
   const fmt = item.useValue === false ? num : brl
   const refIndex = refDay - 1
   const refPoint = refIndex >= 0 ? item.series[refIndex] : null
@@ -124,21 +140,13 @@ function ChartCard({ item, refDay, isFavorite, onToggleFavorite, reordering, onM
     <div className="card space-y-3">
       <div className="flex items-center justify-between gap-2">
         <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{item.label}</span>
-        <div className="flex items-center gap-1 shrink-0">
-          {reordering && onMove && (
-            <OrderControls
-              isFirst={isFirst} isLast={isLast}
-              onMoveUp={() => onMove('up')} onMoveDown={() => onMove('down')}
-            />
-          )}
-          <button
-            onClick={onToggleFavorite}
-            aria-label={isFavorite ? 'Desfavoritar' : 'Favoritar'}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', flexShrink: 0, display: 'flex' }}
-          >
-            <Star size={18} strokeWidth={1.75} fill={isFavorite ? '#eab308' : 'none'} color={isFavorite ? '#eab308' : 'var(--text-faint)'} />
-          </button>
-        </div>
+        <button
+          onClick={onToggleFavorite}
+          aria-label={isFavorite ? 'Desfavoritar' : 'Favoritar'}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', flexShrink: 0, display: 'flex' }}
+        >
+          <Star size={18} strokeWidth={1.75} fill={isFavorite ? '#eab308' : 'none'} color={isFavorite ? '#eab308' : 'var(--text-faint)'} />
+        </button>
       </div>
 
       <EvolucaoChart series={item.series} useValue={item.useValue} referenceLine={target90} />
