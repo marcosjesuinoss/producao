@@ -22,5 +22,19 @@ export function useEvolucaoFavorites() {
     })
   }, [])
 
-  return { favorites, isFavorite, toggleFavorite }
+  // Reordena os favoritos entre si (a ordem de exibicao e a propria ordem
+  // do array, ja persistida) — mesmo padrao de swap do useDisplayOrder.
+  const moveFavorite = useCallback((key, dir) => {
+    setFavorites((prev) => {
+      const idx = prev.indexOf(key)
+      const swap = dir === 'up' ? idx - 1 : idx + 1
+      if (idx < 0 || swap < 0 || swap >= prev.length) return prev
+      const next = [...prev]
+      ;[next[idx], next[swap]] = [next[swap], next[idx]]
+      localStorage.setItem(KEY, JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  return { favorites, isFavorite, toggleFavorite, moveFavorite }
 }

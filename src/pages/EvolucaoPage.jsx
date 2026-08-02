@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown, Star, Target } from 'lucide-react'
+import { ChevronDown, ChevronUp, Star, Target } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
 import { evolucaoBreakdown } from '../lib/evolucao.js'
@@ -87,7 +87,32 @@ function buildChartableItems(allGrupos, breakdownProducts, totalDays) {
   return items
 }
 
-function ChartCard({ item, refDay, isFavorite, onToggleFavorite }) {
+function OrderControls({ onMoveUp, onMoveDown, isFirst, isLast }) {
+  return (
+    <div className="flex gap-0.5 shrink-0">
+      <button
+        className="btn px-1.5 py-1"
+        disabled={isFirst}
+        onClick={onMoveUp}
+        aria-label="Mover para cima"
+        style={{ opacity: isFirst ? 0.25 : 0.7 }}
+      >
+        <ChevronUp size={13} />
+      </button>
+      <button
+        className="btn px-1.5 py-1"
+        disabled={isLast}
+        onClick={onMoveDown}
+        aria-label="Mover para baixo"
+        style={{ opacity: isLast ? 0.25 : 0.7 }}
+      >
+        <ChevronDown size={13} />
+      </button>
+    </div>
+  )
+}
+
+function ChartCard({ item, refDay, isFavorite, onToggleFavorite, reordering, onMove, isFirst, isLast }) {
   const fmt = item.useValue === false ? num : brl
   const refIndex = refDay - 1
   const refPoint = refIndex >= 0 ? item.series[refIndex] : null
@@ -99,13 +124,21 @@ function ChartCard({ item, refDay, isFavorite, onToggleFavorite }) {
     <div className="card space-y-3">
       <div className="flex items-center justify-between gap-2">
         <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{item.label}</span>
-        <button
-          onClick={onToggleFavorite}
-          aria-label={isFavorite ? 'Desfavoritar' : 'Favoritar'}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', flexShrink: 0, display: 'flex' }}
-        >
-          <Star size={18} strokeWidth={1.75} fill={isFavorite ? '#eab308' : 'none'} color={isFavorite ? '#eab308' : 'var(--text-faint)'} />
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          {reordering && onMove && (
+            <OrderControls
+              isFirst={isFirst} isLast={isLast}
+              onMoveUp={() => onMove('up')} onMoveDown={() => onMove('down')}
+            />
+          )}
+          <button
+            onClick={onToggleFavorite}
+            aria-label={isFavorite ? 'Desfavoritar' : 'Favoritar'}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', flexShrink: 0, display: 'flex' }}
+          >
+            <Star size={18} strokeWidth={1.75} fill={isFavorite ? '#eab308' : 'none'} color={isFavorite ? '#eab308' : 'var(--text-faint)'} />
+          </button>
+        </div>
       </div>
 
       <EvolucaoChart series={item.series} useValue={item.useValue} referenceLine={target90} />
@@ -158,7 +191,7 @@ function ChartPicker({ items, isFavorite, onToggleFavorite, selectedKey, onSelec
         onClick={() => setOpen((o) => !o)}
       >
         <span className="truncate" style={{ color: selectedItem ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-          {selectedItem ? selectedItem.label : 'Ver outro produto'}
+          {selectedItem ? selectedItem.label : 'Selecionar produto'}
         </span>
         <ChevronDown size={16} style={{
           transition: 'transform 0.2s',
@@ -186,8 +219,9 @@ function ChartPicker({ items, isFavorite, onToggleFavorite, selectedKey, onSelec
 
 export default function EvolucaoPage() {
   const { year, month } = useMonth()
-  const { favorites, isFavorite, toggleFavorite } = useEvolucaoFavorites()
+  const { favorites, isFavorite, toggleFavorite, moveFavorite } = useEvolucaoFavorites()
   const [exploringKey, setExploringKey] = useState(null)
+  const [reordering, setReordering] = useState(false)
 
   const breakdown = useLiveQuery(() => evolucaoBreakdown({ year, month }), [year, month], null)
   const allGrupos = useLiveQuery(() => db.classes.toArray(), [], [])
@@ -245,12 +279,28 @@ export default function EvolucaoPage() {
         </div>
       ) : (
         <>
-          {favoriteItems.map((item) => (
+          {favoriteItems.map((item, idx) => (
             <ChartCard
               key={itemKey(item)} item={item} refDay={breakdown.refDay}
               isFavorite onToggleFavorite={() => toggleFavorite(itemKey(item))}
+              reordering={reordering} onMove={(dir) => moveFavorite(itemKey(item), dir)}
+              isFirst={idx === 0} isLast={idx === favoriteItems.length - 1}
             />
           ))}
+
+          {favoriteItems.length > 0 && (
+            <button
+              className="btn w-full text-sm"
+              style={reordering ? {
+                background: 'rgba(99,102,241,0.12)',
+                borderColor: 'rgba(99,102,241,0.4)',
+                color: '#818cf8',
+              } : {}}
+              onClick={() => setReordering((v) => !v)}
+            >
+              {reordering ? 'Salvar' : 'Reordenar'}
+            </button>
+          )}
 
           <ChartPicker
             items={chartableItems}
