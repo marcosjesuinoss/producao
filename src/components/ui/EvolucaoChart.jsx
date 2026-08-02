@@ -11,7 +11,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 // com o tema ativo (Claro/Anoitecer/Escuro) sem hardcodar cores aqui.
 const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
-export default function EvolucaoChart({ series, useValue, referenceLine }) {
+export default function EvolucaoChart({ series, useValue, referenceLine, target }) {
   const fmt = useValue ? brl : num
 
   const data = useMemo(() => {
@@ -80,6 +80,11 @@ export default function EvolucaoChart({ series, useValue, referenceLine }) {
         ticks: { color: cssVar('--text-faint') || '#9ca3af', maxTicksLimit: 8 },
       },
       y: {
+        min: 0,
+        // Topo do eixo = 100% da meta. suggestedMax so "sugere" — se algum
+        // ponto passar da meta (produziu mais de 100%), o Chart.js ignora a
+        // sugestao e reajusta o eixo pro valor real, maior.
+        suggestedMax: target > 0 ? target : undefined,
         grid: { color: cssVar('--c-border') || 'rgba(148,163,184,0.15)' },
         ticks: {
           color: cssVar('--text-faint') || '#9ca3af',
@@ -87,7 +92,7 @@ export default function EvolucaoChart({ series, useValue, referenceLine }) {
         },
       },
     },
-  }), [useValue, fmt])
+  }), [useValue, fmt, target])
 
   return (
     <div style={{ height: '220px' }}>

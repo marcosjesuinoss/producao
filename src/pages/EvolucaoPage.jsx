@@ -150,7 +150,7 @@ function ChartCard({ item, refDay, isFavorite, onToggleFavorite, reordering, onM
         </button>
       </div>
 
-      <EvolucaoChart series={item.series} useValue={item.useValue} referenceLine={target90} />
+      <EvolucaoChart series={item.series} useValue={item.useValue} referenceLine={target90} target={item.target} />
 
       <div className="flex items-center justify-between gap-2 pt-3 border-t" style={{ borderColor: 'var(--c-border)' }}>
         <div>
