@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { Home, BarChart2, FileText, Settings } from 'lucide-react'
+import { Home, BarChart2, Gauge, FileText, Settings } from 'lucide-react'
 
 const tabs = [
   { to: '/', label: 'Resumo',    icon: Home,      end: true },
   { to: '/acumulado', label: 'Acumulado', icon: BarChart2 },
+  { to: '/evolucao', label: 'Evolução', icon: Gauge },
   { to: '/registros', label: 'Registros', icon: FileText  },
   { to: '/ajustes',   label: 'Ajustes',   icon: Settings  },
 ]
