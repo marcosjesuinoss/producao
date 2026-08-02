@@ -279,8 +279,8 @@ export default function EvolucaoPage() {
                 className="input w-full"
                 value={selectedItem ? `${selectedItem.type}:${selectedItem.id}` : ''}
                 onChange={(e) => {
-                  const [type, idStr] = e.target.value.split(':')
-                  setSelected({ type, id: Number(idStr) })
+                  const [type, id] = e.target.value.split(':')
+                  setSelected({ type, id })
                 }}
                 aria-label="Produto ou grupo do gráfico"
               >
