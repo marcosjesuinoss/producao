@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { ChevronDown, ChevronUp, Star, Target } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
 import { evolucaoBreakdown } from '../lib/evolucao.js'
 import { useEvolucaoFavorites } from '../hooks/useEvolucaoFavorites.js'
+import { useReorderTransition } from '../hooks/useReorderTransition.js'
 import { getAllDescendants } from '../utils/grupoCalculations.js'
 import { brl, num, floorPct, FULL_MONTHS } from '../lib/format.js'
 import EvolucaoChart from '../components/ui/EvolucaoChart.jsx'
@@ -231,14 +231,7 @@ export default function EvolucaoPage() {
   const { favorites, isFavorite, toggleFavorite, moveFavorite } = useEvolucaoFavorites()
   const [exploringKey, setExploringKey] = useState(null)
   const [reordering, setReordering] = useState(false)
-  const [favoritesRef, setFavoritesAnimated] = useAutoAnimate()
-
-  // So anima durante a reordenacao — deixar sempre ligado faz o auto-animate
-  // tambem "sentir" o resize do card (grafico -> so nome) ao entrar/sair do
-  // modo, ou o picker abrindo/fechando, e brigar com essas transicoes.
-  useEffect(() => {
-    setFavoritesAnimated(reordering)
-  }, [reordering, setFavoritesAnimated])
+  const favoriteRefs = useRef(new Map())
 
   const breakdown = useLiveQuery(() => evolucaoBreakdown({ year, month }), [year, month], null)
   const allGrupos = useLiveQuery(() => db.classes.toArray(), [], [])
@@ -254,6 +247,7 @@ export default function EvolucaoPage() {
     () => favorites.map((k) => chartableItems.find((i) => itemKey(i) === k)).filter(Boolean),
     [favorites, chartableItems]
   )
+  useReorderTransition(favoriteRefs, favorites.join(','))
   const exploringItem = chartableItems.find((i) => itemKey(i) === exploringKey) ?? null
 
   const linearExpectedPct = breakdown && breakdown.totalBusinessDays > 0
@@ -296,15 +290,20 @@ export default function EvolucaoPage() {
         </div>
       ) : (
         <>
-          <div className="space-y-4" ref={favoritesRef}>
-            {favoriteItems.map((item, idx) => (
-              <ChartCard
-                key={itemKey(item)} item={item} refDay={breakdown.refDay}
-                isFavorite onToggleFavorite={() => toggleFavorite(itemKey(item))}
-                reordering={reordering} onMove={(dir) => moveFavorite(itemKey(item), dir)}
-                isFirst={idx === 0} isLast={idx === favoriteItems.length - 1}
-              />
-            ))}
+          <div className="space-y-4">
+            {favoriteItems.map((item, idx) => {
+              const key = itemKey(item)
+              return (
+                <div key={key} ref={(el) => { if (el) favoriteRefs.current.set(key, el); else favoriteRefs.current.delete(key) }}>
+                  <ChartCard
+                    item={item} refDay={breakdown.refDay}
+                    isFavorite onToggleFavorite={() => toggleFavorite(key)}
+                    reordering={reordering} onMove={(dir) => moveFavorite(key, dir)}
+                    isFirst={idx === 0} isLast={idx === favoriteItems.length - 1}
+                  />
+                </div>
+              )
+            })}
           </div>
 
           {favoriteItems.length > 0 && (

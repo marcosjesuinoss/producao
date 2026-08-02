@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { ChevronRight, ChevronUp, ChevronDown, Check } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
@@ -12,6 +11,7 @@ import { getProgressColor, getRemainingLabel } from '../utils/progressColor.js'
 import ProgressBar from '../components/ui/ProgressBar.jsx'
 import { computeGrupoProgress, deriveMemberships } from '../utils/grupoCalculations.js'
 import { useDisplayOrder } from '../hooks/useDisplayOrder.js'
+import { useReorderTransition } from '../hooks/useReorderTransition.js'
 import ViewRecordsButton from '../components/ViewRecordsButton.jsx'
 
 // ---------------------------------------------------------------------------
@@ -382,14 +382,7 @@ export default function HomePage() {
   const [showZero, setShowZero] = useState(false)
   const [reordering, setReordering] = useState(false)
   const { getSorted, move } = useDisplayOrder()
-  const [listRef, setListAnimated] = useAutoAnimate()
-
-  // So anima durante a reordenacao — deixar sempre ligado faz o auto-animate
-  // tambem "sentir" o resize de expandir/recolher um grupo (ResizeObserver no
-  // card) e brigar com a transicao propria do chevron, travando visualmente.
-  useEffect(() => {
-    setListAnimated(reordering)
-  }, [reordering, setListAnimated])
+  const itemRefs = useRef(new Map())
 
   const tick = useLiveQuery(
     async () => (await db.records.count()) + (await db.goals.count()),
@@ -504,6 +497,7 @@ export default function HomePage() {
   }, [rootGrupos, standaloneBreakdown, productsByName, getSorted])
 
   const sortedKeys = useMemo(() => sortedItems.map((i) => i.key), [sortedItems])
+  useReorderTransition(itemRefs, sortedKeys.join(','))
 
   const hasAnyProduction = sortedItems.length > 0
 
@@ -517,36 +511,35 @@ export default function HomePage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-2" ref={listRef}>
+        <div className="space-y-2">
           {sortedItems.map(({ key, kind, grp, b }, idx) => {
             const isFirst = idx === 0
             const isLast  = idx === sortedItems.length - 1
-            if (kind === 'grupo') {
-              return (
-                <GrupoNode
-                  key={grp.id}
-                  grupoId={grp.id}
-                  allGrupos={allGrupos ?? []}
-                  productDataMap={productDataMap}
-                  memberships={memberships}
-                  productById={productById}
-                  depth={0}
-                  reordering={reordering}
-                  onMove={(gId, dir) => move(`g:${gId}`, sortedKeys, dir)}
-                  isFirst={isFirst}
-                  isLast={isLast}
-                />
-              )
-            }
             return (
-              <ProductCard
-                key={b.product}
-                b={b}
-                reordering={reordering}
-                onMove={(dir) => move(key, sortedKeys, dir)}
-                isFirst={isFirst}
-                isLast={isLast}
-              />
+              <div key={key} ref={(el) => { if (el) itemRefs.current.set(key, el); else itemRefs.current.delete(key) }}>
+                {kind === 'grupo' ? (
+                  <GrupoNode
+                    grupoId={grp.id}
+                    allGrupos={allGrupos ?? []}
+                    productDataMap={productDataMap}
+                    memberships={memberships}
+                    productById={productById}
+                    depth={0}
+                    reordering={reordering}
+                    onMove={(gId, dir) => move(`g:${gId}`, sortedKeys, dir)}
+                    isFirst={isFirst}
+                    isLast={isLast}
+                  />
+                ) : (
+                  <ProductCard
+                    b={b}
+                    reordering={reordering}
+                    onMove={(dir) => move(key, sortedKeys, dir)}
+                    isFirst={isFirst}
+                    isLast={isLast}
+                  />
+                )}
+              </div>
             )
           })}
         </div>
