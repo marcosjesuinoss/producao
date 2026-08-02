@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { ChevronDown, ChevronUp, Star, Target } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
@@ -230,6 +231,7 @@ export default function EvolucaoPage() {
   const { favorites, isFavorite, toggleFavorite, moveFavorite } = useEvolucaoFavorites()
   const [exploringKey, setExploringKey] = useState(null)
   const [reordering, setReordering] = useState(false)
+  const [favoritesRef] = useAutoAnimate()
 
   const breakdown = useLiveQuery(() => evolucaoBreakdown({ year, month }), [year, month], null)
   const allGrupos = useLiveQuery(() => db.classes.toArray(), [], [])
@@ -287,14 +289,16 @@ export default function EvolucaoPage() {
         </div>
       ) : (
         <>
-          {favoriteItems.map((item, idx) => (
-            <ChartCard
-              key={itemKey(item)} item={item} refDay={breakdown.refDay}
-              isFavorite onToggleFavorite={() => toggleFavorite(itemKey(item))}
-              reordering={reordering} onMove={(dir) => moveFavorite(itemKey(item), dir)}
-              isFirst={idx === 0} isLast={idx === favoriteItems.length - 1}
-            />
-          ))}
+          <div className="space-y-4" ref={favoritesRef}>
+            {favoriteItems.map((item, idx) => (
+              <ChartCard
+                key={itemKey(item)} item={item} refDay={breakdown.refDay}
+                isFavorite onToggleFavorite={() => toggleFavorite(itemKey(item))}
+                reordering={reordering} onMove={(dir) => moveFavorite(itemKey(item), dir)}
+                isFirst={idx === 0} isLast={idx === favoriteItems.length - 1}
+              />
+            ))}
+          </div>
 
           {favoriteItems.length > 0 && (
             <button

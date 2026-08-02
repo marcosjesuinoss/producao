@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { ChevronRight, ChevronUp, ChevronDown, Check } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
@@ -381,6 +382,7 @@ export default function HomePage() {
   const [showZero, setShowZero] = useState(false)
   const [reordering, setReordering] = useState(false)
   const { getSorted, move } = useDisplayOrder()
+  const [listRef] = useAutoAnimate()
 
   const tick = useLiveQuery(
     async () => (await db.records.count()) + (await db.goals.count()),
@@ -508,7 +510,7 @@ export default function HomePage() {
           </div>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-2" ref={listRef}>
           {sortedItems.map(({ key, kind, grp, b }, idx) => {
             const isFirst = idx === 0
             const isLast  = idx === sortedItems.length - 1
