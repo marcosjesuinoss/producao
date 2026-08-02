@@ -11,43 +11,56 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 // com o tema ativo (Claro/Anoitecer/Escuro) sem hardcodar cores aqui.
 const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
-export default function EvolucaoChart({ series, useValue }) {
+export default function EvolucaoChart({ series, useValue, referenceLine }) {
   const fmt = useValue ? brl : num
 
   const data = useMemo(() => {
     const labels = series.map((p) => String(p.day))
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Ritmo necessário',
-          data: series.map((p) => p.cumulativeExpected),
-          borderColor: cssVar('--text-faint') || '#6b7280',
-          borderDash: [5, 4],
-          borderWidth: 2,
-          pointRadius: 0,
-          tension: 0.15,
+    const datasets = [
+      {
+        label: 'Ritmo necessário',
+        data: series.map((p) => p.cumulativeExpected),
+        borderColor: cssVar('--text-faint') || '#6b7280',
+        borderDash: [5, 4],
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.15,
+      },
+      {
+        label: 'Realizado',
+        data: series.map((p) => p.cumulativeActual),
+        borderColor: (ctx) => {
+          const { chart } = ctx
+          const { ctx: canvasCtx, chartArea } = chart
+          if (!chartArea) return '#818cf8'
+          const gradient = canvasCtx.createLinearGradient(chartArea.left, 0, chartArea.right, 0)
+          gradient.addColorStop(0, '#06b6d4')
+          gradient.addColorStop(1, '#818cf8')
+          return gradient
         },
-        {
-          label: 'Realizado',
-          data: series.map((p) => p.cumulativeActual),
-          borderColor: (ctx) => {
-            const { chart } = ctx
-            const { ctx: canvasCtx, chartArea } = chart
-            if (!chartArea) return '#818cf8'
-            const gradient = canvasCtx.createLinearGradient(chartArea.left, 0, chartArea.right, 0)
-            gradient.addColorStop(0, '#06b6d4')
-            gradient.addColorStop(1, '#818cf8')
-            return gradient
-          },
-          borderWidth: 3,
-          pointRadius: 0,
-          tension: 0.15,
-          spanGaps: false,
-        },
-      ],
+        borderWidth: 3,
+        pointRadius: 0,
+        tension: 0.15,
+        spanGaps: false,
+      },
+    ]
+
+    // Linha reta e fixa em 90% da meta total do mes — referencia visual de
+    // "quase la", independente do ritmo dia a dia.
+    if (referenceLine > 0) {
+      datasets.push({
+        label: 'Meta 90%',
+        data: series.map(() => referenceLine),
+        borderColor: '#eab308',
+        borderDash: [2, 3],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        tension: 0,
+      })
     }
-  }, [series])
+
+    return { labels, datasets }
+  }, [series, referenceLine])
 
   const options = useMemo(() => ({
     responsive: true,
