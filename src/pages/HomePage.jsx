@@ -382,7 +382,14 @@ export default function HomePage() {
   const [showZero, setShowZero] = useState(false)
   const [reordering, setReordering] = useState(false)
   const { getSorted, move } = useDisplayOrder()
-  const [listRef] = useAutoAnimate()
+  const [listRef, setListAnimated] = useAutoAnimate()
+
+  // So anima durante a reordenacao — deixar sempre ligado faz o auto-animate
+  // tambem "sentir" o resize de expandir/recolher um grupo (ResizeObserver no
+  // card) e brigar com a transicao propria do chevron, travando visualmente.
+  useEffect(() => {
+    setListAnimated(reordering)
+  }, [reordering, setListAnimated])
 
   const tick = useLiveQuery(
     async () => (await db.records.count()) + (await db.goals.count()),

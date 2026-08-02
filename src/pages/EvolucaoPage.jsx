@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { ChevronDown, ChevronUp, Star, Target } from 'lucide-react'
@@ -231,7 +231,14 @@ export default function EvolucaoPage() {
   const { favorites, isFavorite, toggleFavorite, moveFavorite } = useEvolucaoFavorites()
   const [exploringKey, setExploringKey] = useState(null)
   const [reordering, setReordering] = useState(false)
-  const [favoritesRef] = useAutoAnimate()
+  const [favoritesRef, setFavoritesAnimated] = useAutoAnimate()
+
+  // So anima durante a reordenacao — deixar sempre ligado faz o auto-animate
+  // tambem "sentir" o resize do card (grafico -> so nome) ao entrar/sair do
+  // modo, ou o picker abrindo/fechando, e brigar com essas transicoes.
+  useEffect(() => {
+    setFavoritesAnimated(reordering)
+  }, [reordering, setFavoritesAnimated])
 
   const breakdown = useLiveQuery(() => evolucaoBreakdown({ year, month }), [year, month], null)
   const allGrupos = useLiveQuery(() => db.classes.toArray(), [], [])
