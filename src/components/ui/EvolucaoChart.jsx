@@ -32,7 +32,6 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target 
         borderDash: [5, 4],
         borderWidth: 2,
         pointRadius: 0,
-        pointStyle: 'line',
         tension: 0.15,
       },
       {
@@ -49,7 +48,6 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target 
         },
         borderWidth: 3,
         pointRadius: 0,
-        pointStyle: 'line',
         tension: 0.15,
         spanGaps: false,
       },
@@ -65,7 +63,6 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target 
         borderDash: [2, 3],
         borderWidth: 1.5,
         pointRadius: 0,
-        pointStyle: 'line',
         tension: 0,
       })
     }
