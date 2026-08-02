@@ -14,6 +14,14 @@ const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyV
 export default function EvolucaoChart({ series, useValue, referenceLine, target }) {
   const fmt = useValue ? brl : num
 
+  // Cor solida por serie — usada no tracinho do tooltip (uma gradiente nao
+  // da pra representar num marcador tao pequeno).
+  const tooltipColor = (label) => {
+    if (label === 'Meta 90%') return '#eab308'
+    if (label === 'Realizado') return '#818cf8'
+    return cssVar('--text-faint') || '#6b7280'
+  }
+
   const data = useMemo(() => {
     const labels = series.map((p) => String(p.day))
     const datasets = [
@@ -24,6 +32,7 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target 
         borderDash: [5, 4],
         borderWidth: 2,
         pointRadius: 0,
+        pointStyle: 'line',
         tension: 0.15,
       },
       {
@@ -40,6 +49,7 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target 
         },
         borderWidth: 3,
         pointRadius: 0,
+        pointStyle: 'line',
         tension: 0.15,
         spanGaps: false,
       },
@@ -55,6 +65,7 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target 
         borderDash: [2, 3],
         borderWidth: 1.5,
         pointRadius: 0,
+        pointStyle: 'line',
         tension: 0,
       })
     }
@@ -68,9 +79,20 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target 
     interaction: { mode: 'index', intersect: false },
     plugins: {
       tooltip: {
+        usePointStyle: true,
+        // Ordena os itens do tooltip pelo valor naquele dia — a linha que
+        // esta visualmente mais alta no grafico aparece primeiro, invertendo
+        // conforme o dia (as vezes Realizado esta acima do ritmo, as vezes
+        // abaixo).
+        itemSort: (a, b) => (b.parsed.y ?? -Infinity) - (a.parsed.y ?? -Infinity),
         callbacks: {
           title: (items) => `Dia ${items[0].label}`,
           label: (item) => `${item.dataset.label}: ${item.raw == null ? '—' : fmt(item.raw)}`,
+          labelPointStyle: () => ({ pointStyle: 'line', rotation: 0 }),
+          labelColor: (item) => {
+            const color = tooltipColor(item.dataset.label)
+            return { borderColor: color, backgroundColor: color, borderWidth: 2 }
+          },
         },
       },
     },
