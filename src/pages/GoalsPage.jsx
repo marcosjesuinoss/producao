@@ -4,12 +4,10 @@ import { ArrowLeft, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
 import { upsertGoal, createProduct, updateProduct, deleteProduct, deleteGoal } from '../api/localApi.js'
-import { num, brl, BR_NUM_RE, floorPct } from '../lib/format.js'
+import { BR_NUM_RE } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
 import { useToast } from '../hooks/useToast.js'
 import { useMonth } from '../context/MonthContext.jsx'
-import { getProgressColor } from '../utils/progressColor.js'
-import ProgressBar from '../components/ui/ProgressBar.jsx'
 import ProductModal from '../components/ProductModal.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import Toast from '../components/Toast.jsx'
@@ -73,21 +71,6 @@ export default function GoalsPage() {
     () => db.goals.filter((g) => g.year === Number(year) && g.month === Number(month)).toArray(),
     [year, month], []
   )
-  const done = useLiveQuery(
-    () => db.records.where({ year: Number(year), month: Number(month) }).toArray(),
-    [year, month], []
-  )
-
-  const realizedByProduct = useMemo(() => {
-    const map = {}
-    for (const r of done) {
-      map[r.product] = map[r.product] || { quantity: 0, value: 0 }
-      map[r.product].quantity += r.quantity || 0
-      map[r.product].value += r.value || 0
-    }
-    return map
-  }, [done])
-
   const goalFor = (product) => goals.find((g) => g.product === product)
 
   const save = async (product, targetQuantity, targetValue) => {
@@ -146,10 +129,6 @@ export default function GoalsPage() {
         {allProducts.map((product, idx) => {
           const g = goalFor(product)
           const isVal = isValue(product)
-          const rec = realizedByProduct[product] || { quantity: 0, value: 0 }
-          const realized = isVal ? rec.value : rec.quantity
-          const target = isVal ? (g?.targetValue || 0) : (g?.targetQuantity || 0)
-          const pct = target > 0 ? floorPct((realized / target) * 100) : realized > 0 ? 100 : null
           const productId = productById.get(product) ?? null
           return (
             <GoalCard
@@ -157,8 +136,6 @@ export default function GoalsPage() {
               product={product}
               goal={g}
               isValueProduct={isVal}
-              realized={realized}
-              pct={pct}
               productId={productId}
               month={month}
               year={year}
@@ -176,7 +153,7 @@ export default function GoalsPage() {
   )
 }
 
-function GoalCard({ product, goal, isValueProduct, realized, pct, productId, month, year, onSave, showToast, onDeleteGoal, onDeleteProduct, groupNames = [] }) {
+function GoalCard({ product, goal, isValueProduct, productId, month, year, onSave, showToast, onDeleteGoal, onDeleteProduct, groupNames = [] }) {
   const [inputVal, setInputVal] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -192,12 +169,6 @@ function GoalCard({ product, goal, isValueProduct, realized, pct, productId, mon
       setInputVal(Number(raw).toLocaleString('pt-BR', { maximumFractionDigits: 2 }))
     }
   }, [goal?.id, goal?.targetValue, goal?.targetQuantity, isValueProduct])
-
-  const rawPctGoal = (() => {
-    const t = isValueProduct ? (goal?.targetValue ?? 0) : (goal?.targetQuantity ?? 0)
-    return t > 0 ? (realized / t) * 100 : realized > 0 ? 100 : 0
-  })()
-  const color = pct != null ? getProgressColor(rawPctGoal) : 'var(--text-faint)'
 
   const handleSave = async () => {
     const n = parseBRNum(inputVal)
