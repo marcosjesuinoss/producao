@@ -11,6 +11,30 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 // com o tema ativo (Claro/Anoitecer/Escuro) sem hardcodar cores aqui.
 const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
+// Chart.js nao tem opcao nativa de "sumir sozinho" — o tooltip fica aberto
+// ate o usuario tocar em outro lugar. Esse plugin observa todo evento do
+// canvas e, enquanto o tooltip estiver visivel, reinicia um timer de 5s;
+// ao estourar, fecha o tooltip programaticamente.
+const autoHideTooltipPlugin = {
+  id: 'autoHideTooltip',
+  afterEvent(chart) {
+    clearTimeout(chart.$tooltipHideTimer)
+    // getActiveElements() reflete o estado logico na hora — ao contrario de
+    // "opacity" (que e animado e so chega em 1 depois de alguns frames),
+    // isso detecta o tooltip aberto no mesmo evento que o mostrou.
+    if (chart.tooltip?.getActiveElements().length > 0) {
+      chart.$tooltipHideTimer = setTimeout(() => {
+        chart.setActiveElements([])
+        chart.tooltip?.setActiveElements([], { x: 0, y: 0 })
+        chart.update()
+      }, 5000)
+    }
+  },
+  destroy(chart) {
+    clearTimeout(chart.$tooltipHideTimer)
+  },
+}
+
 export default function EvolucaoChart({ series, useValue, referenceLine, target }) {
   const fmt = useValue ? brl : num
 
@@ -115,7 +139,7 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target 
 
   return (
     <div style={{ height: '220px' }}>
-      <Line data={data} options={options} />
+      <Line data={data} options={options} plugins={[autoHideTooltipPlugin]} />
     </div>
   )
 }
