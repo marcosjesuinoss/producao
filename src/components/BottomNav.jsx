@@ -14,11 +14,17 @@ export default function BottomNav() {
     <nav
       aria-label="Navegação principal"
       style={{
-        // Ultimo item da coluna flex do shell (ver App.jsx) — fica no rodape
-        // por construcao, sem position:fixed.
-        flexShrink: 0,
+        // position:fixed de proposito, pro conteudo de <main> rolar por
+        // tras do vidro fosco — <main> ganha padding-bottom equivalente
+        // (ver App.jsx) pra nada ficar escondido atras do menu parado.
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        bottom: 0,
         zIndex: 20,
-        background: 'var(--c-surface)',
+        background: 'var(--nav-bg-glass)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         borderTop: '1px solid var(--c-border)',
         boxShadow: 'var(--shadow-nav)',
         paddingBottom: 'env(safe-area-inset-bottom)',

@@ -35,6 +35,7 @@
   --accent-cyan:    #0891b2;
   --shadow-card:    0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04);
   --shadow-nav:     0 -2px 8px rgba(15,23,42,0.06);
+  --nav-bg-glass:   rgba(255,255,255,0.75);
   /* --bg-card-deep (usado nos inputs/chips) fica quase igual a --c-surface
      aqui — sem borda, o .btn ficava "sem preenchimento" visualmente. Precisa
      contrastar tanto com --c-surface (botao dentro de card) quanto com
@@ -82,6 +83,7 @@
   --accent-cyan:    #06b6d4;
   --shadow-card:    0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
   --shadow-nav:     0 -2px 8px rgba(0,0,0,0.25);
+  --nav-bg-glass:   rgba(30,41,59,0.75);
   /* #111827 contrastava bem com --c-surface (#1e293b), mas ficava quase
      identico a --bg-base (#0f172a) — camuflado nos botões que ficam direto
      na página, sem card por baixo (ex.: "Enviar produção"/"Baixar" em
@@ -130,6 +132,7 @@
   /* Mesmo truque do --shadow-card (realce em vez de sombra) — aqui na
      borda de CIMA do menu, já que ele fica colado embaixo da tela. */
   --shadow-nav:     inset 0 1px 0 rgba(255,255,255,0.06);
+  --nav-bg-glass:   rgba(18,18,18,0.75);
   /* --bg-card-deep (#0a0a0a) e mais escuro que --c-surface (#121212) —
      um tom mais claro aqui faz o botao parecer "aceso" por cima do card,
      em vez de um buraco mais escuro. */
