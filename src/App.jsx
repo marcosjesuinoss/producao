@@ -53,15 +53,12 @@ export default function App() {
     <MonthProvider>
     <RecordModalProvider>
       {/*
-        App shell: coluna flex de altura fixa (100dvh). Header fica fora da
-        area de rolagem — so <main> rola. BottomNav e position:fixed (efeito
-        de vidro fosco — precisa do conteudo rolando por tras dele), entao
-        fica fora do fluxo da coluna; <main> ganha padding-bottom equivalente
-        a altura do menu pra nada ficar escondido atras dele no fim da lista.
-        Nenhum ancestral do menu (esta div, body) recebe transform/filter em
-        lugar nenhum do app, entao o position:fixed nao corre o risco do bug
-        que motivou tirar isso daqui antes (ancestral virando novo containing
-        block "solta" o fixed do rodape de verdade).
+        App shell: coluna flex de altura fixa (100dvh). Header e BottomNav
+        ficam fora da area de rolagem — so <main> rola. O menu inferior deixa
+        de depender de position:fixed (que "solta" do rodape se algum
+        ancestral ganhar um novo containing block, ex.: transform/filter) e
+        passa a ser so o ultimo item da coluna, sempre no rodape por
+        construcao, tanto faz o que acontece no meio.
       */}
       <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         <ScrollToTop containerRef={mainRef} />
@@ -69,10 +66,7 @@ export default function App() {
         <main
           ref={mainRef}
           className="max-w-5xl mx-auto p-4 w-full"
-          style={{
-            flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch',
-            paddingBottom: 'calc(64px + env(safe-area-inset-bottom))',
-          }}
+          style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
         >
           <Routes>
             <Route path="/" element={<HomePage />} />
