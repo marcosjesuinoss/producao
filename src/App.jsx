@@ -30,10 +30,21 @@ export default function App() {
   const { hasPin, unlocked } = useAuth()
   const [online, setOnline] = useState(navigator.onLine)
   const mainRef = useRef(null)
+  const [headerHeight, setHeaderHeight] = useState(0)
 
   useEffect(() => {
     seedStandardProducts().then(seedGrupos)
     navigator.storage?.persist?.()
+  }, [])
+
+  // Header e position:fixed (efeito de vidro) — mede a altura real dele pra
+  // dar esse mesmo espaco de padding-top em <main>, em vez de um numero fixo
+  // fragil (o header tem 2 linhas e pode variar um pouco por conteudo/tela).
+  useEffect(() => {
+    const measure = () => setHeaderHeight(document.getElementById('app-header')?.offsetHeight ?? 0)
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
   }, [])
 
   useEffect(() => {
@@ -53,15 +64,15 @@ export default function App() {
     <MonthProvider>
     <RecordModalProvider>
       {/*
-        App shell: coluna flex de altura fixa (100dvh). Header fica fora da
-        area de rolagem — so <main> rola. BottomNav e position:fixed (efeito
-        de vidro fosco — precisa do conteudo rolando por tras dele), entao
-        fica fora do fluxo da coluna; <main> ganha padding-bottom equivalente
-        a altura do menu pra nada ficar escondido atras dele no fim da lista.
-        Nenhum ancestral do menu (esta div, body) recebe transform/filter em
+        App shell: coluna flex de altura fixa (100dvh). Header e BottomNav
+        sao ambos position:fixed (efeito de vidro fosco — precisa do
+        conteudo de <main> rolando por tras dos dois), entao ficam fora do
+        fluxo da coluna; <main> ganha padding-top/padding-bottom equivalente
+        a altura de cada um pra nada ficar escondido atras deles.
+        Nenhum ancestral dos dois (esta div, body) recebe transform/filter em
         lugar nenhum do app, entao o position:fixed nao corre o risco do bug
-        que motivou tirar isso daqui antes (ancestral virando novo containing
-        block "solta" o fixed do rodape de verdade).
+        que motivou tirar isso do BottomNav antes (ancestral virando novo
+        containing block "solta" o fixed do lugar de verdade).
       */}
       <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         <ScrollToTop containerRef={mainRef} />
@@ -71,6 +82,7 @@ export default function App() {
           className="max-w-5xl mx-auto p-4 w-full"
           style={{
             flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch',
+            paddingTop: headerHeight ? `${headerHeight + 16}px` : undefined,
             paddingBottom: 'calc(64px + env(safe-area-inset-bottom))',
           }}
         >

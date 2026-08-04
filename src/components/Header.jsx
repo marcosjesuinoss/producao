@@ -25,7 +25,20 @@ export default function Header({ online }) {
   const { year, month, prev, next } = useMonth()
 
   return (
-    <header className="surface border-b" style={{ background: 'var(--c-surface)' }}>
+    <header
+      id="app-header"
+      className="surface border-b"
+      style={{
+        // position:fixed de proposito — mesmo tratamento de vidro fosco do
+        // BottomNav (ver App.jsx/BottomNav.jsx), com <main> ganhando
+        // padding-top medido dinamicamente pra nada ficar escondido atras.
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 20,
+        background: 'var(--nav-bg-glass)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        paddingTop: 'env(safe-area-inset-top)',
+      }}
+    >
       {/* SVG gradient definition for icon */}
       <svg width="0" height="0" style={{ position: 'absolute', pointerEvents: 'none' }}>
         <defs>
