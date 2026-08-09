@@ -13,7 +13,7 @@ const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyV
 
 // Chart.js nao tem opcao nativa de "sumir sozinho" — o tooltip fica aberto
 // ate o usuario tocar em outro lugar. Esse plugin observa todo evento do
-// canvas e, enquanto o tooltip estiver visivel, reinicia um timer de 5s;
+// canvas e, enquanto o tooltip estiver visivel, reinicia um timer de 3s;
 // ao estourar, fecha o tooltip programaticamente.
 const autoHideTooltipPlugin = {
   id: 'autoHideTooltip',
@@ -27,7 +27,7 @@ const autoHideTooltipPlugin = {
         chart.setActiveElements([])
         chart.tooltip?.setActiveElements([], { x: 0, y: 0 })
         chart.update()
-      }, 5000)
+      }, 3000)
     }
   },
   destroy(chart) {

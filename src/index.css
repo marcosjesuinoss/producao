@@ -176,6 +176,20 @@ body {
   box-shadow: var(--shadow-card);
 }
 
+/* Titulo de bloco (ex.: tela de Ajustes) — maior, mais peso e cor primaria
+   (em vez de --text-secondary) pra se destacar mais do conteudo do bloco,
+   com uma linha fina separando do resto. */
+.block-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  text-align: center;
+  padding-bottom: 0.625rem;
+  margin-bottom: 0.125rem;
+  border-bottom: 1px solid var(--c-border);
+}
+
 /* ─── BUTTONS ─────────────────────────────────────── */
 /* Escala de raio do app (do menor pro maior): 10px chips/cartoes de opcao
    -> 12px botoes/inputs -> 14px cards -> 20px dialogos pequenos -> 24px

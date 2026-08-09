@@ -224,7 +224,7 @@ export default function SettingsPage() {
 
       {/* Aparência */}
       <div className="card space-y-3">
-        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Aparência</h3>
+        <h3 className="block-title">Aparência</h3>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button onClick={() => setTheme('light')} style={themeBtnStyle(theme === 'light')}>
             <Sun size={14} />
@@ -243,7 +243,7 @@ export default function SettingsPage() {
 
       {/* Metas */}
       <div className="card space-y-3">
-        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Metas</h3>
+        <h3 className="block-title">Metas</h3>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={() => navigate('/metas')}
@@ -292,7 +292,7 @@ export default function SettingsPage() {
 
       {/* Registro */}
       <div className="card space-y-3" id="registro">
-        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Registros</h3>
+        <h3 className="block-title">Registros</h3>
         <div className="flex items-center gap-2">
           <label className="switch">
             <input
@@ -376,7 +376,7 @@ export default function SettingsPage() {
 
       {/* Gráficos */}
       <div className="card space-y-3">
-        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Gráficos</h3>
+        <h3 className="block-title">Gráficos</h3>
         <div className="flex items-center gap-2">
           <label className="switch">
             <input
@@ -437,13 +437,13 @@ export default function SettingsPage() {
 
       {/* Notificações */}
       <div className="card space-y-3">
-        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Notificações</h3>
+        <h3 className="block-title">Notificações</h3>
         <p className="text-sm" style={{ color: 'var(--text-faint)' }}>Em breve</p>
       </div>
 
       {/* Aplicativo */}
       <div className="card space-y-3">
-        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Aplicativo</h3>
+        <h3 className="block-title">Aplicativo</h3>
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Versão do app</p>
@@ -463,7 +463,7 @@ export default function SettingsPage() {
 
       {/* Segurança */}
       <div className="card space-y-3">
-        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>
+        <h3 className="block-title">
           Segurança (PIN local opcional)
         </h3>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
@@ -509,7 +509,7 @@ export default function SettingsPage() {
 
       {/* Dados */}
       <div className="card space-y-3">
-        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Dados</h3>
+        <h3 className="block-title">Dados</h3>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
           O backup salva registros, metas, produtos e grupos num arquivo local — guarde-o em local seguro (e-mail, nuvem) para não perder os dados caso o app seja desinstalado ou o navegador limpe o armazenamento.
         </p>
