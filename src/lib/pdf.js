@@ -3,6 +3,12 @@ import autoTable from 'jspdf-autotable'
 import { dateBR, brl, num, FULL_MONTHS } from './format.js'
 import { splitAccount } from './agencia.js'
 
+// jsPDF nao aceita var() do CSS — le a cor de destaque atual (definida
+// pelo AccentProvider em runtime) em tempo de exportacao.
+const getBrandHex = () => getComputedStyle(document.documentElement).getPropertyValue('--c-brand').trim()
+const getBrandRgbArray = () =>
+  getComputedStyle(document.documentElement).getPropertyValue('--c-brand-rgb').trim().split(',').map(Number)
+
 /*
   Exportacao PDF - mesmo conjunto de registros do CSV, mas formatado como
   relatorio (titulo, escopo, tabela e linha de totais) pra imprimir ou
@@ -40,7 +46,7 @@ export function exportPdf(records, scopeDescription, filename = 'producao.pdf') 
     }),
     foot: [[`${records.length} registro${records.length === 1 ? '' : 's'}`, '', '', '', num(totalQuantity), brl(totalValue), '']],
     styles: { fontSize: 9 },
-    headStyles: { fillColor: [79, 70, 229] },
+    headStyles: { fillColor: getBrandRgbArray() },
     footStyles: { fillColor: [240, 240, 240], textColor: [30, 30, 30], fontStyle: 'bold' },
   })
 
@@ -74,7 +80,6 @@ const COLOR = {
   eyebrow: '#94a3b8',
   title: '#0f172a',
   subtitle: '#64748b',
-  total: '#0891b2',
   totalLabel: '#94a3b8',
   colHeader: '#94a3b8',
   account: '#1e293b',
@@ -212,7 +217,7 @@ export function exportProductRecordsPdf({ product, records, isValue, total, star
       y += px(HERO.totalGap)
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(px(40))
-      doc.setTextColor(COLOR.total)
+      doc.setTextColor(getBrandHex())
       doc.text(totalStr, cardX + pad, y)
 
       y += px(HERO.labelGap)

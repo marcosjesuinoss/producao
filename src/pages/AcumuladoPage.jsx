@@ -96,7 +96,7 @@ function ProductLeaf({ name, realized, target, useValue, depth, year, startMonth
   const color  = pct != null ? getProgressColor(rawPct) : '#374151'
   const nodeStyle = depth === 1
     ? { borderLeft: `2px solid ${color}`, paddingLeft: '8px', marginLeft: '2px' }
-    : { borderLeft: '2px solid rgba(99,102,241,0.2)', paddingLeft: '12px', marginLeft: '8px' }
+    : { borderLeft: '2px solid rgba(var(--c-brand-rgb),0.2)', paddingLeft: '12px', marginLeft: '8px' }
 
   return (
     <div style={nodeStyle} className="space-y-1">
@@ -147,7 +147,7 @@ function GrupoNode({ grupoId, allGrupos, productDataMap, productById, depth = 0,
 
   const nodeStyle = depth === 0 ? {} : depth === 1
     ? { borderLeft: `2px solid ${color}`, paddingLeft: '8px', marginLeft: '2px' }
-    : { borderLeft: '2px solid rgba(99,102,241,0.2)', paddingLeft: '12px', marginLeft: '8px' }
+    : { borderLeft: '2px solid rgba(var(--c-brand-rgb),0.2)', paddingLeft: '12px', marginLeft: '8px' }
 
   const labelSize   = depth === 0 ? '14px' : depth === 1 ? '13px' : '12px'
   const labelWeight = depth === 0 ? 600    : depth === 1 ? 500    : 400

@@ -145,8 +145,8 @@ function GroupsBadge({ count }) {
     <span style={{
       fontSize: '9px',
       fontWeight: 600,
-      background: 'rgba(99,102,241,0.15)',
-      color: '#818cf8',
+      background: 'rgba(var(--c-brand-rgb),0.15)',
+      color: 'var(--c-brand)',
       borderRadius: '99px',
       padding: '2px 6px',
       flexShrink: 0,
@@ -165,7 +165,7 @@ function GrupoCard({ grp, allGrupos, productById, parentCount, depth, onEdit, on
     <div className="space-y-2">
       {/* Grupo header row */}
       <div className="flex items-center gap-2 min-w-0">
-        <FolderTree size={14} style={{ color: '#818cf8', flexShrink: 0 }} />
+        <FolderTree size={14} style={{ color: 'var(--c-brand)', flexShrink: 0 }} />
         <span
           className="flex-1 min-w-0 truncate"
           style={{ fontSize: labelSize, fontWeight: labelWeight, color: 'var(--text-secondary)' }}
@@ -194,7 +194,7 @@ function GrupoCard({ grp, allGrupos, productById, parentCount, depth, onEdit, on
       {(grp.children ?? []).length > 0 && (
         <div
           className="space-y-1.5"
-          style={{ borderLeft: '2px solid rgba(99,102,241,0.25)', paddingLeft: '10px', marginLeft: '6px' }}
+          style={{ borderLeft: '2px solid rgba(var(--c-brand-rgb),0.25)', paddingLeft: '10px', marginLeft: '6px' }}
         >
           {(grp.children ?? []).map((child) => {
             if (child.type === 'classe') {

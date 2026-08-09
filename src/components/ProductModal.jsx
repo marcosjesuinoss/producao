@@ -38,7 +38,7 @@ const modeCardStyle = (active) => ({
   flex: 1,
   padding: '12px',
   borderRadius: '10px',
-  background: active ? 'rgba(99,102,241,0.12)' : 'var(--btn-bg)',
+  background: active ? 'rgba(var(--c-brand-rgb),0.12)' : 'var(--btn-bg)',
   boxShadow: active ? 'none' : 'var(--shadow-btn)',
   cursor: 'pointer',
   transition: 'all 0.15s',

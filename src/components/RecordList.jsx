@@ -172,11 +172,11 @@ export default function RecordList({ records, onEdit, onDelete, onIgnore, groupB
                   marginTop: idx === 0 ? 0 : '4px',
                 }}
               >
-                <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(6,182,212,0.5))' }} />
+                <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(var(--c-brand-rgb),0.5))' }} />
                 <span
                   style={{
-                    background: 'rgba(99,102,241,0.15)',
-                    color: '#818cf8',
+                    background: 'rgba(var(--c-brand-rgb),0.15)',
+                    color: 'var(--c-brand)',
                     fontSize: '11px',
                     fontWeight: 700,
                     padding: '4px 10px',
@@ -186,7 +186,7 @@ export default function RecordList({ records, onEdit, onDelete, onIgnore, groupB
                 >
                   {pillDate(r.date)}
                 </span>
-                <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(6,182,212,0.5), transparent)' }} />
+                <span style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(var(--c-brand-rgb),0.5), transparent)' }} />
               </li>
             )}
             <li

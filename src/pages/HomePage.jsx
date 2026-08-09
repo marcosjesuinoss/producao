@@ -26,8 +26,8 @@ function GroupsBadge({ count }) {
   if (count <= 1) return null
   return (
     <span style={{
-      fontSize: '9px', fontWeight: 600, background: 'rgba(99,102,241,0.15)',
-      color: '#818cf8', borderRadius: '99px', padding: '2px 6px',
+      fontSize: '9px', fontWeight: 600, background: 'rgba(var(--c-brand-rgb),0.15)',
+      color: 'var(--c-brand)', borderRadius: '99px', padding: '2px 6px',
       flexShrink: 0, whiteSpace: 'nowrap',
     }}>
       {count} grupos
@@ -94,7 +94,7 @@ function ProductLeaf({ name, realized, target, useValue, depth, parentCount }) {
   const nodeStyle =
     depth === 1
       ? { borderLeft: `2px solid ${color}`, paddingLeft: '8px', marginLeft: '2px' }
-      : { borderLeft: '2px solid rgba(99,102,241,0.2)', paddingLeft: '12px', marginLeft: '8px' }
+      : { borderLeft: '2px solid rgba(var(--c-brand-rgb),0.2)', paddingLeft: '12px', marginLeft: '8px' }
   const labelSize   = depth === 1 ? '13px' : '12px'
   const labelWeight = depth === 1 ? 500 : 400
   const valueSize   = depth === 1 ? '15px' : '13px'
@@ -163,7 +163,7 @@ function GrupoNode({
     depth === 0 ? {} :
     depth === 1
       ? { borderLeft: `2px solid ${color}`, paddingLeft: '8px', marginLeft: '2px' }
-      : { borderLeft: '2px solid rgba(99,102,241,0.2)', paddingLeft: '12px', marginLeft: '8px' }
+      : { borderLeft: '2px solid rgba(var(--c-brand-rgb),0.2)', paddingLeft: '12px', marginLeft: '8px' }
 
   const labelSize   = depth === 0 ? '14px' : depth === 1 ? '13px' : '12px'
   const labelWeight = depth === 0 ? 600    : depth === 1 ? 500    : 400
@@ -550,9 +550,9 @@ export default function HomePage() {
         <button
           className="btn flex-1 text-sm"
           style={showZero ? {
-            background: 'rgba(99,102,241,0.12)',
-            borderColor: 'rgba(99,102,241,0.4)',
-            color: '#818cf8',
+            background: 'rgba(var(--c-brand-rgb),0.12)',
+            borderColor: 'rgba(var(--c-brand-rgb),0.4)',
+            color: 'var(--c-brand)',
           } : {}}
           onClick={() => setShowZero((v) => !v)}
         >
@@ -561,9 +561,9 @@ export default function HomePage() {
         <button
           className="btn flex-1 text-sm"
           style={reordering ? {
-            background: 'rgba(99,102,241,0.12)',
-            borderColor: 'rgba(99,102,241,0.4)',
-            color: '#818cf8',
+            background: 'rgba(var(--c-brand-rgb),0.12)',
+            borderColor: 'rgba(var(--c-brand-rgb),0.4)',
+            color: 'var(--c-brand)',
           } : {}}
           onClick={() => setReordering((v) => !v)}
         >
@@ -573,7 +573,7 @@ export default function HomePage() {
 
       <p className="text-xs text-center" style={{ color: 'var(--text-faint)' }}>
         Dados locais · offline-first · Defina metas em{' '}
-        <Link to="/metas" className="underline" style={{ color: 'var(--accent-indigo)' }}>Metas</Link>
+        <Link to="/metas" className="underline" style={{ color: 'var(--c-brand)' }}>Metas</Link>
       </p>
     </section>
   )

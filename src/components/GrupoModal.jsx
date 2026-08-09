@@ -48,7 +48,7 @@ const modeCardStyle = (active) => ({
   flex: 1,
   padding: '12px',
   borderRadius: '10px',
-  background: active ? 'rgba(99,102,241,0.12)' : 'var(--btn-bg)',
+  background: active ? 'rgba(var(--c-brand-rgb),0.12)' : 'var(--btn-bg)',
   boxShadow: active ? 'none' : 'var(--shadow-btn)',
   cursor: 'pointer',
   transition: 'all 0.15s',
@@ -389,7 +389,7 @@ export default function GrupoModal({
                         className="flex items-start gap-3 px-3 py-2.5 rounded-lg"
                         style={{
                           opacity: item.disabled ? 0.4 : 1,
-                          background: isChecked ? 'rgba(99,102,241,0.08)' : 'transparent',
+                          background: isChecked ? 'rgba(var(--c-brand-rgb),0.08)' : 'transparent',
                           cursor: item.disabled ? 'not-allowed' : 'pointer',
                         }}
                         onClick={() => toggleItem(key, item.disabled)}
@@ -405,7 +405,7 @@ export default function GrupoModal({
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             {item.type === 'classe' && (
-                              <FolderTree size={12} style={{ color: '#818cf8', flexShrink: 0 }} />
+                              <FolderTree size={12} style={{ color: 'var(--c-brand)', flexShrink: 0 }} />
                             )}
                             <span className="text-sm font-medium truncate" style={{ color: 'var(--text-secondary)' }}>
                               {item.name}

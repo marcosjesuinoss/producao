@@ -5,9 +5,9 @@ import { dateBR, brl, num } from '../lib/format.js'
 
 const toggleBtnStyle = (active) => ({
   flex: 1,
-  background: active ? 'rgba(99,102,241,0.1)' : 'var(--btn-bg)',
+  background: active ? 'rgba(var(--c-brand-rgb),0.1)' : 'var(--btn-bg)',
   boxShadow: active ? 'none' : 'var(--shadow-btn)',
-  color: active ? '#818cf8' : 'var(--text-secondary)',
+  color: active ? 'var(--c-brand)' : 'var(--text-secondary)',
 })
 
 const describeMatch = (r) => {

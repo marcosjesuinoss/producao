@@ -10,8 +10,16 @@
   --c-fg:         #0f172a;
   --c-muted:      #64748b;
   --c-border:     #e2e8f0;
-  --c-brand:      #6366f1;
-  --c-brand-soft: rgba(99,102,241,0.12);
+  /* Cor de destaque selecionavel (bloco Aparência em Ajustes, ver
+     src/lib/accents.js e src/context/AccentContext.jsx) — os 4 valores
+     abaixo sao SOBRESCRITOS em runtime pelo AccentProvider assim que o
+     React monta; os valores aqui (Azul) sao so o fallback do primeiro
+     paint, antes disso acontecer. */
+  --c-brand:      #2563eb;
+  --c-brand-rgb:  37, 99, 235;
+  --c-brand-2:    #0891b2;
+  --c-brand-fg:   #ffffff;
+  --c-brand-soft: rgba(var(--c-brand-rgb), 0.12);
   --c-good:       #16a34a;
   --c-bad:        #dc2626;
   --c-warn:       #ca8a04;
@@ -28,17 +36,14 @@
   --text-secondary: #334155;
   --text-muted:     #64748b;
   --text-faint:     #94a3b8;
-  --accent-indigo:  #6366f1;
   --accent-green:   #16a34a;
   --accent-yellow:  #ca8a04;
   --accent-red:     #dc2626;
-  --accent-cyan:    #0891b2;
   --shadow-card:    0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04);
   --shadow-nav:     0 -2px 8px rgba(15,23,42,0.06);
-  /* Gradiente sutil no fundo dos blocos (.card) — mesma luminosidade de
-     --c-surface (nao mexe no contraste do texto), so um leve tom indigo
-     na ponta pra ficar menos "chapado"/mais amigavel. */
-  --card-gradient:  linear-gradient(135deg, #ffffff 0%, #eef1ff 100%);
+  /* Tinta sutil no fundo dos blocos (.card) na cor de destaque escolhida —
+     ver a regra .card mais abaixo, que combina isso com --c-surface. */
+  --card-tint: 0.10;
   /* --bg-card-deep (usado nos inputs/chips) fica quase igual a --c-surface
      aqui — sem borda, o .btn ficava "sem preenchimento" visualmente. Precisa
      contrastar tanto com --c-surface (botao dentro de card) quanto com
@@ -62,8 +67,11 @@
   --c-fg:         #f9fafb;
   --c-muted:      #9ca3af;
   --c-border:     #334155;
-  --c-brand:      #818cf8;
-  --c-brand-soft: rgba(99,102,241,0.12);
+  --c-brand:      #60a5fa;
+  --c-brand-rgb:  96, 165, 250;
+  --c-brand-2:    #22d3ee;
+  --c-brand-fg:   #0c223f;
+  --c-brand-soft: rgba(var(--c-brand-rgb), 0.12);
   --c-good:       #22c55e;
   --c-bad:        #ef4444;
   --c-warn:       #eab308;
@@ -79,14 +87,12 @@
   --text-secondary: #d1d5db;
   --text-muted:     #9ca3af;
   --text-faint:     #6b7280;
-  --accent-indigo:  #818cf8;
   --accent-green:   #22c55e;
   --accent-yellow:  #eab308;
   --accent-red:     #ef4444;
-  --accent-cyan:    #06b6d4;
   --shadow-card:    0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
   --shadow-nav:     0 -2px 8px rgba(0,0,0,0.25);
-  --card-gradient:  linear-gradient(135deg, #1e293b 0%, #26314f 100%);
+  --card-tint: 0.12;
   /* #111827 contrastava bem com --c-surface (#1e293b), mas ficava quase
      identico a --bg-base (#0f172a) — camuflado nos botões que ficam direto
      na página, sem card por baixo (ex.: "Enviar produção"/"Baixar" em
@@ -105,8 +111,11 @@
   --c-fg:         #f5f5f5;
   --c-muted:      #9a9a9a;
   --c-border:     #262626;
-  --c-brand:      #818cf8;
-  --c-brand-soft: rgba(99,102,241,0.12);
+  --c-brand:      #60a5fa;
+  --c-brand-rgb:  96, 165, 250;
+  --c-brand-2:    #22d3ee;
+  --c-brand-fg:   #0c223f;
+  --c-brand-soft: rgba(var(--c-brand-rgb), 0.12);
   --c-good:       #22c55e;
   --c-bad:        #ef4444;
   --c-warn:       #eab308;
@@ -122,11 +131,9 @@
   --text-secondary: #c7c7c7;
   --text-muted:     #9a9a9a;
   --text-faint:     #6b6b6b;
-  --accent-indigo:  #818cf8;
   --accent-green:   #22c55e;
   --accent-yellow:  #eab308;
   --accent-red:     #ef4444;
-  --accent-cyan:    #06b6d4;
   /* Sombra sozinha nao aparece sobre preto puro (#000) — qualquer preto
      com alpha, composto sobre preto, continua preto. Em vez disso, um
      realce bem sutil na borda superior (luz "batendo" de cima), truque
@@ -135,7 +142,7 @@
   /* Mesmo truque do --shadow-card (realce em vez de sombra) — aqui na
      borda de CIMA do menu, já que ele fica colado embaixo da tela. */
   --shadow-nav:     inset 0 1px 0 rgba(255,255,255,0.06);
-  --card-gradient:  linear-gradient(135deg, #121212 0%, #1a1625 100%);
+  --card-tint: 0.10;
   /* --bg-card-deep (#0a0a0a) e mais escuro que --c-surface (#121212) —
      um tom mais claro aqui faz o botao parecer "aceso" por cima do card,
      em vez de um buraco mais escuro. */
@@ -178,7 +185,12 @@ body {
 .card {
   @apply p-4;
   border-radius: 14px;
-  background: var(--card-gradient);
+  /* Tinta sutil na cor de destaque escolhida, por cima da superficie solida
+     — se adapta a qualquer accent sem precisar de um gradiente calibrado
+     por cor (ver --card-tint, definido por tema). */
+  background:
+    linear-gradient(135deg, transparent 0%, rgba(var(--c-brand-rgb), var(--card-tint)) 100%),
+    var(--c-surface);
   box-shadow: var(--shadow-card);
 }
 
@@ -213,16 +225,16 @@ body {
 .btn:active { opacity: 0.7; }
 
 .btn-brand {
-  background: linear-gradient(135deg, #06b6d4, #818cf8);
+  background: linear-gradient(135deg, var(--c-brand-2), var(--c-brand));
   border-color: transparent;
   border-radius: 12px;
   font-weight: 600;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(99,102,241,0.35);
+  color: var(--c-brand-fg);
+  box-shadow: 0 2px 8px rgba(var(--c-brand-rgb), 0.35);
   transition: box-shadow 0.15s, opacity 0.15s, filter 0.15s;
 }
-.btn-brand:hover { opacity: 0.9; filter: brightness(1.05); box-shadow: 0 4px 14px rgba(99,102,241,0.45); }
-.btn-brand:active { box-shadow: 0 1px 4px rgba(99,102,241,0.3); }
+.btn-brand:hover { opacity: 0.9; filter: brightness(1.05); box-shadow: 0 4px 14px rgba(var(--c-brand-rgb), 0.45); }
+.btn-brand:active { box-shadow: 0 1px 4px rgba(var(--c-brand-rgb), 0.3); }
 
 .btn-danger {
   background: rgba(239,68,68,0.1);
@@ -268,7 +280,7 @@ body {
 }
 /* Ligado: preenchimento tingido forte, sem borda nem brilho. */
 .switch input:checked + .switch-track {
-  background: rgba(99,102,241,0.28);
+  background: rgba(var(--c-brand-rgb), 0.28);
 }
 .switch input:checked + .switch-track::after {
   transform: translateX(18px);

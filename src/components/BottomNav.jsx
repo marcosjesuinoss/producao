@@ -32,7 +32,7 @@ export default function BottomNav() {
           end={end}
           className="flex-1 flex flex-col items-center justify-center gap-0.5 py-1.5 transition-colors"
           style={({ isActive }) => ({
-            color: isActive ? '#818cf8' : 'var(--text-faint)',
+            color: isActive ? 'var(--c-brand)' : 'var(--text-faint)',
           })}
         >
           {({ isActive }) => (

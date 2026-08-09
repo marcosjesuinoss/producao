@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useTheme } from '../context/ThemeContext.jsx'
+import { useAccent } from '../context/AccentContext.jsx'
+import { ACCENTS, ACCENT_ORDER, resolveAccentTones } from '../lib/accents.js'
 import { resetAll } from '../lib/seed.js'
 import { exportBackup, readImportFile, importBackup, importMerge, describePeriod, findContentDuplicates } from '../lib/backup.js'
 import { getAgenciaEnabled, setAgenciaEnabled, getAgenciaDefault, setAgenciaDefault, getDigitoEnabled, setDigitoEnabled } from '../lib/agencia.js'
@@ -44,7 +46,7 @@ function InfoButton({ id, description, open, onToggle }) {
             className="relative w-full max-w-sm p-4 shadow-lg"
             style={{
               backgroundColor: 'var(--c-surface)',
-              backgroundImage: 'linear-gradient(rgba(99,102,241,0.12), rgba(99,102,241,0.12))',
+              backgroundImage: 'linear-gradient(rgba(var(--c-brand-rgb),0.12), rgba(var(--c-brand-rgb),0.12))',
               border: '1.5px solid var(--c-brand)',
               borderRadius: '14px',
               fontSize: '14px',
@@ -66,6 +68,7 @@ export default function SettingsPage() {
   const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW()
   const { hasPin, setPin, removePin } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { accent, setAccent } = useAccent()
   const [pin, setPinValue] = useState('')
   const { toast, showToast, hideToast } = useToast()
   const [showClearDialog, setShowClearDialog] = useState(false)
@@ -111,9 +114,9 @@ export default function SettingsPage() {
     fontSize: '0.875em',
     fontWeight: active ? 700 : 500,
     borderRadius: '12px',
-    background: active ? 'rgba(99,102,241,0.28)' : 'var(--btn-bg)',
-    color: active ? '#818cf8' : 'var(--text-secondary)',
-    boxShadow: active ? '0 2px 8px rgba(99,102,241,0.35)' : 'var(--shadow-btn)',
+    background: active ? 'rgba(var(--c-brand-rgb),0.28)' : 'var(--btn-bg)',
+    color: active ? 'var(--c-brand)' : 'var(--text-secondary)',
+    boxShadow: active ? '0 2px 8px rgba(var(--c-brand-rgb),0.35)' : 'var(--shadow-btn)',
     cursor: 'pointer',
     transition: 'all 0.15s',
   })
@@ -238,6 +241,46 @@ export default function SettingsPage() {
             <Moon size={14} />
             Escuro
           </button>
+        </div>
+
+        <div className="flex items-center gap-2" style={{ marginTop: '4px' }}>
+          <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+            Cor de destaque
+          </span>
+          <InfoButton
+            id="accent"
+            open={infoOpen}
+            onToggle={setInfoOpen}
+            description="Escolha a cor de destaque usada nos botões, abas ativas e realces do app inteiro."
+          />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+          {ACCENT_ORDER.map((key) => {
+            const tones = resolveAccentTones(key, theme)
+            const isSelected = accent === key
+            return (
+              <button
+                key={key}
+                onClick={() => setAccent(key)}
+                aria-pressed={isSelected}
+                style={{
+                  padding: '0.5em 0.4em',
+                  fontSize: '0.75em',
+                  fontWeight: isSelected ? 700 : 500,
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${tones.brand2}, ${tones.brand})`,
+                  color: tones.fg,
+                  outline: isSelected ? '2px solid var(--text-primary)' : 'none',
+                  outlineOffset: '2px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {ACCENTS[key].label}
+              </button>
+            )
+          })}
         </div>
       </div>
 

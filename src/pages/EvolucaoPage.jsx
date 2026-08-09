@@ -317,9 +317,9 @@ export default function EvolucaoPage() {
             <button
               className="btn w-full text-sm"
               style={reordering ? {
-                background: 'rgba(99,102,241,0.12)',
-                borderColor: 'rgba(99,102,241,0.4)',
-                color: '#818cf8',
+                background: 'rgba(var(--c-brand-rgb),0.12)',
+                borderColor: 'rgba(var(--c-brand-rgb),0.4)',
+                color: 'var(--c-brand)',
               } : {}}
               onClick={() => setReordering((v) => !v)}
             >

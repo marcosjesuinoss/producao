@@ -9,7 +9,7 @@ const navBtnStyle = {
   height: '24px',
   background: 'transparent',
   border: 'none',
-  color: '#818cf8',
+  color: 'var(--c-brand)',
   fontSize: '16px',
   fontWeight: 700,
   display: 'flex',
@@ -30,8 +30,8 @@ export default function Header({ online }) {
       <svg width="0" height="0" style={{ position: 'absolute', pointerEvents: 'none' }}>
         <defs>
           <linearGradient id="iconGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#06b6d4" />
-            <stop offset="100%" stopColor="#818cf8" />
+            <stop offset="0%" stopColor="var(--c-brand-2)" />
+            <stop offset="100%" stopColor="var(--c-brand)" />
           </linearGradient>
         </defs>
       </svg>
@@ -41,7 +41,7 @@ export default function Header({ online }) {
         className="max-w-5xl mx-auto px-4"
         style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingTop: '12px' }}
       >
-        <div style={{ padding: '6px', background: 'rgba(99,102,241,0.12)', borderRadius: '10px', flexShrink: 0 }}>
+        <div style={{ padding: '6px', background: 'var(--c-brand-soft)', borderRadius: '10px', flexShrink: 0 }}>
           <TrendingUp size={24} stroke="url(#iconGrad)" strokeWidth={2} />
         </div>
         <h1 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, flexShrink: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
