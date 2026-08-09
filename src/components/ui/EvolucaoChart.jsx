@@ -35,13 +35,34 @@ const autoHideTooltipPlugin = {
   },
 }
 
-export default function EvolucaoChart({ series, useValue, referenceLine, target }) {
+// Projeção: extrapola o RITMO REAL do usuario (realizado ate hoje) pro resto
+// do mes, seguindo a mesma "forma" da curva de ritmo esperado (cumulativeExpected
+// ja cresce so nos dias uteis, na proporcao certa) — so escalada pelo ritmo
+// real em vez do ritmo da meta. Nasce exatamente no ponto onde "Realizado"
+// para hoje (sem quebra visual) e nunca ultrapassa a meta (100%).
+function buildProjectionData(series, refDay, target) {
+  const refIndex = refDay - 1
+  if (refIndex < 0 || refIndex >= series.length) return null
+  const refPoint = series[refIndex]
+  const realized = refPoint.cumulativeActual
+  const expectedAtRef = refPoint.cumulativeExpected
+  if (realized == null || !(expectedAtRef > 0) || !(target > 0)) return null
+
+  return series.map((p, i) => {
+    if (i < refIndex) return null
+    const raw = realized * (p.cumulativeExpected / expectedAtRef)
+    return Math.min(target, raw)
+  })
+}
+
+export default function EvolucaoChart({ series, useValue, referenceLine, target, refDay, showProjection, showMarker90 }) {
   const fmt = useValue ? brl : num
 
   // Cor solida por serie — usada no tracinho do tooltip (uma gradiente nao
   // da pra representar num marcador tao pequeno).
   const tooltipColor = (label) => {
     if (label === 'Meta 90%') return '#eab308'
+    if (label === 'Projeção') return '#22c55e'
     if (label === 'Realizado') return '#818cf8'
     return cssVar('--text-faint') || '#6b7280'
   }
@@ -79,7 +100,7 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target 
 
     // Linha reta e fixa em 90% da meta total do mes — referencia visual de
     // "quase la", independente do ritmo dia a dia.
-    if (referenceLine > 0) {
+    if (showMarker90 && referenceLine > 0) {
       datasets.push({
         label: 'Meta 90%',
         data: series.map(() => referenceLine),
@@ -91,8 +112,24 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target 
       })
     }
 
+    if (showProjection) {
+      const projectionData = buildProjectionData(series, refDay, target)
+      if (projectionData) {
+        datasets.push({
+          label: 'Projeção',
+          data: projectionData,
+          borderColor: '#22c55e',
+          borderDash: [1, 3],
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.15,
+          spanGaps: false,
+        })
+      }
+    }
+
     return { labels, datasets }
-  }, [series, referenceLine])
+  }, [series, referenceLine, showMarker90, showProjection, refDay, target])
 
   const options = useMemo(() => ({
     responsive: true,

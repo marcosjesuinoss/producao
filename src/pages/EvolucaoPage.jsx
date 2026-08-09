@@ -8,6 +8,7 @@ import { useEvolucaoFavorites } from '../hooks/useEvolucaoFavorites.js'
 import { useReorderTransition } from '../hooks/useReorderTransition.js'
 import { getAllDescendants } from '../utils/grupoCalculations.js'
 import { brl, num, floorPct, FULL_MONTHS } from '../lib/format.js'
+import { getProjecaoEnabled, getMarcador90Enabled } from '../lib/chartSettings.js'
 import EvolucaoChart from '../components/ui/EvolucaoChart.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
 
@@ -113,7 +114,7 @@ function OrderControls({ onMoveUp, onMoveDown, isFirst, isLast }) {
   )
 }
 
-function ChartCard({ item, refDay, isFavorite, onToggleFavorite, reordering, onMove, isFirst, isLast }) {
+function ChartCard({ item, refDay, isFavorite, onToggleFavorite, reordering, onMove, isFirst, isLast, showProjection, showMarker90 }) {
   // Durante a reordenacao, fecha o grafico e mostra so o nome + setas —
   // facilita organizar varios favoritos sem rolar por graficos inteiros.
   if (reordering && onMove) {
@@ -150,7 +151,10 @@ function ChartCard({ item, refDay, isFavorite, onToggleFavorite, reordering, onM
         </button>
       </div>
 
-      <EvolucaoChart series={item.series} useValue={item.useValue} referenceLine={target90} target={item.target} />
+      <EvolucaoChart
+        series={item.series} useValue={item.useValue} referenceLine={target90} target={item.target}
+        refDay={refDay} showProjection={showProjection} showMarker90={showMarker90}
+      />
 
       <div className="flex items-center justify-between gap-2 pt-3 border-t" style={{ borderColor: 'var(--c-border)' }}>
         <div>
@@ -232,6 +236,8 @@ export default function EvolucaoPage() {
   const [exploringKey, setExploringKey] = useState(null)
   const [reordering, setReordering] = useState(false)
   const favoriteRefs = useRef(new Map())
+  const [showProjection] = useState(getProjecaoEnabled)
+  const [showMarker90] = useState(getMarcador90Enabled)
 
   const breakdown = useLiveQuery(() => evolucaoBreakdown({ year, month }), [year, month], null)
   const allGrupos = useLiveQuery(() => db.classes.toArray(), [], [])
@@ -300,6 +306,7 @@ export default function EvolucaoPage() {
                     isFavorite onToggleFavorite={() => toggleFavorite(key)}
                     reordering={reordering} onMove={(dir) => moveFavorite(key, dir)}
                     isFirst={idx === 0} isLast={idx === favoriteItems.length - 1}
+                    showProjection={showProjection} showMarker90={showMarker90}
                   />
                 </div>
               )
@@ -333,6 +340,7 @@ export default function EvolucaoPage() {
               item={exploringItem} refDay={breakdown.refDay}
               isFavorite={false}
               onToggleFavorite={() => toggleFavorite(itemKey(exploringItem))}
+              showProjection={showProjection} showMarker90={showMarker90}
             />
           )}
         </>

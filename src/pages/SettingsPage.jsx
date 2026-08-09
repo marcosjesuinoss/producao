@@ -8,6 +8,7 @@ import { useTheme } from '../context/ThemeContext.jsx'
 import { resetAll } from '../lib/seed.js'
 import { exportBackup, readImportFile, importBackup, importMerge, describePeriod, findContentDuplicates } from '../lib/backup.js'
 import { getAgenciaEnabled, setAgenciaEnabled, getAgenciaDefault, setAgenciaDefault, getDigitoEnabled, setDigitoEnabled } from '../lib/agencia.js'
+import { getProjecaoEnabled, setProjecaoEnabled, getMarcador90Enabled, setMarcador90Enabled } from '../lib/chartSettings.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import PeriodPicker from '../components/PeriodPicker.jsx'
 import DuplicateReview from '../components/DuplicateReview.jsx'
@@ -78,7 +79,9 @@ export default function SettingsPage() {
   const [agenciaEnabled, setAgenciaEnabledState] = useState(getAgenciaEnabled())
   const [agenciaValue, setAgenciaValue] = useState(getAgenciaDefault())
   const [digitoEnabled, setDigitoEnabledState] = useState(getDigitoEnabled())
-  const [infoOpen, setInfoOpen] = useState(null) // null | 'agencia' | 'digito'
+  const [projecaoEnabled, setProjecaoEnabledState] = useState(getProjecaoEnabled())
+  const [marcador90Enabled, setMarcador90EnabledState] = useState(getMarcador90Enabled())
+  const [infoOpen, setInfoOpen] = useState(null) // null | 'agencia' | 'digito' | 'projecao' | 'marcador90'
   const fileInputRef = useRef(null)
   const producaoInputRef = useRef(null)
 
@@ -219,9 +222,28 @@ export default function SettingsPage() {
     <section className="space-y-4 max-w-xl">
       <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Ajustes</h2>
 
+      {/* Aparência */}
+      <div className="card space-y-3">
+        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Aparência</h3>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button onClick={() => setTheme('light')} style={themeBtnStyle(theme === 'light')}>
+            <Sun size={14} />
+            Claro
+          </button>
+          <button onClick={() => setTheme('midnight')} style={themeBtnStyle(theme === 'midnight')}>
+            <MoonStar size={14} />
+            Anoitecer
+          </button>
+          <button onClick={() => setTheme('dark')} style={themeBtnStyle(theme === 'dark')}>
+            <Moon size={14} />
+            Escuro
+          </button>
+        </div>
+      </div>
+
       {/* Metas */}
       <div className="card space-y-3">
-        <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Metas</h3>
+        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Metas</h3>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={() => navigate('/metas')}
@@ -268,28 +290,9 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Aparência */}
-      <div className="card space-y-3">
-        <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Aparência</h3>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button onClick={() => setTheme('light')} style={themeBtnStyle(theme === 'light')}>
-            <Sun size={14} />
-            Claro
-          </button>
-          <button onClick={() => setTheme('midnight')} style={themeBtnStyle(theme === 'midnight')}>
-            <MoonStar size={14} />
-            Anoitecer
-          </button>
-          <button onClick={() => setTheme('dark')} style={themeBtnStyle(theme === 'dark')}>
-            <Moon size={14} />
-            Escuro
-          </button>
-        </div>
-      </div>
-
       {/* Registro */}
       <div className="card space-y-3" id="registro">
-        <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Registros</h3>
+        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Registros</h3>
         <div className="flex items-center gap-2">
           <label className="switch">
             <input
@@ -371,15 +374,76 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Gráficos */}
+      <div className="card space-y-3">
+        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Gráficos</h3>
+        <div className="flex items-center gap-2">
+          <label className="switch">
+            <input
+              id="s-projecao-enabled"
+              type="checkbox"
+              checked={projecaoEnabled}
+              onChange={(e) => {
+                const v = e.target.checked
+                setProjecaoEnabledState(v)
+                setProjecaoEnabled(v)
+              }}
+            />
+            <span className="switch-track" aria-hidden />
+          </label>
+          <label
+            htmlFor="s-projecao-enabled"
+            className="text-sm font-medium cursor-pointer select-none"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Projeção
+          </label>
+          <InfoButton
+            id="projecao"
+            open={infoOpen}
+            onToggle={setInfoOpen}
+            description="Mostra no gráfico da Evolução uma linha que projeta, pelo ritmo real de produção até hoje, quanto você deve fazer até o fim do mês — nunca passa de 100% da meta."
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="switch">
+            <input
+              id="s-marcador90-enabled"
+              type="checkbox"
+              checked={marcador90Enabled}
+              onChange={(e) => {
+                const v = e.target.checked
+                setMarcador90EnabledState(v)
+                setMarcador90Enabled(v)
+              }}
+            />
+            <span className="switch-track" aria-hidden />
+          </label>
+          <label
+            htmlFor="s-marcador90-enabled"
+            className="text-sm font-medium cursor-pointer select-none"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            Marcador de 90%
+          </label>
+          <InfoButton
+            id="marcador90"
+            open={infoOpen}
+            onToggle={setInfoOpen}
+            description="Mostra no gráfico da Evolução uma linha de referência fixa em 90% da meta do mês."
+          />
+        </div>
+      </div>
+
       {/* Notificações */}
       <div className="card space-y-3">
-        <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Notificações</h3>
+        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Notificações</h3>
         <p className="text-sm" style={{ color: 'var(--text-faint)' }}>Em breve</p>
       </div>
 
       {/* Aplicativo */}
       <div className="card space-y-3">
-        <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Aplicativo</h3>
+        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Aplicativo</h3>
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Versão do app</p>
@@ -399,7 +463,7 @@ export default function SettingsPage() {
 
       {/* Segurança */}
       <div className="card space-y-3">
-        <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>
+        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>
           Segurança (PIN local opcional)
         </h3>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
@@ -445,7 +509,7 @@ export default function SettingsPage() {
 
       {/* Dados */}
       <div className="card space-y-3">
-        <h3 className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Dados</h3>
+        <h3 className="font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>Dados</h3>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
           O backup salva registros, metas, produtos e grupos num arquivo local — guarde-o em local seguro (e-mail, nuvem) para não perder os dados caso o app seja desinstalado ou o navegador limpe o armazenamento.
         </p>
