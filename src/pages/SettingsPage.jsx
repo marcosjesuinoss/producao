@@ -243,7 +243,7 @@ export default function SettingsPage() {
           </button>
         </div>
 
-        <div className="flex items-center gap-2" style={{ marginTop: '4px' }}>
+        <div className="flex items-center gap-2" style={{ marginTop: '16px' }}>
           <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
             Cor de destaque
           </span>

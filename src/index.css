@@ -41,9 +41,6 @@
   --accent-red:     #dc2626;
   --shadow-card:    0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04);
   --shadow-nav:     0 -2px 8px rgba(15,23,42,0.06);
-  /* Tinta sutil no fundo dos blocos (.card) na cor de destaque escolhida —
-     ver a regra .card mais abaixo, que combina isso com --c-surface. */
-  --card-tint: 0.10;
   /* --bg-card-deep (usado nos inputs/chips) fica quase igual a --c-surface
      aqui — sem borda, o .btn ficava "sem preenchimento" visualmente. Precisa
      contrastar tanto com --c-surface (botao dentro de card) quanto com
@@ -92,7 +89,6 @@
   --accent-red:     #ef4444;
   --shadow-card:    0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
   --shadow-nav:     0 -2px 8px rgba(0,0,0,0.25);
-  --card-tint: 0.12;
   /* #111827 contrastava bem com --c-surface (#1e293b), mas ficava quase
      identico a --bg-base (#0f172a) — camuflado nos botões que ficam direto
      na página, sem card por baixo (ex.: "Enviar produção"/"Baixar" em
@@ -142,7 +138,6 @@
   /* Mesmo truque do --shadow-card (realce em vez de sombra) — aqui na
      borda de CIMA do menu, já que ele fica colado embaixo da tela. */
   --shadow-nav:     inset 0 1px 0 rgba(255,255,255,0.06);
-  --card-tint: 0.10;
   /* --bg-card-deep (#0a0a0a) e mais escuro que --c-surface (#121212) —
      um tom mais claro aqui faz o botao parecer "aceso" por cima do card,
      em vez de um buraco mais escuro. */
@@ -185,12 +180,7 @@ body {
 .card {
   @apply p-4;
   border-radius: 14px;
-  /* Tinta sutil na cor de destaque escolhida, por cima da superficie solida
-     — se adapta a qualquer accent sem precisar de um gradiente calibrado
-     por cor (ver --card-tint, definido por tema). */
-  background:
-    linear-gradient(135deg, transparent 0%, rgba(var(--c-brand-rgb), var(--card-tint)) 100%),
-    var(--c-surface);
+  background: var(--c-surface);
   box-shadow: var(--shadow-card);
 }
 

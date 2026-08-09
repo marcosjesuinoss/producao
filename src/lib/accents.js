@@ -23,7 +23,7 @@ export const ACCENTS = {
   vermelho: {
     label: 'Vermelho',
     light: { brand: '#dc2626', rgb: '220, 38, 38',    brand2: '#ea580c', fg: '#ffffff' },
-    dark:  { brand: '#f87171', rgb: '248, 113, 113',  brand2: '#fb923c', fg: '#450a0a' },
+    dark:  { brand: '#ef4444', rgb: '239, 68, 68',    brand2: '#fb7185', fg: '#450a0a' },
   },
   azul: {
     label: 'Azul',
@@ -32,7 +32,7 @@ export const ACCENTS = {
   },
   amarelo: {
     label: 'Amarelo',
-    light: { brand: '#ca8a04', rgb: '202, 138, 4',    brand2: '#d97706', fg: '#1c1917' },
+    light: { brand: '#eab308', rgb: '234, 179, 8',    brand2: '#f59e0b', fg: '#1c1917' },
     dark:  { brand: '#facc15', rgb: '250, 204, 21',   brand2: '#fbbf24', fg: '#422006' },
   },
   roxo: {
