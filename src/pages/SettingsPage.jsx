@@ -254,7 +254,7 @@ export default function SettingsPage() {
             description="Escolha a cor de destaque usada nos botões, abas ativas e realces do app inteiro."
           />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
           {ACCENT_ORDER.map((key) => {
             const tones = resolveAccentTones(key, theme)
             const isSelected = accent === key
@@ -264,8 +264,8 @@ export default function SettingsPage() {
                 onClick={() => setAccent(key)}
                 aria-pressed={isSelected}
                 style={{
-                  padding: '0.5em 0.4em',
-                  fontSize: '0.75em',
+                  padding: '0.75em 0.5em',
+                  fontSize: '0.875em',
                   fontWeight: isSelected ? 700 : 500,
                   borderRadius: '12px',
                   border: 'none',

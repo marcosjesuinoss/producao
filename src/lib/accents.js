@@ -40,16 +40,6 @@ export const ACCENTS = {
     light: { brand: '#9333ea', rgb: '147, 51, 234',   brand2: '#db2777', fg: '#ffffff' },
     dark:  { brand: '#c084fc', rgb: '192, 132, 252',  brand2: '#f472b6', fg: '#2e1065' },
   },
-  marrom: {
-    label: 'Marrom',
-    light: { brand: '#78350f', rgb: '120, 53, 15',    brand2: '#92400e', fg: '#ffffff' },
-    dark:  { brand: '#c68a5c', rgb: '198, 138, 92',   brand2: '#d9a066', fg: '#2a1a0c' },
-  },
-  laranja: {
-    label: 'Laranja',
-    light: { brand: '#ea580c', rgb: '234, 88, 12',    brand2: '#d97706', fg: '#ffffff' },
-    dark:  { brand: '#fb923c', rgb: '251, 146, 60',   brand2: '#fbbf24', fg: '#431407' },
-  },
   cinza: {
     label: 'Cinza',
     light: { brand: '#475569', rgb: '71, 85, 105',    brand2: '#64748b', fg: '#ffffff' },
@@ -57,7 +47,7 @@ export const ACCENTS = {
   },
 }
 
-export const ACCENT_ORDER = ['verde', 'vermelho', 'azul', 'amarelo', 'roxo', 'marrom', 'laranja', 'cinza']
+export const ACCENT_ORDER = ['azul', 'verde', 'cinza', 'roxo', 'vermelho', 'amarelo']
 
 export const DEFAULT_ACCENT = 'azul'
 
