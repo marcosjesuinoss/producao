@@ -196,7 +196,7 @@ function GoalCard({ product, goal, isValueProduct, productId, month, year, onSav
           inputMode="decimal"
           className="input"
           style={{ flex: 1, minWidth: 0 }}
-          placeholder={isValueProduct ? '100.000,00' : 'Ex: 20'}
+          placeholder={isValueProduct ? 'Ex: 100.000,00' : 'Ex: 20'}
           value={inputVal}
           onChange={onMaskedChange(setInputVal)}
           onBlur={fillCentsIf(setInputVal, isValueProduct)}

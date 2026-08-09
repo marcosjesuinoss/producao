@@ -303,6 +303,7 @@ body {
   font-size: 13px;
 }
 .input:focus { border-color: var(--c-brand); box-shadow: 0 0 0 2px var(--c-brand-soft); }
+.input::placeholder { color: var(--text-faint); opacity: 1; }
 
 /* iOS/Safari dao ao input[type=date] uma largura intrinseca propria que
    ignora o width:100% -> forca a ocupar toda a celula, igual aos demais.
