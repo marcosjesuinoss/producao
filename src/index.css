@@ -22,15 +22,12 @@
   --c-brand-soft: rgba(var(--c-brand-rgb), 0.12);
   --c-good:       #16a34a;
   --c-bad:        #dc2626;
-  --c-warn:       #ca8a04;
   --font-scale: 0.9;
 
   /* new design tokens */
-  --bg-base:        #f1f5f9;
   --bg-card:        #ffffff;
   --bg-card-deep:   #f8fafc;
   --bg-bar:         #e2e8f0;
-  --border-subtle:  #e2e8f0;
   --input-border:   #cbd5e1;
   --text-primary:   #0f172a;
   --text-secondary: #334155;
@@ -44,8 +41,8 @@
   /* --bg-card-deep (usado nos inputs/chips) fica quase igual a --c-surface
      aqui — sem borda, o .btn ficava "sem preenchimento" visualmente. Precisa
      contrastar tanto com --c-surface (botao dentro de card) quanto com
-     --bg-base (botao direto na pagina, ex.: "Enviar produção"/"Baixar" em
-     Registros) — o #eef1f6 anterior ficava camuflado contra --bg-base
+     --c-bg (botao direto na pagina, ex.: "Enviar produção"/"Baixar" em
+     Registros) — o #eef1f6 anterior ficava camuflado contra --c-bg
      (#f1f5f9, quase identico). #e2e8f0 (mesmo tom de --c-border/--bg-bar)
      contrasta com os dois. */
   --btn-bg:         #e2e8f0;
@@ -71,14 +68,11 @@
   --c-brand-soft: rgba(var(--c-brand-rgb), 0.12);
   --c-good:       #22c55e;
   --c-bad:        #ef4444;
-  --c-warn:       #eab308;
 
   /* new design tokens */
-  --bg-base:        #0f172a;
   --bg-card:        #1e293b;
   --bg-card-deep:   #111827;
   --bg-bar:         #334155;
-  --border-subtle:  #1f2937;
   --input-border:   #2d3748;
   --text-primary:   #f9fafb;
   --text-secondary: #d1d5db;
@@ -90,7 +84,7 @@
   --shadow-card:    0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
   --shadow-nav:     0 -2px 8px rgba(0,0,0,0.25);
   /* #111827 contrastava bem com --c-surface (#1e293b), mas ficava quase
-     identico a --bg-base (#0f172a) — camuflado nos botões que ficam direto
+     identico a --c-bg (#0f172a) — camuflado nos botões que ficam direto
      na página, sem card por baixo (ex.: "Enviar produção"/"Baixar" em
      Registros). #334155 (mesmo tom de --bg-bar/--c-border) é mais claro
      que os dois fundos, ficando visível em qualquer um. */
@@ -114,14 +108,11 @@
   --c-brand-soft: rgba(var(--c-brand-rgb), 0.12);
   --c-good:       #22c55e;
   --c-bad:        #ef4444;
-  --c-warn:       #eab308;
 
   /* new design tokens */
-  --bg-base:        #000000;
   --bg-card:        #121212;
   --bg-card-deep:   #0a0a0a;
   --bg-bar:         #1a1a1a;
-  --border-subtle:  #1f1f1f;
   --input-border:   #2a2a2a;
   --text-primary:   #f5f5f5;
   --text-secondary: #c7c7c7;
@@ -283,7 +274,7 @@ body {
 
 /* ─── INPUTS ──────────────────────────────────────── */
 /* --bg-card-deep + --input-border ficavam camuflados contra --c-surface
-   (dentro de cards, ex.: campo "Minha agência") e contra --bg-base (ex.:
+   (dentro de cards, ex.: campo "Minha agência") e contra --c-bg (ex.:
    seletor de período do Acumulado, que fica direto na página) — mesmo
    problema ja corrigido nos botões. Reusa --btn-bg (ja calibrado pra
    contrastar com os dois fundos, nos 3 temas), mas com --shadow-input

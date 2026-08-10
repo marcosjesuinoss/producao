@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { seedStandardProducts, seedGrupos } from './lib/seed.js'
 
@@ -28,23 +28,11 @@ import UpdateToast from './components/UpdateToast.jsx'
 
 export default function App() {
   const { hasPin, unlocked } = useAuth()
-  const [online, setOnline] = useState(navigator.onLine)
   const mainRef = useRef(null)
 
   useEffect(() => {
     seedStandardProducts().then(seedGrupos)
     navigator.storage?.persist?.()
-  }, [])
-
-  useEffect(() => {
-    const on = () => setOnline(true)
-    const off = () => setOnline(false)
-    window.addEventListener('online', on)
-    window.addEventListener('offline', off)
-    return () => {
-      window.removeEventListener('online', on)
-      window.removeEventListener('offline', off)
-    }
   }, [])
 
   if (hasPin && !unlocked) return <LoginPage />
@@ -62,7 +50,7 @@ export default function App() {
       */}
       <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
         <ScrollToTop containerRef={mainRef} />
-        <Header online={online} />
+        <Header />
         <main
           ref={mainRef}
           className="max-w-5xl mx-auto p-4 w-full"

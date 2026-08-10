@@ -1,16 +1,13 @@
 import { db, uid } from '../db/db.js'
-import { monthlySummary, annualSummary, generalSummary } from '../lib/summaries.js'
 import { notifyDataChanged } from '../lib/dataBus.js'
 
 /*
   "Endpoints" locais (Promise-based) equivalentes a uma REST API,
   porem 100% offline sobre IndexedDB.
 
-    GET    /records              -> listRecords(filters)
     POST   /records             -> createRecord(payload)
     PUT    /records/:id         -> updateRecord(id, patch)
     DELETE /records/:id         -> deleteRecord(id)
-    GET    /summary?period=...  -> getSummary(period, filters)
     GET    /goals               -> listGoals(filters)
     POST   /goals (upsert)      -> upsertGoal(payload)
     POST   /export?format=csv   -> ver lib/csv.js (exportCsv)
@@ -47,15 +44,6 @@ function applyFilters(coll, { year, month, product, account, manager }) {
 }
 
 // ---- RECORDS (CRUD) ----
-export async function listRecords(filters = {}) {
-  const all = db.records.orderBy('date').reverse()
-  return applyFilters(all, filters).toArray()
-}
-
-export async function getRecord(id) {
-  return db.records.get(id)
-}
-
 export async function createRecord(payload) {
   const { year, month } = ym(payload.date)
   const now = Date.now()
@@ -184,13 +172,6 @@ export async function deleteProduct(id) {
   return { ok: true, id }
 }
 
-// ---- SUMMARY ----
-export async function getSummary(period = 'monthly', filters = {}) {
-  if (period === 'monthly') return monthlySummary(filters)
-  if (period === 'annual') return annualSummary(filters)
-  return generalSummary(filters)
-}
-
 // ---- GRUPOS ----
 export async function createGrupo({ name, aggregationMode, children }) {
   const trimmed = (name || '').trim()
@@ -235,27 +216,4 @@ export async function saveYearSnapshot(year) {
   await db.yearSnapshots.add(snap)
   notifyDataChanged()
   return snap
-}
-
-// ---- SYNC (opcional / simples) ----
-// Marca registros como sincronizados; aqui simulamos um POST em lote.
-export async function syncNow(endpoint) {
-  const pending = await db.records.filter((r) => !r.synced).toArray()
-  if (!pending.length) return { synced: 0, skipped: 'nada pendente' }
-  if (endpoint && navigator.onLine) {
-    try {
-      await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pending)
-      })
-    } catch (e) {
-      return { synced: 0, error: String(e) }
-    }
-  }
-  // Em todos os casos marcamos local como sincronizado (sync otimista).
-  await db.transaction('rw', db.records, async () => {
-    for (const r of pending) await db.records.update(r.id, { synced: true })
-  })
-  return { synced: pending.length }
 }

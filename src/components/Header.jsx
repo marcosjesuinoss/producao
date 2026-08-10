@@ -19,7 +19,7 @@ const navBtnStyle = {
   flexShrink: 0,
 }
 
-export default function Header({ online }) {
+export default function Header() {
   const { hasPin, lock } = useAuth()
   const { open } = useRecordModal()
   const { year, month, prev, next } = useMonth()
