@@ -30,7 +30,11 @@ const autoHideTooltipPlugin = {
       }, 3000)
     }
   },
-  destroy(chart) {
+  // O Chart.js nao dispara um hook chamado "destroy" — o nome certo e
+  // "afterDestroy" (conferido no codigo-fonte da biblioteca). Com o nome
+  // errado esse cleanup nunca rodava: um timer de 3s podia sobreviver a um
+  // grafico ja destruido (troca rapida de produto) e tentar atualiza-lo.
+  afterDestroy(chart) {
     clearTimeout(chart.$tooltipHideTimer)
   },
 }

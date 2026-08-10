@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, Archive, ArchiveRestore, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
-import { upsertGoal, createProduct, updateProduct, deleteProduct, deleteGoal } from '../api/localApi.js'
+import { upsertGoal, createProduct, updateProduct, deleteProduct, unarchiveProduct, deleteGoal } from '../api/localApi.js'
 import { BR_NUM_RE } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
 import { useToast } from '../hooks/useToast.js'
@@ -50,8 +50,17 @@ export default function GoalsPage() {
   const [productModalOpen, setProductModalOpen] = useState(false)
   const { toast, showToast, hideToast } = useToast()
 
-  const { allProducts, custom, isValue } = useProducts()
+  const { allProducts, archivedProducts, custom, isValue } = useProducts()
   const productById = useMemo(() => new Map(custom.map((p) => [p.name, p.id])), [custom])
+
+  // Usado so pra escolher o texto certo no dialogo de confirmacao — a
+  // decisao de verdade (arquivar vs excluir) e sempre tomada no backend
+  // (deleteProduct em localApi.js), isso aqui e so pra nao mostrar "Excluir"
+  // quando na pratica vai arquivar.
+  const productsWithRecords = useLiveQuery(
+    async () => new Set((await db.records.toArray()).map((r) => r.product)),
+    [], new Set()
+  )
 
   const allGrupos = useLiveQuery(() => db.classes.toArray(), [], [])
   const groupNamesByProductId = useMemo(() => {
@@ -143,17 +152,48 @@ export default function GoalsPage() {
               showToast={showToast}
               onDeleteGoal={g ? () => deleteGoal(g.id) : null}
               onDeleteProduct={productId && product !== 'Abertura de Conta' ? () => deleteProduct(productId) : null}
+              willArchive={productsWithRecords.has(product)}
               groupNames={productId ? (groupNamesByProductId.get(productId) ?? []) : []}
             />
           )
         })}
       </div>
+
+      {archivedProducts.length > 0 && (
+        <div className="card space-y-2">
+          <h3 className="block-title">Produtos arquivados</h3>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            Já tiveram lançamentos, por isso não foram excluídos — os dados continuam intactos, só saíram das listas de uso ativo.
+          </p>
+          <div className="space-y-1">
+            {archivedProducts.map((p) => (
+              <div key={p.id} className="flex items-center justify-between gap-2 py-1">
+                <span className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{p.name}</span>
+                <button
+                  className="btn text-xs px-2.5 py-1.5 flex items-center gap-1.5 shrink-0"
+                  onClick={async () => {
+                    try {
+                      await unarchiveProduct(p.id)
+                      showToast('Produto reativado.')
+                    } catch (err) {
+                      showToast(`Erro ao reativar: ${err?.message || err}`, 'error')
+                    }
+                  }}
+                >
+                  <ArchiveRestore size={13} />
+                  Desarquivar
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
     </>
   )
 }
 
-function GoalCard({ product, goal, isValueProduct, productId, month, year, onSave, showToast, onDeleteGoal, onDeleteProduct, groupNames = [] }) {
+function GoalCard({ product, goal, isValueProduct, productId, month, year, onSave, showToast, onDeleteGoal, onDeleteProduct, willArchive = false, groupNames = [] }) {
   const [inputVal, setInputVal] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -278,17 +318,22 @@ function GoalCard({ product, goal, isValueProduct, productId, month, year, onSav
 
       {confirmAction === 'product' && (
         <ConfirmDialog
-          title="Excluir produto"
+          title={willArchive ? 'Arquivar produto' : 'Excluir produto'}
+          tone={willArchive ? 'warning' : 'danger'}
+          confirmIcon={willArchive ? Archive : Trash2}
           description={
-            groupNames.length > 0
+            willArchive
+              ? `"${product}" já tem lançamentos — em vez de excluir, ele será arquivado. Os dados existentes continuam intactos (registros, relatórios, backups), só sai das listas de novo registro/meta. Pode reativar depois em "Produtos arquivados".`
+              : groupNames.length > 0
               ? `Excluir produto "${product}"? Ele faz parte do grupo ${groupNames.map((n) => `"${n}"`).join(', ')} — o total desse grupo vai deixar de contar os registros dele.`
               : `Excluir produto "${product}"?`
           }
-          confirmLabel="Excluir"
+          confirmLabel={willArchive ? 'Arquivar' : 'Excluir'}
           onConfirm={async () => {
             try {
-              await onDeleteProduct()
+              const result = await onDeleteProduct()
               setConfirmAction(null)
+              showToast(result?.archived ? 'Produto arquivado.' : 'Produto excluído.')
             } catch (err) {
               showToast(`Erro ao excluir: ${err?.message || err}`, 'error')
             }

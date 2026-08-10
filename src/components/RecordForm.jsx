@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings } from 'lucide-react'
-import { PRODUCTS, BR_NUM_RE, todayISO } from '../lib/format.js'
+import { BR_NUM_RE, todayISO } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
 import { getAgenciaEnabled, getAgenciaDefault, getDigitoEnabled, formatAccountMask, accountCursorForDigitCount } from '../lib/agencia.js'
 
@@ -14,7 +14,7 @@ const ABERTURA = 'Abertura de Conta'
 // formulario pra um registro novo.
 const empty = {
   date: '',
-  product: PRODUCTS[0],
+  product: '',
   account: '',
   quantity: '',
   value: '',
@@ -95,8 +95,16 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
     } else {
       // Registro novo: pre-preenche com a agencia padrao (Ajustes > Registro),
       // se estiver ativada — o usuario pode apagar com backspace normalmente.
+      // Produto padrao vem da lista REAL de produtos (allProducts[0]), nao de
+      // um nome fixo no codigo — se o primeiro produto for renomeado/excluido,
+      // o campo continua abrindo com uma opcao valida em vez de vazio.
       const agencia = agenciaEnabled ? getAgenciaDefault() : ''
-      setForm({ ...empty, date: todayISO(), account: agencia ? formatAccountMask(agencia, true, digitoEnabled) : '' })
+      setForm({
+        ...empty,
+        date: todayISO(),
+        product: allProducts[0] ?? '',
+        account: agencia ? formatAccountMask(agencia, true, digitoEnabled) : '',
+      })
     }
     setErrors({})
   }, [initial])
@@ -162,7 +170,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
     onSubmit(form)
-    if (!initial) setForm({ ...empty, date: todayISO() })
+    if (!initial) setForm({ ...empty, date: todayISO(), product: allProducts[0] ?? '' })
   }
 
   const isAbertura = form.product === ABERTURA

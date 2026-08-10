@@ -166,8 +166,40 @@ export async function updateProduct(id, { name, useValue }) {
   return { id, name: trimmed, useValue: !!useValue }
 }
 
+// Produto sem nenhum lancamento: exclui de verdade (e limpa referencias
+// orfas em grupos que o continham). Produto COM lancamentos: arquiva em vez
+// de excluir — os dados existentes (registros, relatorios, backups)
+// continuam intactos, so some das listas de uso ativo (Metas, novo
+// registro). Evita tanto perder historico quanto deixar "lixo" (referencia
+// a um id que nao existe mais) espalhado pelos grupos.
 export async function deleteProduct(id) {
-  await db.products.delete(id)
+  const product = await db.products.get(id)
+  if (!product) return { ok: true, id, archived: false }
+
+  const hasRecords = (await db.records.where('product').equals(product.name).count()) > 0
+  if (hasRecords) {
+    await db.products.update(id, { archived: true })
+    notifyDataChanged()
+    return { ok: true, id, archived: true }
+  }
+
+  await db.transaction('rw', db.products, db.classes, async () => {
+    await db.products.delete(id)
+    const grupos = await db.classes.toArray()
+    for (const g of grupos) {
+      const children = g.children ?? []
+      const filtered = children.filter((c) => !(c.type === 'product' && c.refId === id))
+      if (filtered.length !== children.length) {
+        await db.classes.update(g.id, { children: filtered })
+      }
+    }
+  })
+  notifyDataChanged()
+  return { ok: true, id, archived: false }
+}
+
+export async function unarchiveProduct(id) {
+  await db.products.update(id, { archived: false })
   notifyDataChanged()
   return { ok: true, id }
 }
@@ -196,8 +228,22 @@ export async function updateGrupo(id, { name, aggregationMode, children }) {
   return { id, name: trimmed, aggregationMode, children }
 }
 
+// Alem de excluir o grupo, limpa a referencia a ele de dentro de qualquer
+// outro grupo que o tivesse como subgrupo — sem isso, sobrava um id
+// apontando pra um grupo inexistente guardado pra sempre no banco (mesmo
+// problema corrigido em deleteProduct).
 export async function deleteGrupo(id) {
-  await db.classes.delete(id)
+  await db.transaction('rw', db.classes, async () => {
+    await db.classes.delete(id)
+    const grupos = await db.classes.toArray()
+    for (const g of grupos) {
+      const children = g.children ?? []
+      const filtered = children.filter((c) => !(c.type === 'classe' && c.refId === id))
+      if (filtered.length !== children.length) {
+        await db.classes.update(g.id, { children: filtered })
+      }
+    }
+  })
   notifyDataChanged()
   return { ok: true, id }
 }

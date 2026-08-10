@@ -5,9 +5,22 @@ import { db } from '../db/db.js'
 export function useProducts() {
   const dbProducts = useLiveQuery(() => db.products.orderBy('name').toArray(), [], [])
 
-  const allProducts = useMemo(
-    () => (dbProducts || []).map((p) => p.name),
+  // Produtos arquivados (ja tem lancamentos, mas foram "excluidos" — ver
+  // deleteProduct em localApi.js) ficam fora de allProducts: nao aparecem
+  // pra escolher em novo registro/meta, mas os dados deles continuam
+  // intactos e visiveis nos relatorios.
+  const activeProducts = useMemo(
+    () => (dbProducts || []).filter((p) => !p.archived),
     [dbProducts]
+  )
+  const archivedProducts = useMemo(
+    () => (dbProducts || []).filter((p) => p.archived),
+    [dbProducts]
+  )
+
+  const allProducts = useMemo(
+    () => activeProducts.map((p) => p.name),
+    [activeProducts]
   )
 
   const isValue = useMemo(() => {
@@ -15,5 +28,5 @@ export function useProducts() {
     return (name) => map.get(name) ?? true
   }, [dbProducts])
 
-  return { allProducts, custom: dbProducts || [], isValue }
+  return { allProducts, archivedProducts, custom: dbProducts || [], isValue }
 }
