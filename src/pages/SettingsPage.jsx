@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { Sun, Moon, MoonStar, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload, Info } from 'lucide-react'
+import { Sun, Moon, MoonStar, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -9,59 +8,14 @@ import { useAccent } from '../context/AccentContext.jsx'
 import { ACCENTS, ACCENT_ORDER, resolveAccentTones } from '../lib/accents.js'
 import { resetAll } from '../lib/seed.js'
 import { exportBackup, readImportFile, importBackup, importMerge, describePeriod, findContentDuplicates } from '../lib/backup.js'
-import { getAgenciaEnabled, setAgenciaEnabled, getAgenciaDefault, setAgenciaDefault, getDigitoEnabled, setDigitoEnabled } from '../lib/agencia.js'
 import { getProjecaoEnabled, setProjecaoEnabled, getMarcador90Enabled, setMarcador90Enabled } from '../lib/chartSettings.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import PeriodPicker from '../components/PeriodPicker.jsx'
 import DuplicateReview from '../components/DuplicateReview.jsx'
 import Toast from '../components/Toast.jsx'
+import InfoButton from '../components/InfoButton.jsx'
+import RegistroSettingsFields from '../components/RegistroSettingsFields.jsx'
 import { useToast } from '../hooks/useToast.js'
-
-// Botão "i" com popup centralizado na tela (mesmo padrão dos outros popups
-// do app — portal pro <body>, fixed inset-0 + flex center — em vez de
-// ancorado no proprio botao, que estourava a borda da tela quando o botao
-// ficava perto da direita). Tom indigo (cor "marca" do app) em vez do verde
-// do toast: aqui nao e uma confirmacao de sucesso, e so uma informacao.
-function InfoButton({ id, description, open, onToggle }) {
-  const isOpen = open === id
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => onToggle(isOpen ? null : id)}
-        aria-label="O que é isso?"
-        className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-        style={{ background: 'var(--bg-card-deep)', color: 'var(--text-faint)' }}
-      >
-        <Info size={12} />
-      </button>
-      {isOpen && createPortal(
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          onClick={() => onToggle(null)}
-        >
-          <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)' }} aria-hidden />
-          <div
-            role="status"
-            className="relative w-full max-w-sm p-4 shadow-lg"
-            style={{
-              backgroundColor: 'var(--c-surface)',
-              backgroundImage: 'linear-gradient(rgba(var(--c-brand-rgb),0.12), rgba(var(--c-brand-rgb),0.12))',
-              border: '1.5px solid var(--c-brand)',
-              borderRadius: '14px',
-              fontSize: '14px',
-              lineHeight: '1.5',
-              color: 'var(--text-primary)',
-            }}
-          >
-            {description}
-          </div>
-        </div>,
-        document.body
-      )}
-    </>
-  )
-}
 
 export default function SettingsPage() {
   const navigate = useNavigate()
@@ -79,12 +33,9 @@ export default function SettingsPage() {
   const [importPayload, setImportPayload] = useState(null)
   const [producaoPayload, setProducaoPayload] = useState(null)
   const [duplicateReview, setDuplicateReview] = useState(null) // { payload, matches, label, errorMsg }
-  const [agenciaEnabled, setAgenciaEnabledState] = useState(getAgenciaEnabled())
-  const [agenciaValue, setAgenciaValue] = useState(getAgenciaDefault())
-  const [digitoEnabled, setDigitoEnabledState] = useState(getDigitoEnabled())
   const [projecaoEnabled, setProjecaoEnabledState] = useState(getProjecaoEnabled())
   const [marcador90Enabled, setMarcador90EnabledState] = useState(getMarcador90Enabled())
-  const [infoOpen, setInfoOpen] = useState(null) // null | 'agencia' | 'digito' | 'projecao' | 'marcador90'
+  const [infoOpen, setInfoOpen] = useState(null) // null | 'projecao' | 'marcador90'
   const fileInputRef = useRef(null)
   const producaoInputRef = useRef(null)
 
@@ -336,85 +287,7 @@ export default function SettingsPage() {
       {/* Registro */}
       <div className="card space-y-3" id="registro">
         <h3 className="block-title">Registros</h3>
-        <div className="flex items-center gap-2">
-          <label className="switch">
-            <input
-              id="s-agencia-enabled"
-              type="checkbox"
-              checked={agenciaEnabled}
-              onChange={(e) => {
-                const v = e.target.checked
-                setAgenciaEnabledState(v)
-                setAgenciaEnabled(v)
-              }}
-            />
-            <span className="switch-track" aria-hidden />
-          </label>
-          <label
-            htmlFor="s-agencia-enabled"
-            className="text-sm font-medium cursor-pointer select-none"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Solicitar agência nos registros
-          </label>
-          <InfoButton
-            id="agencia"
-            open={infoOpen}
-            onToggle={setInfoOpen}
-            description='Quando ativado, o campo "Agência / Conta do produto" separa os 4 primeiros dígitos digitados como agência e o resto como conta. Se você definir uma agência abaixo, ela vem pré-preenchida em todo registro novo — mas dá pra apagar na hora, se precisar.'
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Espaçador do mesmo tamanho do switch (.switch = 42px) — alinha
-              "Minha agência" na mesma coluna dos rótulos "Solicitar..." */}
-          <div style={{ width: '42px' }} aria-hidden />
-          <label htmlFor="s-agencia-value" className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-            Minha agência
-          </label>
-          <input
-            id="s-agencia-value"
-            type="text"
-            inputMode="numeric"
-            className="input !w-24"
-            placeholder="1234"
-            disabled={!agenciaEnabled}
-            style={!agenciaEnabled ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
-            value={agenciaValue}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, '').slice(0, 4)
-              setAgenciaValue(digits)
-              setAgenciaDefault(digits)
-            }}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="switch">
-            <input
-              id="s-digito-enabled"
-              type="checkbox"
-              checked={digitoEnabled}
-              onChange={(e) => {
-                const v = e.target.checked
-                setDigitoEnabledState(v)
-                setDigitoEnabled(v)
-              }}
-            />
-            <span className="switch-track" aria-hidden />
-          </label>
-          <label
-            htmlFor="s-digito-enabled"
-            className="text-sm font-medium cursor-pointer select-none"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Solicitar dígito nas contas
-          </label>
-          <InfoButton
-            id="digito"
-            open={infoOpen}
-            onToggle={setInfoOpen}
-            description='Ativado (padrão), a conta exige um dígito verificador depois do "-" (ex: 1-2). Desativado, a conta aceita só números, sem dígito nem separador (ex: 12).'
-          />
-        </div>
+        <RegistroSettingsFields />
       </div>
 
       {/* Gráficos */}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Download, Send } from 'lucide-react'
+import { Download, Send, Settings } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
 import { deleteRecord, updateRecord } from '../api/localApi.js'
@@ -12,6 +12,7 @@ import RecordList from '../components/RecordList.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import PeriodPicker from '../components/PeriodPicker.jsx'
 import DownloadDialog from '../components/DownloadDialog.jsx'
+import RegistroSettingsModal from '../components/RegistroSettingsModal.jsx'
 import Toast from '../components/Toast.jsx'
 import { useToast } from '../hooks/useToast.js'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
@@ -50,6 +51,7 @@ export default function RecordsPage() {
   const [showSendPicker, setShowSendPicker] = useState(false)
   const [sendRecords, setSendRecords] = useState(null)
   const [showDownloadWarning, setShowDownloadWarning] = useState(false)
+  const [showRegistroSettings, setShowRegistroSettings] = useState(false)
   const { toast, showToast, hideToast } = useToast()
 
   const all = useLiveQuery(
@@ -151,7 +153,7 @@ export default function RecordsPage() {
             onClick={handleOpenSendPicker}
           >
             <Send size={16} />
-            Enviar produção
+            Enviar
           </button>
           <button
             className="btn flex items-center gap-1.5"
@@ -160,10 +162,21 @@ export default function RecordsPage() {
             <Download size={16} />
             Baixar
           </button>
+          <button
+            className="btn px-2.5"
+            onClick={() => setShowRegistroSettings(true)}
+            aria-label="Ajuste de registro"
+          >
+            <Settings size={16} />
+          </button>
         </div>
       </div>
 
       <Toast toast={toast} onDismiss={hideToast} />
+
+      {showRegistroSettings && (
+        <RegistroSettingsModal onClose={() => setShowRegistroSettings(false)} />
+      )}
 
       <Filters value={filters} onChange={setFilters} accounts={accounts} sortMode={sortMode} onSortChange={setSortMode} />
 
