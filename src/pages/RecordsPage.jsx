@@ -74,6 +74,14 @@ export default function RecordsPage() {
     return sorted
   }, [all, filters, sortMode])
 
+  // Ignorados continuam visiveis na lista (pra poder desfazer o "ignorar"),
+  // mas nao devem contar nos relatorios exportados — mesmo filtro que ja
+  // vale pras metas em summaries.js/evolucao.js.
+  const exportableRecords = useMemo(
+    () => records.filter((r) => !r.ignored),
+    [records]
+  )
+
   const handleDelete = (r) => setDeleteTarget(r)
 
   const handleDeleteConfirm = async () => {
@@ -188,8 +196,8 @@ export default function RecordsPage() {
         <DownloadDialog
           title="Baixar produção"
           description={`Você está baixando ${describeDownloadScope(filters, month, year)}.`}
-          onDownloadCsv={() => { setShowDownloadWarning(false); exportCsv(records, 'producao-filtrada.csv') }}
-          onDownloadPdf={() => { setShowDownloadWarning(false); exportPdf(records, describeReportTitle(filters, month, year), 'producao-filtrada.pdf') }}
+          onDownloadCsv={() => { setShowDownloadWarning(false); exportCsv(exportableRecords, 'producao-filtrada.csv') }}
+          onDownloadPdf={() => { setShowDownloadWarning(false); exportPdf(exportableRecords, describeReportTitle(filters, month, year), 'producao-filtrada.pdf') }}
           onCancel={() => setShowDownloadWarning(false)}
         />
       )}

@@ -7,8 +7,13 @@ import { getAgenciaEnabled, getAgenciaDefault, getDigitoEnabled, formatAccountMa
 
 const ABERTURA = 'Abertura de Conta'
 
+// "date" NAO entra aqui — todayISO() so seria avaliado uma vez, quando este
+// arquivo carrega. Num PWA que fica aberto passando da meia-noite, isso
+// travaria a data padrao no dia em que a aba foi aberta. Por isso "date" e
+// preenchido na hora certa (todayISO() de novo) em cada lugar que reseta o
+// formulario pra um registro novo.
 const empty = {
-  date: todayISO(),
+  date: '',
   product: PRODUCTS[0],
   account: '',
   quantity: '',
@@ -91,7 +96,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
       // Registro novo: pre-preenche com a agencia padrao (Ajustes > Registro),
       // se estiver ativada — o usuario pode apagar com backspace normalmente.
       const agencia = agenciaEnabled ? getAgenciaDefault() : ''
-      setForm({ ...empty, account: agencia ? formatAccountMask(agencia, true, digitoEnabled) : '' })
+      setForm({ ...empty, date: todayISO(), account: agencia ? formatAccountMask(agencia, true, digitoEnabled) : '' })
     }
     setErrors({})
   }, [initial])
@@ -157,7 +162,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
     onSubmit(form)
-    if (!initial) setForm(empty)
+    if (!initial) setForm({ ...empty, date: todayISO() })
   }
 
   const isAbertura = form.product === ABERTURA

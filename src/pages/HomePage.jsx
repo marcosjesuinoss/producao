@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight, ChevronUp, ChevronDown, Check } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
+import { useDataVersion } from '../hooks/useDataVersion.js'
 import { db } from '../db/db.js'
 import { productBreakdown } from '../lib/summaries.js'
 import { brl, num, floorPct, FULL_MONTHS } from '../lib/format.js'
@@ -384,11 +385,10 @@ export default function HomePage() {
   const { getSorted, move } = useDisplayOrder()
   const itemRefs = useRef(new Map())
 
-  const tick = useLiveQuery(
-    async () => (await db.records.count()) + (await db.goals.count()),
-    [],
-    0
-  )
+  // Versao que muda a cada escrita no banco (ver dataBus.js) — ao contrario
+  // de uma contagem de linhas, tambem reage a EDICOES (que nao mudam a
+  // quantidade de registros/metas, so o conteudo deles).
+  const dataVersion = useDataVersion()
 
   const allGrupos   = useLiveQuery(() => db.classes.toArray(),  [], [])
   const allProducts = useLiveQuery(() => db.products.toArray(), [], [])
@@ -404,7 +404,7 @@ export default function HomePage() {
       if (alive) setBreakdown(data)
     })
     return () => { alive = false }
-  }, [tick, year, month])
+  }, [dataVersion, year, month])
 
   const productById = useMemo(
     () => new Map((allProducts ?? []).map((p) => [p.id, p])),
