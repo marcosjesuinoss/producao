@@ -7,18 +7,26 @@ export function MonthProvider({ children }) {
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
 
+  // Le "month" do closure (nao de dentro do updater de setMonth) antes de
+  // decidir se o ano tambem muda — chamar setYear de dentro do updater de
+  // setMonth fazia o StrictMode (que invoca updaters em dobro) decrementar
+  // o ano duas vezes ao virar Janeiro->Dezembro.
   const prev = () => {
-    setMonth((m) => {
-      if (m === 1) { setYear((y) => y - 1); return 12 }
-      return m - 1
-    })
+    if (month === 1) {
+      setYear((y) => y - 1)
+      setMonth(12)
+    } else {
+      setMonth((m) => m - 1)
+    }
   }
 
   const next = () => {
-    setMonth((m) => {
-      if (m === 12) { setYear((y) => y + 1); return 1 }
-      return m + 1
-    })
+    if (month === 12) {
+      setYear((y) => y + 1)
+      setMonth(1)
+    } else {
+      setMonth((m) => m + 1)
+    }
   }
 
   return (

@@ -55,7 +55,7 @@ export default function Header() {
             alignItems: 'center',
             gap: '8px',
             background: 'var(--bg-card)',
-            border: '1px solid #2d3748',
+            border: '1px solid var(--c-border)',
             borderRadius: '99px',
             padding: '8px 12px',
             marginLeft: 'auto',
