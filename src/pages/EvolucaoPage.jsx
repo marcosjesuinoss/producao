@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronDown, ChevronUp, Star, Target } from 'lucide-react'
+import { ChevronDown, ChevronUp, Settings, Star, Target } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
 import { evolucaoBreakdown } from '../lib/evolucao.js'
@@ -8,8 +8,9 @@ import { useEvolucaoFavorites } from '../hooks/useEvolucaoFavorites.js'
 import { useReorderTransition } from '../hooks/useReorderTransition.js'
 import { getAllDescendants } from '../utils/grupoCalculations.js'
 import { brl, num, floorPct, FULL_MONTHS } from '../lib/format.js'
-import { getProjecaoEnabled, getMarcador90Enabled } from '../lib/chartSettings.js'
+import { getProjecaoEnabled, setProjecaoEnabled, getMarcador90Enabled, setMarcador90Enabled } from '../lib/chartSettings.js'
 import EvolucaoChart from '../components/ui/EvolucaoChart.jsx'
+import GraficosSettingsModal from '../components/GraficosSettingsModal.jsx'
 import { useMonth } from '../context/MonthContext.jsx'
 
 const itemKey = (item) => `${item.type}:${item.id}`
@@ -236,8 +237,9 @@ export default function EvolucaoPage() {
   const [exploringKey, setExploringKey] = useState(null)
   const [reordering, setReordering] = useState(false)
   const favoriteRefs = useRef(new Map())
-  const [showProjection] = useState(getProjecaoEnabled)
-  const [showMarker90] = useState(getMarcador90Enabled)
+  const [showProjection, setShowProjection] = useState(getProjecaoEnabled)
+  const [showMarker90, setShowMarker90] = useState(getMarcador90Enabled)
+  const [showChartSettings, setShowChartSettings] = useState(false)
 
   const breakdown = useLiveQuery(() => evolucaoBreakdown({ year, month }), [year, month], null)
   const allGrupos = useLiveQuery(() => db.classes.toArray(), [], [])
@@ -271,9 +273,28 @@ export default function EvolucaoPage() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-        Evolução {FULL_MONTHS[month - 1]}
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          Evolução {FULL_MONTHS[month - 1]}
+        </h2>
+        <button
+          className="btn px-2.5 shrink-0"
+          onClick={() => setShowChartSettings(true)}
+          aria-label="Ajuste de gráficos"
+        >
+          <Settings size={16} />
+        </button>
+      </div>
+
+      {showChartSettings && (
+        <GraficosSettingsModal
+          projecaoEnabled={showProjection}
+          marcador90Enabled={showMarker90}
+          onProjecaoChange={(v) => { setShowProjection(v); setProjecaoEnabled(v) }}
+          onMarcador90Change={(v) => { setShowMarker90(v); setMarcador90Enabled(v) }}
+          onClose={() => setShowChartSettings(false)}
+        />
+      )}
 
       <div className="card space-y-1">
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>

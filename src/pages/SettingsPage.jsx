@@ -15,6 +15,7 @@ import DuplicateReview from '../components/DuplicateReview.jsx'
 import Toast from '../components/Toast.jsx'
 import InfoButton from '../components/InfoButton.jsx'
 import RegistroSettingsFields from '../components/RegistroSettingsFields.jsx'
+import GraficosSettingsFields from '../components/GraficosSettingsFields.jsx'
 import { useToast } from '../hooks/useToast.js'
 
 export default function SettingsPage() {
@@ -35,7 +36,7 @@ export default function SettingsPage() {
   const [duplicateReview, setDuplicateReview] = useState(null) // { payload, matches, label, errorMsg }
   const [projecaoEnabled, setProjecaoEnabledState] = useState(getProjecaoEnabled())
   const [marcador90Enabled, setMarcador90EnabledState] = useState(getMarcador90Enabled())
-  const [infoOpen, setInfoOpen] = useState(null) // null | 'projecao' | 'marcador90'
+  const [infoOpen, setInfoOpen] = useState(null) // null | 'accent'
   const fileInputRef = useRef(null)
   const producaoInputRef = useRef(null)
 
@@ -293,62 +294,12 @@ export default function SettingsPage() {
       {/* Gráficos */}
       <div className="card space-y-3">
         <h3 className="block-title">Gráficos</h3>
-        <div className="flex items-center gap-2">
-          <label className="switch">
-            <input
-              id="s-projecao-enabled"
-              type="checkbox"
-              checked={projecaoEnabled}
-              onChange={(e) => {
-                const v = e.target.checked
-                setProjecaoEnabledState(v)
-                setProjecaoEnabled(v)
-              }}
-            />
-            <span className="switch-track" aria-hidden />
-          </label>
-          <label
-            htmlFor="s-projecao-enabled"
-            className="text-sm font-medium cursor-pointer select-none"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Projeção
-          </label>
-          <InfoButton
-            id="projecao"
-            open={infoOpen}
-            onToggle={setInfoOpen}
-            description="Mostra no gráfico da Evolução uma linha que projeta, pelo ritmo real de produção até hoje, quanto você deve fazer até o fim do mês — nunca passa de 100% da meta."
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="switch">
-            <input
-              id="s-marcador90-enabled"
-              type="checkbox"
-              checked={marcador90Enabled}
-              onChange={(e) => {
-                const v = e.target.checked
-                setMarcador90EnabledState(v)
-                setMarcador90Enabled(v)
-              }}
-            />
-            <span className="switch-track" aria-hidden />
-          </label>
-          <label
-            htmlFor="s-marcador90-enabled"
-            className="text-sm font-medium cursor-pointer select-none"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            Marcador de 90%
-          </label>
-          <InfoButton
-            id="marcador90"
-            open={infoOpen}
-            onToggle={setInfoOpen}
-            description="Mostra no gráfico da Evolução uma linha de referência fixa em 90% da meta do mês."
-          />
-        </div>
+        <GraficosSettingsFields
+          projecaoEnabled={projecaoEnabled}
+          marcador90Enabled={marcador90Enabled}
+          onProjecaoChange={(v) => { setProjecaoEnabledState(v); setProjecaoEnabled(v) }}
+          onMarcador90Change={(v) => { setMarcador90EnabledState(v); setMarcador90Enabled(v) }}
+        />
       </div>
 
       {/* Notificações */}
