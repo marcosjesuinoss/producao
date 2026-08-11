@@ -24,7 +24,7 @@ export default function GraficosSettingsModal({ projecaoEnabled, marcador90Enabl
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'var(--c-brand)' }}>
-                Ajuste de gráficos
+                Ajustes
               </p>
               <h2 className="text-xl font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
                 Gráficos
