@@ -228,6 +228,7 @@ export default function SettingsPage() {
                   background: `linear-gradient(135deg, ${tones.brand2}, ${tones.brand})`,
                   color: tones.fg,
                   transform: isSelected ? 'scale(1.04)' : 'scale(1)',
+                  opacity: isSelected ? 1 : 0.8,
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}
