@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Sun, Moon, MoonStar, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload } from 'lucide-react'
+import { Sun, Moon, MoonStar, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload, Check } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -216,6 +216,10 @@ export default function SettingsPage() {
                 onClick={() => setAccent(key)}
                 aria-pressed={isSelected}
                 style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
                   padding: '0.75em 0.5em',
                   fontSize: '0.875em',
                   fontWeight: isSelected ? 700 : 500,
@@ -223,12 +227,20 @@ export default function SettingsPage() {
                   border: 'none',
                   background: `linear-gradient(135deg, ${tones.brand2}, ${tones.brand})`,
                   color: tones.fg,
-                  outline: isSelected ? '2px solid var(--text-primary)' : 'none',
-                  outlineOffset: '2px',
+                  // Anel de 2 tons (vao do fundo do card + escuro/claro do
+                  // texto) em vez de um outline so — fica visivel em cima de
+                  // QUALQUER uma das 8 cores, ao contrario de uma borda
+                  // colorida so, que pode se camuflar contra a propria cor
+                  // do botao selecionado (ex.: anel escuro sobre Marrom).
+                  boxShadow: isSelected
+                    ? '0 0 0 2px var(--c-surface), 0 0 0 4px var(--text-primary)'
+                    : 'none',
+                  transform: isSelected ? 'scale(1.04)' : 'scale(1)',
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}
               >
+                {isSelected && <Check size={13} strokeWidth={3} />}
                 {ACCENTS[key].label}
               </button>
             )
