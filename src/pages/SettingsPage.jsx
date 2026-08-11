@@ -233,7 +233,7 @@ export default function SettingsPage() {
                   // colorida so, que pode se camuflar contra a propria cor
                   // do botao selecionado (ex.: anel escuro sobre Marrom).
                   boxShadow: isSelected
-                    ? '0 0 0 2px var(--c-surface), 0 0 0 4px var(--text-primary)'
+                    ? '0 0 0 1px var(--c-surface), 0 0 0 2px var(--text-primary)'
                     : 'none',
                   transform: isSelected ? 'scale(1.04)' : 'scale(1)',
                   cursor: 'pointer',
