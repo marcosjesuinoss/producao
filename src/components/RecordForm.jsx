@@ -198,7 +198,18 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
       aria-label={initial ? 'Editar registro' : 'Novo registro'} noValidate>
 
       <div>
-        <label className="label" htmlFor="r-date">Data *</label>
+        <div className="flex items-center justify-between gap-2">
+          <label className="label mb-1" htmlFor="r-date">Data *</label>
+          <button
+            type="button"
+            onClick={goToAgenciaSettings}
+            aria-label="Configurar agência padrão"
+            className="shrink-0 px-2 py-1 rounded-lg mb-1"
+            style={{ background: 'var(--btn-bg)', boxShadow: 'var(--shadow-btn)', color: 'var(--text-muted)' }}
+          >
+            <Settings size={14} />
+          </button>
+        </div>
         <input id="r-date" type="date" className={`${inputCls('date')} !w-fit max-w-full`}
           value={form.date} onChange={(e) => set('date', e.target.value)} />
         {errors.date && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.date}</p>}
@@ -217,25 +228,14 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
         <label className="label" htmlFor="r-account">
           {agenciaEnabled ? 'Agência / Conta do produto' : 'Conta produção'} *
         </label>
-        <div className="flex gap-2">
-          <input id="r-account" ref={accountRef} className={`${inputCls('account')} flex-1 min-w-0`}
-            placeholder={
-              agenciaEnabled
-                ? (digitoEnabled ? '1234 / 1234567-8' : '1234 / 12345678')
-                : (digitoEnabled ? '1234567-8' : '12345678')
-            }
-            inputMode="numeric"
-            value={form.account} onChange={onAccountChange} />
-          <button
-            type="button"
-            onClick={goToAgenciaSettings}
-            aria-label="Configurar agência padrão"
-            className="shrink-0 px-2.5 rounded-lg"
-            style={{ background: 'var(--btn-bg)', boxShadow: 'var(--shadow-btn)', color: 'var(--text-muted)' }}
-          >
-            <Settings size={16} />
-          </button>
-        </div>
+        <input id="r-account" ref={accountRef} className={inputCls('account')}
+          placeholder={
+            agenciaEnabled
+              ? (digitoEnabled ? '1234 / 1234567-8' : '1234 / 12345678')
+              : (digitoEnabled ? '1234567-8' : '12345678')
+          }
+          inputMode="numeric"
+          value={form.account} onChange={onAccountChange} />
         {errors.account && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.account}</p>}
       </div>
 
