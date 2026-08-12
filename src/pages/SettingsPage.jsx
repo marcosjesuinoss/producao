@@ -233,7 +233,6 @@ export default function SettingsPage() {
                   boxShadow: isSelected ? `0 5px 16px rgba(${tones.rgb}, 0.5)` : 'none',
                   transform: isSelected ? 'scale(1.06)' : 'scale(1)',
                   opacity: isSelected ? 1 : 0.8,
-                  filter: isSelected ? 'none' : 'saturate(0.6)',
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}
