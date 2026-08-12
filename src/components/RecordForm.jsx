@@ -195,7 +195,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
 
       <div>
         <label className="label" htmlFor="r-date">Data *</label>
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex justify-between gap-2">
           <input id="r-date" type="date" className={`${inputCls('date')} !w-fit max-w-full`}
             value={form.date} onChange={(e) => set('date', e.target.value)} />
           <button
