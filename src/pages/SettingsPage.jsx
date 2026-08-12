@@ -227,7 +227,11 @@ export default function SettingsPage() {
                   border: 'none',
                   background: `linear-gradient(135deg, ${tones.brand2}, ${tones.brand})`,
                   color: tones.fg,
-                  transform: isSelected ? 'scale(1.04)' : 'scale(1)',
+                  // Brilho colorido (na propria cor do botao) em vez de um
+                  // contorno — destaca sem depender de contraste contra o
+                  // fundo do card, e nunca "briga" com nenhuma das 8 cores.
+                  boxShadow: isSelected ? `0 5px 16px rgba(${tones.rgb}, 0.5)` : 'none',
+                  transform: isSelected ? 'scale(1.06)' : 'scale(1)',
                   opacity: isSelected ? 1 : 0.8,
                   cursor: 'pointer',
                   transition: 'all 0.15s',
