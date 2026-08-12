@@ -21,6 +21,54 @@ function fullDateBR(iso) {
   return `${WEEKDAYS[date.getDay()]}, ${d} de ${MONTHS_FULL[m - 1]} de ${y}`
 }
 
+const hexToRgb = (hex) => {
+  const h = hex.replace('#', '')
+  return `${parseInt(h.slice(0, 2), 16)}, ${parseInt(h.slice(2, 4), 16)}, ${parseInt(h.slice(4, 6), 16)}`
+}
+
+// Rajada de linhas diagonais paralelas, cada uma com gradiente proprio
+// (transparente -> cor -> transparente ao longo do proprio comprimento,
+// nao so na espessura) — le como um traco de luz cruzando o cartao, tipo
+// capa de playlist/poster grafico, em vez de uma textura solida.
+function drawDiagonalLines(ctx, W, H, colors) {
+  ctx.save()
+  ctx.lineCap = 'round'
+  const angle = (-24 * Math.PI) / 180
+  const dx = Math.cos(angle)
+  const dy = Math.sin(angle)
+  // perpendicular a direcao das linhas, pra espalha-las lado a lado
+  const px = -dy
+  const py = dx
+  const diag = Math.hypot(W, H) * 1.4
+  const count = 8
+  for (let i = 0; i < count; i++) {
+    const t = i / (count - 1) - 0.5 // -0.5 .. 0.5
+    const offset = t * H * 1.6
+    const cx = W / 2 + px * offset
+    const cy = H * 0.35 + py * offset
+    const x1 = cx - dx * diag, y1 = cy - dy * diag
+    const x2 = cx + dx * diag, y2 = cy + dy * diag
+
+    const isAccent = i === 1 || i === 5
+    const color = colors[i % colors.length]
+    const peak = isAccent ? 0.32 : 0.14
+
+    const grad = ctx.createLinearGradient(x1, y1, x2, y2)
+    grad.addColorStop(0, `rgba(${color}, 0)`)
+    grad.addColorStop(0.45, `rgba(${color}, ${peak})`)
+    grad.addColorStop(0.55, `rgba(${color}, ${peak})`)
+    grad.addColorStop(1, `rgba(${color}, 0)`)
+
+    ctx.strokeStyle = grad
+    ctx.lineWidth = isAccent ? 7 : 2.5
+    ctx.beginPath()
+    ctx.moveTo(x1, y1)
+    ctx.lineTo(x2, y2)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath()
   ctx.moveTo(x + r, y)
@@ -85,34 +133,15 @@ export function downloadProducaoDiaImage({ breakdown, gerente, agencia }) {
   canvas.height = H
   const ctx = canvas.getContext('2d')
 
-  // Fundo — gradiente diagonal de base + manchas suaves desfocadas por
-  // cima (mesh gradient simplificado), pra dar profundidade em vez de uma
-  // cor chapada de ponta a ponta — mesmo espirito visual de telas de
-  // "resumo"/conquista de outros apps.
+  // Fundo — gradiente diagonal de base + rajada de linhas com gradiente
+  // proprio por cima, pra um visual grafico/poster em vez de cor chapada.
   const bg = ctx.createLinearGradient(0, 0, W, H)
   bg.addColorStop(0, brand2)
   bg.addColorStop(1, brand)
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
 
-  ctx.save()
-  ctx.filter = 'blur(140px)'
-  ctx.globalAlpha = 0.55
-  ctx.fillStyle = fg
-  ctx.beginPath()
-  ctx.arc(W * 0.88, H * 0.06, 260, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.globalAlpha = 0.4
-  ctx.fillStyle = brand2
-  ctx.beginPath()
-  ctx.arc(W * 0.05, H * 0.4, 280, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.globalAlpha = 0.35
-  ctx.fillStyle = fg
-  ctx.beginPath()
-  ctx.arc(W * 0.95, H * 0.85, 320, 0, Math.PI * 2)
-  ctx.fill()
-  ctx.restore()
+  drawDiagonalLines(ctx, W, H, [hexToRgb(fg), hexToRgb(brand2), hexToRgb(fg)])
 
   let y = 96
 
