@@ -194,20 +194,20 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
       aria-label={initial ? 'Editar registro' : 'Novo registro'} noValidate>
 
       <div>
-        <div className="flex items-center justify-between gap-2">
-          <label className="label mb-1" htmlFor="r-date">Data *</label>
+        <label className="label" htmlFor="r-date">Data *</label>
+        <div className="flex gap-2">
+          <input id="r-date" type="date" className={`${inputCls('date')} !w-fit max-w-full`}
+            value={form.date} onChange={(e) => set('date', e.target.value)} />
           <button
             type="button"
             onClick={() => setShowRegistroSettings(true)}
             aria-label="Ajuste de registro"
-            className="shrink-0 px-2 py-1 rounded-lg mb-1"
+            className="shrink-0 px-2.5 rounded-lg"
             style={{ background: 'var(--btn-bg)', boxShadow: 'var(--shadow-btn)', color: 'var(--text-muted)' }}
           >
-            <Settings size={14} />
+            <Settings size={16} />
           </button>
         </div>
-        <input id="r-date" type="date" className={`${inputCls('date')} !w-fit max-w-full`}
-          value={form.date} onChange={(e) => set('date', e.target.value)} />
         {errors.date && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.date}</p>}
       </div>
 
