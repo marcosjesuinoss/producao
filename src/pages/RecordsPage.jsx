@@ -216,7 +216,7 @@ export default function RecordsPage() {
           Quantidade de registros: <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{records.length}</span>
         </p>
         <button
-          className="btn text-xs px-2.5 py-1.5 flex items-center gap-1.5 shrink-0"
+          className="btn btn-brand text-xs px-2.5 py-1.5 flex items-center gap-1.5 shrink-0"
           onClick={handleProducaoDiaClick}
         >
           <Sparkles size={13} />
