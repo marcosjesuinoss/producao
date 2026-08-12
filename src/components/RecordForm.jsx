@@ -109,6 +109,20 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
     setErrors({})
   }, [initial])
 
+  // Reparo pro caso do efeito acima ter rodado ANTES de allProducts carregar
+  // (consulta assincrona ao banco — pode nao ter resolvido ainda no exato
+  // instante em que o formulario abre): nesse caso form.product fica vazio,
+  // mas o <select> do navegador, sem nenhuma opcao com value="", mostra o
+  // primeiro produto da lista como se estivesse selecionado — ilusao que
+  // faz o app tratar o produto errado (cai no padrao "valor" e esconde os
+  // campos exclusivos de "Abertura de Conta"). So preenche se ainda estiver
+  // vazio, pra nunca sobrescrever uma escolha real do usuario.
+  useEffect(() => {
+    if (!initial && !form.product && allProducts.length > 0) {
+      setForm((f) => ({ ...f, product: allProducts[0] }))
+    }
+  }, [initial, allProducts, form.product])
+
   const set = (k, v) => {
     setForm((f) => ({ ...f, [k]: v }))
     setErrors((e) => { const n = { ...e }; delete n[k]; return n })
