@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Settings } from 'lucide-react'
 import { BR_NUM_RE, todayISO } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
 import { getAgenciaEnabled, getAgenciaDefault, getDigitoEnabled, formatAccountMask, accountCursorForDigitCount } from '../lib/agencia.js'
+import RegistroSettingsModal from './RegistroSettingsModal.jsx'
 
 const ABERTURA = 'Abertura de Conta'
 
@@ -81,11 +81,11 @@ const validate = (f, isValueFn, agenciaEnabled, digitoEnabled) => {
 
 export default function RecordForm({ initial, onSubmit, onCancel, noCard = false }) {
   const { allProducts, isValue } = useProducts()
-  const navigate = useNavigate()
   const agenciaEnabled = getAgenciaEnabled()
   const digitoEnabled = getDigitoEnabled()
   const [form, setForm] = useState(empty)
   const [errors, setErrors] = useState({})
+  const [showRegistroSettings, setShowRegistroSettings] = useState(false)
   const accountRef = useRef(null)
   const accountCursor = useRef(null) // posicao pendente de restaurar apos o render
 
@@ -139,11 +139,6 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
     set('account', masked)
   }
 
-  const goToAgenciaSettings = () => {
-    onCancel?.()
-    navigate('/ajustes#registro')
-  }
-
   // Restaura o cursor depois que o React reescreve o value do input (o que,
   // por padrao, jogaria o cursor pro fim). Sem array de dependencias de
   // proposito: precisa rodar tambem quando o texto limpo nao muda (ex.:
@@ -194,6 +189,7 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
     `input${errors[field] ? ' !border-[color:var(--c-bad)]' : ''}`
 
   return (
+    <>
     <form className={`${noCard ? '' : 'card '}grid grid-cols-1 sm:grid-cols-2 gap-3`} onSubmit={submit}
       aria-label={initial ? 'Editar registro' : 'Novo registro'} noValidate>
 
@@ -202,8 +198,8 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
           <label className="label mb-1" htmlFor="r-date">Data *</label>
           <button
             type="button"
-            onClick={goToAgenciaSettings}
-            aria-label="Configurar agência padrão"
+            onClick={() => setShowRegistroSettings(true)}
+            aria-label="Ajuste de registro"
             className="shrink-0 px-2 py-1 rounded-lg mb-1"
             style={{ background: 'var(--btn-bg)', boxShadow: 'var(--shadow-btn)', color: 'var(--text-muted)' }}
           >
@@ -293,5 +289,10 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
         {initial && <button type="button" className="btn" onClick={onCancel}>Cancelar</button>}
       </div>
     </form>
+
+    {showRegistroSettings && (
+      <RegistroSettingsModal onClose={() => setShowRegistroSettings(false)} />
+    )}
+    </>
   )
 }
