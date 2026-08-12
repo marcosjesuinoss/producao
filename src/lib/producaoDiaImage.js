@@ -67,22 +67,53 @@ export function downloadProducaoDiaImage({ breakdown, gerente, agencia }) {
   const fg = cssVar('--c-brand-fg') || '#ffffff'
 
   const W = 1080
-  const H = 1350
+  const marginX = 72
+
+  // Altura calculada a partir do conteudo (em vez de fixa) — sem o numero
+  // grande de lancamentos, uma altura fixa deixava sobra de espaco vazio
+  // grande demais quando tinha poucos produtos no dia.
+  let contentY = 96 + 76 + 20 + 56 // eyebrow + titulo + gap + data
+  if (gerente) contentY += 52
+  if (agencia) contentY += 48
+  const listY = contentY + 90
+  const rowH = 92
+  const listH = breakdown.items.length * rowH + 48
+  const H = listY + listH + 164
+
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d')
 
-  // Fundo — gradiente diagonal na cor de destaque escolhida (mesma ideia
-  // do gradiente dos botoes .btn-brand, so que preenchendo o card inteiro:
-  // aqui e a peca inteira que celebra o dia, nao um botao).
+  // Fundo — gradiente diagonal de base + manchas suaves desfocadas por
+  // cima (mesh gradient simplificado), pra dar profundidade em vez de uma
+  // cor chapada de ponta a ponta — mesmo espirito visual de telas de
+  // "resumo"/conquista de outros apps.
   const bg = ctx.createLinearGradient(0, 0, W, H)
   bg.addColorStop(0, brand2)
   bg.addColorStop(1, brand)
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
 
-  const marginX = 72
+  ctx.save()
+  ctx.filter = 'blur(140px)'
+  ctx.globalAlpha = 0.55
+  ctx.fillStyle = fg
+  ctx.beginPath()
+  ctx.arc(W * 0.88, H * 0.06, 260, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.globalAlpha = 0.4
+  ctx.fillStyle = brand2
+  ctx.beginPath()
+  ctx.arc(W * 0.05, H * 0.4, 280, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.globalAlpha = 0.35
+  ctx.fillStyle = fg
+  ctx.beginPath()
+  ctx.arc(W * 0.95, H * 0.85, 320, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+
   let y = 96
 
   // Eyebrow
@@ -117,23 +148,7 @@ export function downloadProducaoDiaImage({ breakdown, gerente, agencia }) {
   ctx.fillText(fullDateBR(breakdown.date), marginX, y)
   ctx.globalAlpha = 1
 
-  // Numero grande — total de lancamentos
-  y += 130
-  ctx.font = '800 160px system-ui, -apple-system, Segoe UI, Roboto, sans-serif'
-  ctx.fillText(String(breakdown.totalRecords), marginX, y)
-  ctx.font = '600 32px system-ui, -apple-system, Segoe UI, Roboto, sans-serif'
-  ctx.globalAlpha = 0.85
-  ctx.fillText(
-    breakdown.totalRecords === 1 ? 'lançamento hoje' : 'lançamentos hoje',
-    marginX,
-    y + 42
-  )
-  ctx.globalAlpha = 1
-
   // Cartao translucido com a lista de produtos
-  const listY = y + 96
-  const rowH = 92
-  const listH = breakdown.items.length * rowH + 48
   roundRect(ctx, marginX, listY, W - marginX * 2, listH, 28)
   ctx.fillStyle = 'rgba(255,255,255,0.14)'
   ctx.fill()
