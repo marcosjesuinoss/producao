@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Download, Send, Settings } from 'lucide-react'
+import { Download, Send, Settings, Sparkles } from 'lucide-react'
 import { useLiveQuery } from '../hooks/useLiveData.js'
 import { db } from '../db/db.js'
 import { deleteRecord, updateRecord } from '../api/localApi.js'
@@ -7,12 +7,15 @@ import { exportCsv } from '../lib/csv.js'
 import { exportPdf } from '../lib/pdf.js'
 import { dateBR, FULL_MONTHS } from '../lib/format.js'
 import { buildProducaoPayload, periodSlug, downloadJSON } from '../lib/backup.js'
+import { getTodayBreakdown, getImagemGerente, getImagemAgencia } from '../lib/producaoDia.js'
+import { downloadProducaoDiaImage } from '../lib/producaoDiaImage.js'
 import Filters from '../components/Filters.jsx'
 import RecordList from '../components/RecordList.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import PeriodPicker from '../components/PeriodPicker.jsx'
 import DownloadDialog from '../components/DownloadDialog.jsx'
 import RegistroSettingsModal from '../components/RegistroSettingsModal.jsx'
+import ProducaoDiaModal from '../components/ProducaoDiaModal.jsx'
 import Toast from '../components/Toast.jsx'
 import { useToast } from '../hooks/useToast.js'
 import { useRecordModal } from '../context/RecordModalContext.jsx'
@@ -52,6 +55,7 @@ export default function RecordsPage() {
   const [sendRecords, setSendRecords] = useState(null)
   const [showDownloadWarning, setShowDownloadWarning] = useState(false)
   const [showRegistroSettings, setShowRegistroSettings] = useState(false)
+  const [producaoDiaBreakdown, setProducaoDiaBreakdown] = useState(null) // null = fechado
   const { toast, showToast, hideToast } = useToast()
 
   const all = useLiveQuery(
@@ -143,6 +147,25 @@ export default function RecordsPage() {
     fallbackToDownload()
   }
 
+  const handleProducaoDiaClick = async () => {
+    const breakdown = await getTodayBreakdown()
+    if (breakdown.totalRecords === 0) {
+      showToast('Não houve registros hoje', 'error')
+      return
+    }
+    setProducaoDiaBreakdown(breakdown)
+  }
+
+  const handleProducaoDiaConfirm = () => {
+    downloadProducaoDiaImage({
+      breakdown: producaoDiaBreakdown,
+      gerente: getImagemGerente(),
+      agencia: getImagemAgencia(),
+    })
+    setProducaoDiaBreakdown(null)
+    showToast('Imagem gerada.')
+  }
+
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -178,11 +201,28 @@ export default function RecordsPage() {
         <RegistroSettingsModal onClose={() => setShowRegistroSettings(false)} />
       )}
 
+      {producaoDiaBreakdown && (
+        <ProducaoDiaModal
+          breakdown={producaoDiaBreakdown}
+          onConfirm={handleProducaoDiaConfirm}
+          onCancel={() => setProducaoDiaBreakdown(null)}
+        />
+      )}
+
       <Filters value={filters} onChange={setFilters} accounts={accounts} sortMode={sortMode} onSortChange={setSortMode} />
 
-      <p className="text-xs px-1" style={{ color: 'var(--text-muted)' }}>
-        Quantidade de registros: <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{records.length}</span>
-      </p>
+      <div className="flex items-center justify-between gap-2 px-1">
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+          Quantidade de registros: <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{records.length}</span>
+        </p>
+        <button
+          className="btn text-xs px-2.5 py-1.5 flex items-center gap-1.5 shrink-0"
+          onClick={handleProducaoDiaClick}
+        >
+          <Sparkles size={13} />
+          Produção do dia
+        </button>
+      </div>
 
       <RecordList records={records} onEdit={(r) => open(r)} onDelete={handleDelete} onIgnore={handleIgnore} groupByDate={sortMode === 'date'} />
 
