@@ -43,7 +43,17 @@ export const num = (n) => Number(n || 0).toLocaleString('pt-BR')
 // toFixed(6) elimina ruido de ponto flutuante (ex.: 89.999999999999996) sem afetar o valor real.
 export const floorPct = (n) => Math.floor(Number(n.toFixed(6)))
 
-export const todayISO = () => new Date().toISOString().slice(0, 10)
+// Usa getFullYear/Month/Date (hora local), nao toISOString (UTC) — a versao
+// UTC ja virava o dia errado a partir das ~21h em fusos como o do Brasil
+// (UTC-3), fazendo telas que dependem de "hoje" (Produção do Dia, data
+// padrao do formulario, filtro "Hoje") apontarem pro dia seguinte.
+export const todayISO = () => {
+  const d = new Date()
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
 // "2026-06-30" -> "30/06/2026". Manipulacao de string (sem Date) pra evitar
 // o bug classico de fuso horario ao interpretar "YYYY-MM-DD" como UTC.
