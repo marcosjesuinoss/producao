@@ -445,16 +445,22 @@ export default function HomePage() {
     [memberships]
   )
 
-  const standaloneBreakdown = useMemo(() => {
-    const withProduction = breakdown.filter((b) => {
+  // Produtos zerados ficam separados dos com producao: entram sempre no fim
+  // da lista (nunca misturados via getSorted com os demais), pra ligar
+  // "Mostrar zerados" so acrescentar linhas no rodape em vez de reordenar
+  // tudo que ja esta visivel — e, se um zerado ganhar producao, ele sai
+  // desse grupo e passa a ocupar sua posicao normal entre os demais.
+  const standaloneBreakdown = useMemo(
+    () => breakdown.filter((b) => {
       const prod = productsByName.get(b.product)
       return prod && !grupoChildProductIds.has(prod.id) && b.realized > 0
-    })
+    }),
+    [breakdown, productsByName, grupoChildProductIds]
+  )
 
-    if (!showZero) return withProduction
-
-    // Add products with goals but zero production (deduplicated by name)
-    const shown = new Set(withProduction.map((b) => b.product))
+  const zeroBreakdown = useMemo(() => {
+    if (!showZero) return []
+    const shown = new Set(standaloneBreakdown.map((b) => b.product))
     const extras = []
     const seen = new Set()
     for (const g of (monthGoals ?? [])) {
@@ -474,8 +480,8 @@ export default function HomePage() {
         useValue,
       })
     }
-    return [...withProduction, ...extras]
-  }, [showZero, breakdown, productsByName, grupoChildProductIds, monthGoals])
+    return extras
+  }, [showZero, standaloneBreakdown, productsByName, grupoChildProductIds, monthGoals])
 
   // Build sorted display list combining root grupos and standalone products
   const sortedItems = useMemo(() => {
@@ -484,17 +490,22 @@ export default function HomePage() {
       const prod = productsByName.get(b.product)
       return `p:${prod?.id ?? b.product}`
     })
-    const ordered = getSorted([...grupoKeys, ...productKeys])
+    const zeroKeys = zeroBreakdown.map((b) => {
+      const prod = productsByName.get(b.product)
+      return `p:${prod?.id ?? b.product}`
+    })
+    const ordered = [...getSorted([...grupoKeys, ...productKeys]), ...getSorted(zeroKeys)]
+    const allBreakdown = [...standaloneBreakdown, ...zeroBreakdown]
     return ordered.map((key) => {
       if (key.startsWith('g:')) {
         const grp = rootGrupos.find((g) => g.id === key.slice(2))
         return grp ? { key, kind: 'grupo', grp } : null
       }
       const prodId = key.slice(2)
-      const b = standaloneBreakdown.find((sb) => productsByName.get(sb.product)?.id === prodId)
+      const b = allBreakdown.find((sb) => productsByName.get(sb.product)?.id === prodId)
       return b ? { key, kind: 'product', b } : null
     }).filter(Boolean)
-  }, [rootGrupos, standaloneBreakdown, productsByName, getSorted])
+  }, [rootGrupos, standaloneBreakdown, zeroBreakdown, productsByName, getSorted])
 
   const sortedKeys = useMemo(() => sortedItems.map((i) => i.key), [sortedItems])
   useReorderTransition(itemRefs, sortedKeys.join(','))
