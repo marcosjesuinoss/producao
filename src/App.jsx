@@ -82,7 +82,17 @@ export default function App() {
         <main
           ref={mainRef}
           className="max-w-5xl mx-auto p-4 w-full"
-          style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}
+          // overflowAnchor:none desliga a compensacao automatica de scroll do
+          // navegador (scroll anchoring): quando linhas novas aparecem ACIMA
+          // de um botao recem-tocado (ex.: "Mostrar zerados" inserindo itens
+          // zerados antes do proprio botao na lista), o WebKit tenta ajustar
+          // o scrollTop sozinho pra manter o botao no lugar — e esse ajuste
+          // pode brigar com a transicao FLIP que o app ja faz por conta
+          // propria (ver useReorderTransition.js), causando um flash
+          // instantaneo. So conteudo puramente ACRESCENTADO (sem nada
+          // reordenado de verdade) nao deveria precisar de nenhuma
+          // compensacao — por isso desligar essa "ajuda" do navegador aqui.
+          style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', overflowAnchor: 'none' }}
         >
           <Routes>
             <Route path="/" element={<HomePage />} />
