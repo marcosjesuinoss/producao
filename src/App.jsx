@@ -26,9 +26,37 @@ import { RecordModalProvider } from './context/RecordModalContext.jsx'
 import { MonthProvider } from './context/MonthContext.jsx'
 import UpdateToast from './components/UpdateToast.jsx'
 
+// PWA instalada em standalone no iOS tem um bug conhecido do WebKit: no
+// lancamento, 100dvh as vezes fica com a altura errada (nao contando a
+// safe area corretamente) e so se corrige quando o WebKit recebe o
+// PRIMEIRO toque/scroll da sessao — o que faz a tela "pular" bem na hora
+// em que o usuario clica em algo, mesmo que o clique nao tenha nada a ver
+// com o motivo do pulo. Calcular a altura via JS (window.innerHeight, que
+// nao tem esse bug) e guardar numa CSS var evita depender do dvh nesses
+// casos; refaz o calculo tambem apos um pequeno atraso pra pegar o
+// resultado ja correto de eventuais ajustes tardios da safe area no
+// lancamento, antes que o usuario chegue a tocar em algo.
+function useAppHeight() {
+  useEffect(() => {
+    const setAppHeight = () => {
+      document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`)
+    }
+    setAppHeight()
+    const settleTimer = setTimeout(setAppHeight, 300)
+    window.addEventListener('resize', setAppHeight)
+    window.addEventListener('orientationchange', setAppHeight)
+    return () => {
+      clearTimeout(settleTimer)
+      window.removeEventListener('resize', setAppHeight)
+      window.removeEventListener('orientationchange', setAppHeight)
+    }
+  }, [])
+}
+
 export default function App() {
   const { hasPin, unlocked } = useAuth()
   const mainRef = useRef(null)
+  useAppHeight()
 
   useEffect(() => {
     seedStandardProducts().then(seedGrupos)
@@ -48,7 +76,7 @@ export default function App() {
         passa a ser so o ultimo item da coluna, sempre no rodape por
         construcao, tanto faz o que acontece no meio.
       */}
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'var(--app-height, 100dvh)' }}>
         <ScrollToTop containerRef={mainRef} />
         <Header />
         <main
