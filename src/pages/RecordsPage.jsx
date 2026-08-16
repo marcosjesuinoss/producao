@@ -58,8 +58,11 @@ export default function RecordsPage() {
   const [producaoDiaBreakdown, setProducaoDiaBreakdown] = useState(null) // null = fechado
   const { toast, showToast, hideToast } = useToast()
 
+  // Data decrescente (mais recente primeiro); dentro do mesmo dia, por
+  // ordem de lancamento — createdAt decrescente, mais recente em cima.
   const all = useLiveQuery(
-    () => db.records.where({ year: Number(year), month: Number(month) }).reverse().sortBy('date'),
+    () => db.records.where({ year: Number(year), month: Number(month) }).toArray()
+      .then((recs) => recs.sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt ?? 0) - (a.createdAt ?? 0))),
     [year, month], []
   )
   const accounts = useMemo(() => [...new Set(all.map((r) => r.account).filter(Boolean))], [all])
