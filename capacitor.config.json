@@ -1,0 +1,6 @@
+{
+  "appId": "com.controleproducao.app",
+  "appName": "Controle de Produção",
+  "webDir": "dist",
+  "backgroundColor": "#0b1220"
+}

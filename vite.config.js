@@ -6,45 +6,50 @@ import { VitePWA } from 'vite-plugin-pwa'
 // runtime caching para a navegacao -> experiencia offline-first.
 // base: caminho do site no GitHub Pages (https://<user>.github.io/<repo>/).
 // Em dev (npm run dev) usamos '/'; no build de producao usamos '/producao/'.
-const base = process.env.NODE_ENV === 'production' ? '/producao/' : '/'
+// No build pro Capacitor (npm run build:capacitor, mode "capacitor") o app
+// nao mora num subcaminho de dominio nenhum — ele roda direto de dentro do
+// shell nativo — entao a base tem que ser '/'.
+export default defineConfig(({ mode }) => {
+  const base = mode === 'capacitor' ? '/' : process.env.NODE_ENV === 'production' ? '/producao/' : '/'
 
-export default defineConfig({
-  base,
-  plugins: [
-    react(),
-    VitePWA({
-      registerType: 'prompt',
-      includeAssets: ['favicon.svg', 'icon-192.svg', 'icon-512.svg'],
-      manifest: {
-        name: 'Controle de Producao',
-        short_name: 'Producao',
-        description: 'Controle de producao mensal do gerente bancario',
-        theme_color: '#0f766e',
-        background_color: '#0b1220',
-        display: 'standalone',
-        start_url: base,
-        scope: base,
-        icons: [
-          { src: 'icon-192.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
-          { src: 'icon-512.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
-        ]
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: ({ request }) => request.mode === 'navigate',
-            handler: 'NetworkFirst',
-            options: { cacheName: 'pages', networkTimeoutSeconds: 3 }
-          },
-          {
-            urlPattern: ({ request }) => ['style', 'script', 'worker'].includes(request.destination),
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'assets' }
-          }
-        ]
-      },
-      devOptions: { enabled: true }
-    })
-  ]
+  return {
+    base,
+    plugins: [
+      react(),
+      VitePWA({
+        registerType: 'prompt',
+        includeAssets: ['favicon.svg', 'icon-192.svg', 'icon-512.svg'],
+        manifest: {
+          name: 'Controle de Producao',
+          short_name: 'Producao',
+          description: 'Controle de producao mensal do gerente bancario',
+          theme_color: '#0f766e',
+          background_color: '#0b1220',
+          display: 'standalone',
+          start_url: base,
+          scope: base,
+          icons: [
+            { src: 'icon-192.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable' },
+            { src: 'icon-512.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+          ]
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+          runtimeCaching: [
+            {
+              urlPattern: ({ request }) => request.mode === 'navigate',
+              handler: 'NetworkFirst',
+              options: { cacheName: 'pages', networkTimeoutSeconds: 3 }
+            },
+            {
+              urlPattern: ({ request }) => ['style', 'script', 'worker'].includes(request.destination),
+              handler: 'StaleWhileRevalidate',
+              options: { cacheName: 'assets' }
+            }
+          ]
+        },
+        devOptions: { enabled: true }
+      })
+    ]
+  }
 })

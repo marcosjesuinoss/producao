@@ -5,3 +5,24 @@ dev-dist
 *.local
 .DS_Store
 .vite
+
+# Capacitor — os projetos android/ e ios/ ficam versionados (sao parte do
+# app), mas os artefatos de build e config local de cada maquina, nao.
+android/app/build
+android/build
+android/.gradle
+android/local.properties
+android/captures
+android/*.iml
+android/.idea
+ios/App/Pods
+ios/App/build
+ios/App/DerivedData
+ios/App/App.xcworkspace/xcuserdata
+ios/App/App.xcodeproj/xcuserdata
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata
+
+# Copia do dist/ que "npx cap sync" gera dentro de cada projeto nativo —
+# e so build output, sempre regerado; nao precisa ficar no git.
+android/app/src/main/assets/public
+ios/App/App/public
