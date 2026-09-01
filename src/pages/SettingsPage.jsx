@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Sun, Moon, MoonStar, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload } from 'lucide-react'
+import { Sun, Moon, MoonStar, Trash2, Lock, RefreshCw, Target, Layers, Download, Upload, Users, Palmtree } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -289,6 +289,50 @@ export default function SettingsPage() {
           >
             <Layers size={14} />
             Gerenciar grupos
+          </button>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            onClick={() => navigate('/equipe')}
+            style={{
+              flex: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0.5em 0.75em',
+              fontSize: '0.875em',
+              fontWeight: 500,
+              borderRadius: '12px',
+              background: 'var(--btn-bg)',
+              boxShadow: 'var(--shadow-btn)',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+            }}
+          >
+            <Users size={14} />
+            Equipe
+          </button>
+          <button
+            onClick={() => navigate('/ferias')}
+            style={{
+              flex: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0.5em 0.75em',
+              fontSize: '0.875em',
+              fontWeight: 500,
+              borderRadius: '12px',
+              background: 'var(--btn-bg)',
+              boxShadow: 'var(--shadow-btn)',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+            }}
+          >
+            <Palmtree size={14} />
+            Minhas férias
           </button>
         </div>
       </div>

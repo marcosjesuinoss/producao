@@ -3,6 +3,8 @@ import { Settings } from 'lucide-react'
 import { BR_NUM_RE, todayISO } from '../lib/format.js'
 import { useProducts } from '../hooks/useProducts.js'
 import { getAgenciaEnabled, getAgenciaDefault, getDigitoEnabled, formatAccountMask, accountCursorForDigitCount } from '../lib/agencia.js'
+import { listFerias } from '../lib/ferias.js'
+import { isVacationDay } from '../lib/businessDays.js'
 import RegistroSettingsModal from './RegistroSettingsModal.jsx'
 
 const ABERTURA = 'Abertura de Conta'
@@ -88,6 +90,16 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
   const [showRegistroSettings, setShowRegistroSettings] = useState(false)
   const accountRef = useRef(null)
   const accountCursor = useRef(null) // posicao pendente de restaurar apos o render
+
+  // Ferias sao poucas linhas e mudam raramente — carrega a lista inteira uma
+  // vez e testa em memoria, em vez de consultar o banco a cada tecla na data.
+  const [feriasPeriods, setFeriasPeriods] = useState([])
+  useEffect(() => {
+    let alive = true
+    listFerias().then((rows) => { if (alive) setFeriasPeriods(rows) })
+    return () => { alive = false }
+  }, [])
+  const onVacation = form.date ? isVacationDay(form.date, feriasPeriods) : false
 
   useEffect(() => {
     if (initial) {
@@ -209,6 +221,14 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
           </button>
         </div>
         {errors.date && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.date}</p>}
+        {/* Aviso, nao erro: lancar produção num dia de ferias e permitido
+            (pode ter trabalhado mesmo assim) — so chama atencao pro caso de
+            ser data errada. Nao bloqueia o submit. */}
+        {!errors.date && onVacation && (
+          <p className="text-xs mt-1" style={{ color: 'var(--accent-yellow)' }}>
+            Essa data está dentro das suas férias.
+          </p>
+        )}
       </div>
 
       <div>

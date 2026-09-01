@@ -20,6 +20,8 @@ import SettingsPage from './pages/SettingsPage.jsx'
 import GruposPage from './pages/GruposPage.jsx'
 import AcumuladoPage from './pages/AcumuladoPage.jsx'
 import EvolucaoPage from './pages/EvolucaoPage.jsx'
+import FeriasPage from './pages/FeriasPage.jsx'
+import EquipePage from './pages/EquipePage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import { useAuth } from './context/AuthContext.jsx'
 import { RecordModalProvider } from './context/RecordModalContext.jsx'
@@ -102,6 +104,8 @@ export default function App() {
             <Route path="/grupos" element={<GruposPage />} />
             <Route path="/acumulado" element={<AcumuladoPage />} />
             <Route path="/evolucao" element={<EvolucaoPage />} />
+            <Route path="/ferias" element={<FeriasPage />} />
+            <Route path="/equipe" element={<EquipePage />} />
             <Route path="*" element={<HomePage />} />
           </Routes>
         </main>

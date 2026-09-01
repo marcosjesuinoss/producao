@@ -98,3 +98,59 @@ export function countBusinessDaysElapsed(year, month, throughDay) {
   }
   return count
 }
+
+// ─── Camada de FERIAS por cima do calendario bancario ──────────────────
+// O calendario acima (isBusinessDay) e do BANCO — nao muda por gerente.
+// As funcoes abaixo aplicam por cima as ferias DESTE gerente, entao um
+// "dia trabalhado" = dia util do banco E fora das ferias dele.
+//
+// "periods" e sempre uma lista de { startDate, endDate } em ISO
+// ('YYYY-MM-DD', ambos inclusive) — comparacao e feita como string, que
+// pra esse formato ja ordena cronologicamente (evita Date/fuso horario,
+// mesmo cuidado do resto do app). Lista vazia/ausente = sem ferias, e
+// tudo se comporta exatamente como antes.
+
+export function isVacationDay(dateStr, periods) {
+  if (!periods?.length) return false
+  return periods.some((p) => dateStr >= p.startDate && dateStr <= p.endDate)
+}
+
+// Dia em que o gerente e cobrado por producao: util pro banco e fora das
+// ferias dele.
+export function isWorkingDay(dateStr, periods) {
+  return isBusinessDay(dateStr) && !isVacationDay(dateStr, periods)
+}
+
+// Total de dias TRABALHADOS no mes (dias uteis menos os de ferias).
+export function countWorkingDaysInMonth(year, month, periods) {
+  const total = daysInMonth(year, month)
+  let count = 0
+  for (let day = 1; day <= total; day++) {
+    if (isWorkingDay(`${year}-${pad2(month)}-${pad2(day)}`, periods)) count++
+  }
+  return count
+}
+
+// Dias trabalhados do dia 1 ate "throughDay" (inclusive).
+export function countWorkingDaysElapsed(year, month, throughDay, periods) {
+  const lastDay = Math.min(Math.max(throughDay, 0), daysInMonth(year, month))
+  let count = 0
+  for (let day = 1; day <= lastDay; day++) {
+    if (isWorkingDay(`${year}-${pad2(month)}-${pad2(day)}`, periods)) count++
+  }
+  return count
+}
+
+// Quantos dias UTEIS do mes cairam dentro das ferias — o que o gerente
+// "perdeu" de dias de trabalho (fim de semana/feriado dentro das ferias
+// nao conta, porque nao seria dia de trabalho de qualquer forma).
+export function countVacationBusinessDays(year, month, periods) {
+  if (!periods?.length) return 0
+  const total = daysInMonth(year, month)
+  let count = 0
+  for (let day = 1; day <= total; day++) {
+    const dateStr = `${year}-${pad2(month)}-${pad2(day)}`
+    if (isBusinessDay(dateStr) && isVacationDay(dateStr, periods)) count++
+  }
+  return count
+}

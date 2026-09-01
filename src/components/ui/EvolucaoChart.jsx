@@ -39,6 +39,49 @@ const autoHideTooltipPlugin = {
   },
 }
 
+// Faixa sombreada nos dias de ferias. Desenha ANTES dos datasets
+// (beforeDatasetsDraw) pra ficar por tras das linhas, nunca por cima.
+// Recebe os dias via options.plugins.feriasBand.days (lista de numeros de
+// dia do mes) e usa a propria escala X do grafico pra achar a posicao,
+// entao acompanha zoom/resize sem conta manual.
+const feriasBandPlugin = {
+  id: 'feriasBand',
+  beforeDatasetsDraw(chart, _args, opts) {
+    const days = opts?.days
+    if (!days?.length) return
+    const { ctx, chartArea, scales } = chart
+    const x = scales.x
+    if (!x || !chartArea) return
+
+    // Agrupa dias consecutivos num bloco so — um periodo de 10 dias vira
+    // um retangulo, nao 10 colados (evita emendas visiveis por antialiasing).
+    const sorted = [...days].sort((a, b) => a - b)
+    const blocks = []
+    let start = sorted[0]
+    let prev = sorted[0]
+    for (let i = 1; i <= sorted.length; i++) {
+      const d = sorted[i]
+      if (d !== prev + 1) {
+        blocks.push([start, prev])
+        start = d
+      }
+      prev = d
+    }
+
+    ctx.save()
+    // canvas nao entende var() — resolve o valor do tema aqui.
+    ctx.fillStyle = `rgba(${cssVar('--c-brand-rgb') || '96, 165, 250'}, 0.10)`
+    for (const [from, to] of blocks) {
+      // getPixelForValue usa o INDICE da categoria (dia 1 = indice 0).
+      const left = x.getPixelForValue(from - 1)
+      const right = x.getPixelForValue(to - 1)
+      const half = (x.getPixelForValue(1) - x.getPixelForValue(0)) / 2 || 0
+      ctx.fillRect(left - half, chartArea.top, (right - left) + half * 2, chartArea.bottom - chartArea.top)
+    }
+    ctx.restore()
+  },
+}
+
 // Projeção: extrapola o RITMO REAL do usuario (realizado ate hoje) pro resto
 // do mes, seguindo a mesma "forma" da curva de ritmo esperado (cumulativeExpected
 // ja cresce so nos dias uteis, na proporcao certa) — so escalada pelo ritmo
@@ -59,7 +102,7 @@ function buildProjectionData(series, refDay, target) {
   })
 }
 
-export default function EvolucaoChart({ series, useValue, referenceLine, target, refDay, showProjection, showMarker90 }) {
+export default function EvolucaoChart({ series, useValue, referenceLine, target, refDay, showProjection, showMarker90, feriasDays }) {
   const fmt = useValue ? brl : num
 
   // Cor solida por serie — usada no tracinho do tooltip (uma gradiente nao
@@ -140,6 +183,7 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target,
     maintainAspectRatio: false,
     interaction: { mode: 'index', intersect: false },
     plugins: {
+      feriasBand: { days: feriasDays },
       tooltip: {
         usePointStyle: true,
         // Ordena os itens do tooltip pelo valor naquele dia — a linha que
@@ -176,11 +220,11 @@ export default function EvolucaoChart({ series, useValue, referenceLine, target,
         },
       },
     },
-  }), [useValue, fmt, target])
+  }), [useValue, fmt, target, feriasDays])
 
   return (
     <div style={{ height: '220px' }}>
-      <Line data={data} options={options} plugins={[autoHideTooltipPlugin]} />
+      <Line data={data} options={options} plugins={[autoHideTooltipPlugin, feriasBandPlugin]} />
     </div>
   )
 }

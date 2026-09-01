@@ -108,5 +108,19 @@ db.version(6).stores({
   await renameOrCreate('Cobranca - LP', 'Vencidos - LP', true)
 })
 
+// v7: tabela de ferias do gerente. Cada periodo tem inicio/fim (inclusive) e
+// um "mode" que define o que acontece com a meta do mes (ver lib/ferias.js):
+//   'full'    -> meta continua a mesma (o ritmo diario sobe nos dias uteis restantes)
+//   'prorata' -> meta cai proporcionalmente aos dias uteis efetivamente trabalhados
+db.version(7).stores({
+  records: '&id, date, year, month, product, account, manager, synced',
+  goals: '&id, year, month, product, manager',
+  users: '&id, name',
+  products: '&id, name',
+  classes: '&id, name',
+  yearSnapshots: '&id, year',
+  ferias: '&id, startDate, endDate'
+})
+
 export const uid = () =>
   (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2))

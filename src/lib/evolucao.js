@@ -1,6 +1,7 @@
 import { db } from '../db/db.js'
 import { VALUE_PRODUCTS } from './format.js'
-import { countBusinessDaysInMonth, countBusinessDaysElapsed, isBusinessDay } from './businessDays.js'
+import { countWorkingDaysInMonth, countWorkingDaysElapsed, isWorkingDay } from './businessDays.js'
+import { listFeriasForMonth, feriasImpact } from './ferias.js'
 
 /*
   Agregacao dia a dia por produto — igual em espirito a productBreakdown()
@@ -27,9 +28,16 @@ export async function evolucaoBreakdown({ year, month } = {}) {
   const y = Number(year) || now.getFullYear()
   const m = Number(month) || now.getMonth() + 1
 
-  const totalBusinessDays = countBusinessDaysInMonth(y, m)
+  // Ferias entram aqui como uma camada por cima do calendario do banco:
+  // dia de ferias deixa de ser "dia trabalhado", entao some da conta de
+  // dias uteis, a meta diaria se redistribui e a curva de esperado fica
+  // plana durante o periodo (ver lib/businessDays.js e lib/ferias.js).
+  const ferias = await listFeriasForMonth(y, m)
+  const impact = feriasImpact(y, m, ferias)
+
+  const totalBusinessDays = countWorkingDaysInMonth(y, m, ferias)
   const refDay = referenceDay(y, m)
-  const elapsedBusinessDays = countBusinessDaysElapsed(y, m, refDay)
+  const elapsedBusinessDays = countWorkingDaysElapsed(y, m, refDay, ferias)
 
   let records = await db.records.where({ year: y, month: m }).toArray()
   records = records.filter((r) => !r.ignored)
@@ -69,7 +77,11 @@ export async function evolucaoBreakdown({ year, month } = {}) {
     .map((b) => {
       const useValue = isValueProduct(b.product)
       const realized = useValue ? b.value : b.quantity
-      const target = useValue ? b.targetVal : b.targetQty
+      const fullTarget = useValue ? b.targetVal : b.targetQty
+      // No modo 'prorata' a meta encolhe na proporcao dos dias trabalhados;
+      // no 'full' o factor e 1 e a meta segue cheia (so o ritmo diario sobe,
+      // porque o divisor abaixo ja e menor).
+      const target = fullTarget * impact.factor
       const dailyTarget = totalBusinessDays > 0 ? target / totalBusinessDays : 0
       const expectedToDate = dailyTarget * elapsedBusinessDays
       const pace = realized - expectedToDate
@@ -81,7 +93,8 @@ export async function evolucaoBreakdown({ year, month } = {}) {
         const dateStr = `${y}-${pad2(m)}-${pad2(day)}`
         const dayData = b.byDay.get(dateStr)
         if (dayData) cumulativeActual += useValue ? dayData.value : dayData.quantity
-        if (isBusinessDay(dateStr)) cumulativeExpected += dailyTarget
+        // Dia de ferias nao soma esperado -> a curva fica plana no periodo.
+        if (isWorkingDay(dateStr, ferias)) cumulativeExpected += dailyTarget
         series.push({
           day,
           cumulativeActual: day <= refDay ? cumulativeActual : null,
@@ -96,6 +109,9 @@ export async function evolucaoBreakdown({ year, month } = {}) {
         useValue,
         realized,
         target,
+        // Meta antes do desconto das ferias — a tela mostra as duas quando
+        // sao diferentes, pra ninguem achar que a meta "sumiu" sozinha.
+        fullTarget,
         dailyTarget,
         expectedToDate,
         pace,
@@ -113,5 +129,7 @@ export async function evolucaoBreakdown({ year, month } = {}) {
     refDay,
     totalDays,
     products,
+    ferias,
+    feriasImpact: impact,
   }
 }

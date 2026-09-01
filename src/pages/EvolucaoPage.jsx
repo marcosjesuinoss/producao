@@ -8,6 +8,7 @@ import { useEvolucaoFavorites } from '../hooks/useEvolucaoFavorites.js'
 import { useReorderTransition } from '../hooks/useReorderTransition.js'
 import { getAllDescendants } from '../utils/grupoCalculations.js'
 import { brl, num, floorPct, FULL_MONTHS } from '../lib/format.js'
+import { isVacationDay } from '../lib/businessDays.js'
 import { getProjecaoEnabled, setProjecaoEnabled, getMarcador90Enabled, setMarcador90Enabled } from '../lib/chartSettings.js'
 import EvolucaoChart from '../components/ui/EvolucaoChart.jsx'
 import GraficosSettingsModal from '../components/GraficosSettingsModal.jsx'
@@ -115,7 +116,7 @@ function OrderControls({ onMoveUp, onMoveDown, isFirst, isLast }) {
   )
 }
 
-function ChartCard({ item, refDay, isFavorite, onToggleFavorite, reordering, onMove, isFirst, isLast, showProjection, showMarker90 }) {
+function ChartCard({ item, refDay, isFavorite, onToggleFavorite, reordering, onMove, isFirst, isLast, showProjection, showMarker90, feriasDays }) {
   // Durante a reordenacao, fecha o grafico e mostra so o nome + setas —
   // facilita organizar varios favoritos sem rolar por graficos inteiros.
   if (reordering && onMove) {
@@ -155,6 +156,7 @@ function ChartCard({ item, refDay, isFavorite, onToggleFavorite, reordering, onM
       <EvolucaoChart
         series={item.series} useValue={item.useValue} referenceLine={target90} target={item.target}
         refDay={refDay} showProjection={showProjection} showMarker90={showMarker90}
+        feriasDays={feriasDays}
       />
 
       <div className="flex items-center justify-between gap-2 pt-3 border-t" style={{ borderColor: 'var(--c-border)' }}>
@@ -262,6 +264,20 @@ export default function EvolucaoPage() {
     ? (breakdown.elapsedBusinessDays / breakdown.totalBusinessDays) * 100
     : 0
 
+  // Dias do mes (numeros) cobertos por ferias — alimenta a faixa sombreada
+  // no grafico. Inclui fim de semana/feriado dentro do periodo de proposito:
+  // visualmente o bloco de ferias e continuo, mesmo que so os dias uteis
+  // contem pro calculo.
+  const feriasDays = useMemo(() => {
+    if (!breakdown?.ferias?.length) return []
+    const days = []
+    for (let day = 1; day <= breakdown.totalDays; day++) {
+      const iso = `${breakdown.year}-${String(breakdown.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      if (isVacationDay(iso, breakdown.ferias)) days.push(day)
+    }
+    return days
+  }, [breakdown])
+
   if (!breakdown) {
     return (
       <section className="space-y-4">
@@ -305,6 +321,13 @@ export default function EvolucaoPage() {
         <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
           {breakdown.elapsedBusinessDays} de {breakdown.totalBusinessDays} dias úteis decorridos · ritmo esperado: {floorPct(linearExpectedPct)}% do mês
         </p>
+        {breakdown.feriasImpact?.vacationDays > 0 && (
+          <p className="text-xs pt-1" style={{ color: 'var(--c-brand)' }}>
+            {breakdown.feriasImpact.vacationDays} {breakdown.feriasImpact.vacationDays === 1 ? 'dia útil descontado' : 'dias úteis descontados'} por férias
+            {' · '}
+            {breakdown.feriasImpact.mode === 'prorata' ? 'metas proporcionais' : 'metas cheias'}
+          </p>
+        )}
       </div>
 
       {chartableItems.length === 0 ? (
@@ -328,6 +351,7 @@ export default function EvolucaoPage() {
                     reordering={reordering} onMove={(dir) => moveFavorite(key, dir)}
                     isFirst={idx === 0} isLast={idx === favoriteItems.length - 1}
                     showProjection={showProjection} showMarker90={showMarker90}
+                    feriasDays={feriasDays}
                   />
                 </div>
               )
@@ -362,6 +386,7 @@ export default function EvolucaoPage() {
               isFavorite={false}
               onToggleFavorite={() => toggleFavorite(itemKey(exploringItem))}
               showProjection={showProjection} showMarker90={showMarker90}
+              feriasDays={feriasDays}
             />
           )}
         </>

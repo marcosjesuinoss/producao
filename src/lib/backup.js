@@ -4,10 +4,13 @@ import { notifyDataChanged } from './dataBus.js'
 
 // Tabelas de dados do usuario. Preferencias de dispositivo (tema, PIN)
 // ficam no localStorage e nao entram no backup de proposito.
-const TABLES = ['records', 'goals', 'products', 'classes', 'yearSnapshots']
+const TABLES = ['records', 'goals', 'products', 'classes', 'yearSnapshots', 'ferias']
 
 // Tabelas com "data" (ano/mes) — as unicas que um periodo parcial filtra.
 // Produtos/grupos/snapshots nao tem periodo, entao sempre vao inteiros.
+// Ferias tem data (startDate/endDate) mas nao os campos year/month que o
+// filtro usa, e um periodo pode atravessar meses — vao sempre inteiras,
+// que e o que o usuario espera de "as minhas ferias" num backup.
 const DATED_TABLES = new Set(['records', 'goals'])
 
 export function downloadJSON(payload, filename) {
