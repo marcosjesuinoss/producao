@@ -122,5 +122,26 @@ db.version(7).stores({
   ferias: '&id, startDate, endDate'
 })
 
+// v8: "lapides" de exclusao, preparando a sincronizacao com a nuvem.
+//
+// Sem isso, apagar algo aqui e so sumir com a linha — e na proxima descida
+// da nuvem o item RESSUSCITA, porque o servidor nunca soube que ele foi
+// apagado. A alternativa comum (marcar cada linha com "deletedAt" e filtrar
+// na leitura) exigiria mexer nos 19 pontos que leem records hoje; uma tabela
+// separada resolve sem tocar em nenhum deles — so quem sincroniza consulta.
+//
+// key = "<tabela>:<id>" pra uma lapide nunca colidir com a de outra tabela.
+// synced marca as que o servidor ja recebeu (podem ser limpas depois).
+db.version(8).stores({
+  records: '&id, date, year, month, product, account, manager, synced',
+  goals: '&id, year, month, product, manager',
+  users: '&id, name',
+  products: '&id, name',
+  classes: '&id, name',
+  yearSnapshots: '&id, year',
+  ferias: '&id, startDate, endDate',
+  deletions: '&key, table, deletedAt, synced'
+})
+
 export const uid = () =>
   (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2))

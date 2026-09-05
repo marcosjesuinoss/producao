@@ -1,5 +1,6 @@
 import { db, uid } from '../db/db.js'
 import { notifyDataChanged } from './dataBus.js'
+import { tombstone } from '../api/localApi.js'
 import { countBusinessDaysInMonth, countVacationBusinessDays } from './businessDays.js'
 
 /*
@@ -77,6 +78,7 @@ export async function updateFerias(id, patch) {
 
 export async function deleteFerias(id) {
   await db.ferias.delete(id)
+  await tombstone('ferias', id)
   notifyDataChanged()
 }
 

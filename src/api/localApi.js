@@ -19,6 +19,25 @@ const ym = (dateStr) => {
   return { year: d.getFullYear(), month: d.getMonth() + 1 }
 }
 
+/*
+  Registra que uma linha foi apagada, pra sincronizacao (ver db.js v8).
+  Sem a lapide, apagar aqui e so sumir localmente — na proxima descida da
+  nuvem o item voltaria, porque o servidor nunca soube da exclusao.
+
+  Nada no app LE essa tabela hoje; ela so acumula ate a sincronizacao
+  existir. Isso e de proposito: e barato deixar o registro pronto agora e
+  caro descobrir depois que o historico de exclusoes se perdeu.
+*/
+export async function tombstone(table, id) {
+  await db.deletions.put({
+    key: `${table}:${id}`,
+    table,
+    id,
+    deletedAt: Date.now(),
+    synced: false,
+  })
+}
+
 // pt-BR: ponto = milhar (exige 3 digitos apos), virgula = decimal.
 // "8.4" e invalido; "8.400" = 8000; "8,4" = 8.4. Formato errado -> 0.
 const BR_NUM_RE = /^(\d{1,3}(\.\d{3})*(,\d*)?|\d+(,\d*)?)$/
@@ -89,6 +108,7 @@ export async function updateRecord(id, patch) {
 
 export async function deleteRecord(id) {
   await db.records.delete(id)
+  await tombstone('records', id)
   notifyDataChanged()
   return { ok: true, id }
 }
@@ -127,6 +147,7 @@ export async function upsertGoal(payload) {
 
 export async function deleteGoal(id) {
   await db.goals.delete(id)
+  await tombstone('goals', id)
   notifyDataChanged()
   return { ok: true, id }
 }
@@ -194,6 +215,7 @@ export async function deleteProduct(id) {
       }
     }
   })
+  await tombstone('products', id)
   notifyDataChanged()
   return { ok: true, id, archived: false }
 }
@@ -244,6 +266,7 @@ export async function deleteGrupo(id) {
       }
     }
   })
+  await tombstone('classes', id)
   notifyDataChanged()
   return { ok: true, id }
 }
