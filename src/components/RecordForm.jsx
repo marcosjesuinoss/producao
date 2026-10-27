@@ -23,6 +23,10 @@ const empty = {
   notes: '',
   qualified: false,
   clientName: '',
+  // Cancelamento (2026-10-26): grava o valor/quantidade NEGATIVO, que
+  // desconta da producao. O campo continua positivo (o teclado numerico do
+  // iPhone nao tem o sinal de menos); a caixa decide o sinal.
+  cancelamento: false,
 }
 
 // Auto-mascara pt-BR: remove pontos antigos (milhar), re-adiciona a cada 3 dígitos
@@ -103,7 +107,9 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
 
   useEffect(() => {
     if (initial) {
-      setForm({ ...empty, ...initial, value: numToDisplay(initial.value), quantity: numToDisplay(initial.quantity) })
+      const cancelamento = Number(initial.value) < 0 || Number(initial.quantity) < 0
+      const abs = (n) => (n == null || n === '' ? n : Math.abs(Number(n)))
+      setForm({ ...empty, ...initial, cancelamento, value: numToDisplay(abs(initial.value)), quantity: numToDisplay(abs(initial.quantity)) })
     } else {
       // Registro novo: pre-preenche com a agencia padrao (Ajustes > Registro),
       // se estiver ativada — o usuario pode apagar com backspace normalmente.
@@ -190,7 +196,9 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
     const errs = validate(form, isValue, agenciaEnabled, digitoEnabled)
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
     setErrors({})
-    onSubmit(form)
+    const { cancelamento, ...dados } = form
+    const negativo = (v) => (cancelamento && String(v ?? '').trim() ? `-${String(v).trim()}` : v)
+    onSubmit({ ...dados, value: negativo(dados.value), quantity: negativo(dados.quantity) })
     if (!initial) setForm({ ...empty, date: todayISO(), product: allProducts[0] ?? '' })
   }
 
@@ -276,6 +284,22 @@ export default function RecordForm({ initial, onSubmit, onCancel, noCard = false
           {errors.quantity && <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>{errors.quantity}</p>}
         </div>
       )}
+
+      {/* Cancelamento: a producao entra negativa e desconta do total. */}
+      <div className="sm:col-span-2">
+        <div className="flex items-center gap-2">
+          <input id="r-cancelamento" type="checkbox" className="w-4 h-4 accent-[color:var(--c-bad)]"
+            checked={form.cancelamento} onChange={(e) => set('cancelamento', e.target.checked)} />
+          <label htmlFor="r-cancelamento" className="text-sm font-medium cursor-pointer select-none">
+            Cancelamento
+          </label>
+        </div>
+        {form.cancelamento && (
+          <p className="text-xs mt-1" style={{ color: 'var(--c-bad)' }}>
+            {isValueProd ? 'O valor' : 'A quantidade'} entra negativo e desconta da sua produção.
+          </p>
+        )}
+      </div>
 
       {/* Campos exclusivos de Abertura de Conta */}
       {isAbertura && (

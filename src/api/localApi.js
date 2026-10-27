@@ -40,7 +40,8 @@ export async function tombstone(table, id) {
 
 // pt-BR: ponto = milhar (exige 3 digitos apos), virgula = decimal.
 // "8.4" e invalido; "8.400" = 8000; "8,4" = 8.4. Formato errado -> 0.
-const BR_NUM_RE = /^(\d{1,3}(\.\d{3})*(,\d*)?|\d+(,\d*)?)$/
+// Sinal de menos na frente = cancelamento (producao negativa, 2026-10-26).
+const BR_NUM_RE = /^-?(\d{1,3}(\.\d{3})*(,\d*)?|\d+(,\d*)?)$/
 const parseNum = (v) => {
   if (v === '' || v == null) return 0
   const s = String(v).trim()
