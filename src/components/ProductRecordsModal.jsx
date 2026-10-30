@@ -9,6 +9,7 @@ import ConfirmDialog from './ConfirmDialog.jsx'
 
 // Popup de detalhamento: lista os registros individuais de UM produto dentro
 // do periodo (Resumo = mes atual; Acumulado = semestre/ano selecionado).
+// Sem os ignorados: o detalhamento bate com a soma do Resumo.
 // Cabecalho no mesmo estilo do popup de "Novo registro" (RecordModal.jsx).
 export default function ProductRecordsModal({ product, year, startMonth, endMonth, periodLabel, onClose }) {
   const { isValue } = useProducts()
@@ -19,7 +20,7 @@ export default function ProductRecordsModal({ product, year, startMonth, endMont
     let alive = true
     db.records
       .where('year').equals(Number(year))
-      .and((r) => r.month >= startMonth && r.month <= endMonth && r.product === product)
+      .and((r) => r.month >= startMonth && r.month <= endMonth && r.product === product && !r.ignored)
       .toArray()
       .then((rows) => {
         if (alive) setRecords(rows.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)))
